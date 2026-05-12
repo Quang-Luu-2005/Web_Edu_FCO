@@ -1,0 +1,1380 @@
+<style>
+  .navbar-collapse {
+    flex-grow: 0;
+  }
+
+  .navbar-collapse-right {
+    margin-left: 750px;
+  }
+
+  .container-wrap {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 48px;
+  }
+
+  .text-container {
+    width: 100%;
+    max-width: 1340px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 20px 2.4px 30px 2.4px;
+    border-bottom: 1px solid #dcdacb;
+  }
+
+  .heading-xl {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .heading-lg {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
+    font-size: 20px;
+  }
+
+  .heading-md {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
+    font-size: 16px;
+  }
+
+  .black-background {
+    width: 100%;
+    padding: 6px 0 34px;
+    background:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 28%),
+      linear-gradient(180deg, #050505 0%, #0b1220 100%);
+    color: white;
+  }
+
+  .course-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    gap: 32px;
+    align-items: center;
+    padding: 64px 28px 10px;
+    border-radius: 8px;
+  }
+
+  .course-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .course-visual img {
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+  }
+
+  .course-hero-info {
+    padding: 0 8px 20px 8px;
+  }
+
+  .course-hero-info .course-title {
+    margin: 0 0 12px;
+    color: #ffffff;
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .course-hero-info .course-desc {
+    margin: 0 0 16px;
+    color: #e5e7eb;
+    font-size: 16px;
+    line-height: 1.65;
+    max-width: 720px;
+  }
+
+  .course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    margin: 18px 0 22px;
+    color: #e5e7eb;
+    font-size: 14px;
+  }
+
+  .course-meta .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .course-meta .meta-item i {
+    color: #facc15;
+  }
+
+  .course-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .course-actions .course-action-btn,
+  .course-actions #wish-list {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .course-actions .btn-outline-warning {
+    background: #facc15;
+    border-color: #facc15;
+    color: #111827;
+  }
+
+  .course-actions .btn-outline-warning:hover {
+    background: #fbbf24;
+    border-color: #fbbf24;
+    color: #111827;
+  }
+
+  .course-actions .btn-outline-light {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.55);
+    background: transparent;
+  }
+
+  .course-actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+  }
+
+  .course-hero-info > i.fa-star {
+    margin-right: 3px;
+    color: #facc15;
+    font-size: 15px;
+  }
+
+  .course-hero-info > .star5 {
+    display: inline-block;
+    margin-left: 6px;
+    color: #facc15 !important;
+    font-size: 14px;
+  }
+
+  .course-hero-info > p:not(.course-desc) {
+    margin: 10px 0 0;
+    color: #d1d5db;
+    font-size: 14px;
+  }
+
+  .course-hero-info > p:not(.course-desc) a {
+    color: #93c5fd !important;
+  }
+
+  .course-hero-info .btn i {
+    font-size: 14px;
+    margin-right: 0;
+  }
+
+  .checked {
+    color: orange;
+  }
+
+  .what-you-will-learn {
+    background-color: #fbfbf8;
+    border: 1px solid #dcdacb;
+    border-radius: 4px;
+    padding: 24px 32px 28px;
+  }
+
+  .what-you-will-learn-content {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .what-you-will-learn-content li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .what-you-will-learn-content li i {
+    flex: 0 0 14px;
+    margin-top: 4px;
+    color: #16a34a;
+  }
+
+  .what-you-will-learn-content li span {
+    flex: 1;
+  }
+
+  .fas {
+    font-size: 11px;
+  }
+
+  .teacher-avt {
+    width: 110px;
+    height: 110px;
+  }
+
+  .heading-xxl {
+    font-weight: 700;
+    font-size: 60px;
+  }
+
+  .card {
+    width: 140px;
+    align-items: center;
+    border: 0;
+  }
+
+  .bar-container {
+    width: 100%;
+    background-color: #f1f1f1;
+    text-align: center;
+    color: white;
+  }
+
+  .middle {
+    margin-top: 10px;
+    float: left;
+    width: 70%;
+  }
+
+  .bar {
+    height: 13px;
+    background-color: gray;
+  }
+
+  .bar-5 {
+    width: 60%;
+  }
+
+  .bar-4 {
+    width: 30%;
+  }
+
+  .bar-3 {
+    width: 10%;
+  }
+
+  .bar-2 {
+    width: 4%;
+  }
+
+  .bar-1 {
+    width: 15%;
+  }
+
+  .col {
+    padding-top: 17px;
+  }
+
+  .reviews {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+  }
+
+  .container {
+    max-width: 1220px;
+  }
+
+  .comment {
+    padding-top: 40px;
+  }
+
+  .footer-container {
+    padding-top: 30px;
+    padding-bottom: 20px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .pagination {
+    padding-top: 30px;
+  }
+
+  .btn-outline-danger {
+    margin-left: 10px;
+  }
+  .yellow-star {
+    color: yellow;
+  }
+  .red-heart {
+    color: red;
+  }
+  .video {
+    display: none;
+  }
+
+  .show-video {
+    display: block;
+  }
+  .video-js{
+      margin-left: 250px;
+  }
+  .row .info{
+      margin-top: 10px;
+      margin-left: -50px;
+  }
+  .student-response{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    align-items: flex-start;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+  .student-response .card{
+    flex: 0 0 160px;
+    width: 160px;
+  }
+  .student-response .col{
+    flex: 1 1 280px;
+    min-width: 0;
+    padding-top: 0;
+  }
+  .student-response .middle{
+    float: none;
+    width: 100%;
+    margin-top: 12px;
+  }
+  .student-response .bar-container{
+    overflow: hidden;
+    border-radius: 999px;
+  }
+  .rating-star{
+    margin-top: 20px;
+  }
+  .rating-star h3{
+    margin-bottom: 10px;
+  }
+  .rating-star .star{
+    margin-right: 30px;
+    float: left;
+    padding-top: 6px;
+  }
+  .rating-star .star .fa-star{
+    font-size: 25px;
+  }
+  #evaluation label{
+    margin-bottom: 10px;
+    font-size: 20px;
+  }
+  #evaluation #review-btn{
+    margin-top: 10px;
+    padding: 10px 30px;
+  }
+  #student-feedback.text-container{
+    border-bottom: 0px!important;
+    overflow-anchor: none;
+  }
+
+  #couser-teacher {
+    display: none !important;
+  }
+
+  #student-feedback .comment,
+  #student-feedback #evaluation {
+    display: none !important;
+  }
+
+  .course-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #d8dee9;
+    margin-bottom: 18px;
+  }
+
+  .course-tab {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d8dee9;
+    background: #ffffff;
+    color: #2563eb;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .course-tab.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+
+  .course-tab:focus {
+    outline: none;
+  }
+
+  .course-panel {
+    display: none;
+  }
+
+  .course-panel.active {
+    display: block;
+  }
+
+  .faq-heading p {
+    margin: 0 0 18px;
+    color: #4b5563;
+  }
+
+  .faq-composer {
+    padding: 18px;
+    border: 1px solid #dbe4ea;
+    border-radius: 8px;
+    background: #f8fbff;
+    margin-bottom: 18px;
+  }
+
+  .faq-composer .form-group {
+    margin-bottom: 12px;
+  }
+
+  .faq-thread-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .faq-thread {
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .faq-main,
+  .faq-reply {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .faq-reply {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #eef2f7;
+    margin-left: 48px;
+  }
+
+  .faq-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+  }
+
+  .faq-avatar-small {
+    width: 36px;
+    height: 36px;
+  }
+
+  .faq-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .faq-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .faq-head span,
+  .faq-stats {
+    color: #6b7280;
+    font-size: 13px;
+  }
+
+  .faq-body p {
+    margin: 0;
+    color: #111827;
+    line-height: 1.6;
+  }
+
+  .faq-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin-top: 10px;
+  }
+
+  .faq-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .faq-actions .btn-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .reaction-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .reaction-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border: 1px solid #dbe4ea;
+    border-radius: 999px;
+    background: #fff;
+    color: #374151;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .reaction-btn.selected {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
+  }
+
+  .faq-reply-box {
+    margin-top: 12px;
+    display: none;
+  }
+
+  .faq-reply-box.active {
+    display: block;
+  }
+
+  .faq-reply-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 767px) {
+    .course-tabs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .faq-reply {
+      margin-left: 18px;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .course-hero {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      padding: 52px 18px 0;
+    }
+
+    .course-hero-info {
+      padding: 0 0 10px;
+      order: 2;
+    }
+
+    .course-visual {
+      order: 1;
+    }
+  }
+
+  @media (max-width: 575px) {
+    .course-tabs {
+      grid-template-columns: 1fr;
+    }
+
+    .course-hero-info .course-title {
+      font-size: 24px;
+    }
+
+    .course-hero-info .course-desc {
+      font-size: 14px;
+    }
+
+    .course-meta {
+      gap: 10px 14px;
+    }
+  }
+  
+</style>
+<body>
+  <div class="black-background">
+    <div class="container-wrap">
+      <div name="header" class="course-hero">
+        <div class="course-visual">
+          <img src="<%= course.poster %>" alt="<%= course.name %>" />
+        </div>
+        <div class="text-container inlineblock course-hero-info" style="border-bottom: 0">
+          <div name="couser-detail">
+            <h2
+              class="course-title"
+              id="nameCourse"
+              data-name="<%= course.name%>"
+              data-myEvaPoint="<%= myEvaluationPoint %>"
+              data-evaPoint="<%= course.evaluationPoint %>"
+              data-isWishCourse="<%= isWishCourse %>"
+              data-isAuthenticated="<%= isAuthenticated%>"
+              data-isPaid="<%= isPaid %>"
+              data-id="<%= course._id %>"
+            >
+              <strong><%= course.name %></strong>
+            </h2>
+          </div>
+          <p class="course-desc"><%= course.description %></p>
+          <i class="star0 fa fa-star"></i>
+          <i class="star1 fa fa-star"></i>
+          <i class="star2 fa fa-star"></i>
+          <i class="star3 fa fa-star"></i>
+          <i class="star4 fa fa-star"></i>
+          <span class="star5 text-warning" style="padding-left: 5px"
+            ><strong
+              ><%= course.evaluationPoint %> (<%= course.userEvaluations.length
+              %> đánh giá)</strong
+            ></span
+          >
+          <p><%= course.uploadDate.toDateString() %></p>
+          <p>
+            Giảng viên:
+            <a href="#" style="color: rgb(144, 205, 247)"
+              ><strong><%= course.idLecturer.name %></strong></a
+            >
+          </p>
+          <div class="course-actions">
+            <% if (!isPaid) { %>
+            <a href="/payment/<%= course.name %>/checkout" class="btn btn-outline-warning course-action-btn">
+              <i class="fas fa-wallet"></i>
+              <span>Mua luôn</span>
+            </a>
+            <% } %>
+            <button id="wish-list" type="button" class="btn btn-outline-light course-action-btn">
+              <i id="heart" class="fa fa-heart"></i>
+              <span>Yêu thích</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-wrap">
+    <div class="course-tabs" role="tablist" aria-label="Course sections">
+      <button type="button" class="course-tab active" data-target="couser-intro">Giới thiệu</button>
+      <button type="button" class="course-tab" data-target="couser-content">Nội dung</button>
+      <button type="button" class="course-tab" data-target="student-feedback">Reviews</button>
+      <button type="button" class="course-tab" data-target="faq">FAQ</button>
+    </div>
+
+    <div id="couser-intro" class="text-container course-panel active">
+      <h2 class="heading-xl">Về chuyên môn này</h2>
+      <p>
+        Chuyên ngành này được xây dựng dựa trên sự thành công của khóa học
+        Python cho mọi người và sẽ giới thiệu các khái niệm lập trình cơ bản bao
+        gồm cấu trúc dữ liệu, giao diện chương trình ứng dụng được nối mạng và
+        cơ sở dữ liệu, sử dụng ngôn ngữ lập trình Python. Trong Dự án Capstone,
+        bạn sẽ sử dụng các công nghệ đã học trong suốt Chuyên môn để thiết kế và
+        tạo các ứng dụng của riêng bạn để truy xuất, xử lý và hiển thị dữ liệu.
+      </p>
+      <p>Khóa học này dành cho:</p>
+      <ul>
+        <li>Bất kỳ ai quan tâm đến Machine Learning</li>
+        <li>
+          Học sinh có ít nhất kiến thức trung học về toán và những người muốn
+          bắt đầu học Machine Learning.
+        </li>
+        <li>
+          Bất kỳ trình độ trung cấp nào là những người biết kiến thức cơ bản về
+          Machine Learning, bao gồm các thuật toán cổ điển như hồi quy tuyến
+          tính hoặc hồi quy logistic, nhưng những người muốn tìm hiểu thêm về nó
+          và khám phá tất cả các lĩnh vực khác nhau của Machine Learning.
+        </li>
+      </ul>
+      <div class="what-you-will-learn">
+        <h3 style="margin: 0 0 1.6rem">
+          <strong>Bạn sẽ được học</strong>
+        </h3>
+        <ul class="what-you-will-learn-content">
+          <% for( let i = 0; i < course.whatYoullLearn.length; i++ ) { %>
+          <li>
+            <i class="fas fa-check"></i>
+            <span><%= course.whatYoullLearn[i] %></span>
+          </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+
+    <div id="couser-content" class="text-container course-panel">
+      <h2 class="heading-xl">Giáo trình của khóa học như sau:</h2>
+      <div class="document">
+        <% for( let i = 0; i < course.videos.length; i++ ) { %>
+        <div class="row">
+          <div class="col-sm-8">
+            <ul>
+              <i class="fa fa-play-circle"></i>
+              <a href="#" style="color: black">
+                <%= course.videos[i].name %>
+              </a>
+            </ul>
+          </div>
+          <!-- Đã mua và chưa xem -->
+          <% if (isPaid) { %> <% if (learnedVideos.indexOf(i) != -1) { %>
+          <div class="col-sm-4 text-left">
+            <button
+              data-index="<%= i%>"
+              data-isLearned="true"
+              type="button"
+              class="btn btn-secondary btn-playVideo"
+            >
+              Đã xem
+            </button>
+          </div>
+          <% } %> <% } %>
+          <!-- Đã mua và xem rồi -->
+          <% if (isPaid) { %> <% if (learnedVideos.indexOf(i) ==-1) { %>
+          <div class="col-sm-4 text-left">
+            <button
+              data-index="<%= i%>"
+              data-isLearned="false"
+              type="button"
+              class="btn btn-secondary btn-playVideo"
+            >
+              Xem video
+            </button>
+          </div>
+          <% } %> <% } %>
+          <!-- Chưa mua -->
+          <% if (!isPaid && course.previewIndex.indexOf(i) != -1) { %>
+          <div class="col-sm-4 text-left">
+            <button type="button" class="btn btn-secondary btn-playVideo">
+              Preview
+            </button>
+          </div>
+          <% } %>
+          <video
+            id="my-video"
+            class="video-js video col-sm-4"
+            controls
+            preload="auto"
+            width="640"
+            height="264"
+          >
+            <source src="<%= course.videos[i].source %>" type="video/mp4" />
+          </video>
+        </div>
+        <% } %>
+      </div>
+    </div>
+    <div id="couser-teacher" class="text-container">
+      <h2 class="heading-xl">Instructor</h2>
+      <div class="heading-lg">
+        <a href="#" style="text-decoration: none">Mai Ngọc Tú</a>
+      </div>
+      <p style="color: gray">Development Team Lead</p>
+      <div class="row">
+        <div class="col-sm-2">
+          <img src="<%= course.idLecturer.avatar %>" alt="" class="rounded-circle teacher-avt" />
+        </div>
+        <div class="col-sm-6 info">
+          <i class="fas fa-star text-warning"></i>
+          <span style="margin-left: 8px">4.5 Instructor Rating</span><br />
+          <i class="fas fa-user-graduate text-warning"></i>
+          <span style="margin-left: 8px">32,523 Students</span><br />
+
+          <i class="fas fa-play-circle text-warning"></i>
+          <span style="margin-left: 8px">20 Course</span><br />
+        </div>
+        <p style="padding-top: 20px">
+          <%= course.idLecturer.description %> 
+        </p>
+      </div>
+    </div>
+
+    <div id="student-feedback" class="text-container course-panel">
+      <h2 class="heading-xl">Phản hồi của học sinh</h2>
+      <div class="row student-response">
+        <div class="card">
+          <div class="heading-xxl text-warning"><%= course.evaluationPoint %> </div>
+          <div>
+            <i class="star0 fa fa-star"></i>
+            <i class="star1 fa fa-star"></i>
+            <i class="star2 fa fa-star"></i>
+            <i class="star3 fa fa-star"></i>
+            <i class="star4 fa fa-star"></i>
+          </div>
+          <div class="text-warning"><strong>Course rating</strong></div>
+        </div>
+
+        <div class="col">
+          <div class="middle">
+            <div class="bar-container">
+              <div class="bar bar-5"></div>
+            </div>
+          </div>
+
+          <div class="middle">
+            <div class="bar-container">
+              <div class="bar bar-4"></div>
+            </div>
+          </div>
+
+          <div class="middle">
+            <div class="bar-container">
+              <div class="bar bar-3"></div>
+            </div>
+          </div>
+
+          <div class="middle">
+            <div class="bar-container">
+              <div class="bar bar-2"></div>
+            </div>
+          </div>
+
+          <div class="middle">
+            <div class="bar-container">
+              <div class="bar bar-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Mục bạn đánh giá -->
+    <% if (isAuthenticated && isEvaluate && isPaid) { %>
+    <div class="rating-star">
+      <h3>Bạn đã đánh giá</h3>
+      <div class="star">
+        <i id="eva-star0" class="my-star0 fa fa-star" style="color: yellow"></i>
+        <i id="eva-star1" class="my-star1 fa fa-star"></i>
+        <i id="eva-star2" class="my-star2 fa fa-star"></i>
+        <i id="eva-star3" class="my-star3 fa fa-star"></i>
+        <i id="eva-star4" class="my-star4 fa fa-star"></i>
+      </div>
+      
+      <button class="btn btn-success" data-isPaid="<%= isPaid %>" id="eva-btn" type="button">
+        Đánh giá lại
+      </button>
+    </div>
+    <!-- Mục đánh giá môn học -->
+    <% } %> <% if (isAuthenticated && !isEvaluate && isPaid) { %>
+    <div>
+      <h3>Đánh giá</h3>
+      <i id="eva-star0" class="fa fa-star" style="color: yellow"></i>
+      <i id="eva-star1" class="fa fa-star"></i>
+      <i id="eva-star2" class="fa fa-star"></i>
+      <i id="eva-star3" class="fa fa-star"></i>
+      <i id="eva-star4" class="fa fa-star"></i>
+      <button data-isPaid="<%= isPaid %>" id="eva-btn" type="button" class="btn btn-success">
+        Gửi đánh giá
+      </button>
+    </div>
+    <% } %>
+      <div >
+        <h2 class="heading-xl" style="padding-top: 40px">Reviews</h2>
+        <% if (isPaid) { %>
+        <div id="evaluation">
+            <form>
+                <div class="form-group">
+                    <label for="review-text">Đánh giá của bạn</label>
+                    <textarea class="form-control" id="review-text" rows="3"></textarea>
+                </div>
+            </form>
+            <button id="review-btn" type="button" class="btn btn-info" style="float: right;">Gửi</button><br>
+        </div>
+        <% } %>
+        <% for( let i = 0; i < course.userReviews.length; i++ ) { %>
+        <div class="row comment">
+            <div class="col-sm-1">
+                <img src="<%= userReviews[i].avatar %> "
+                class="rounded-circle reviews" />
+            </div>
+            <div class="col-sm-11">
+                <p class="heading-md"><%= userReviews[i].name %></p>
+                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star checked"></span>
+                <span class="far fa-star text-warning"></span>
+                <span style="color: gray">
+                <%= course.userReviews[i].date.toDateString() %>  </span>
+                <p class="review-text" style="padding-top: 10px">
+                <%= course.userReviews[i].review %> 
+                </p>
+                <a href="#"><i class="fa fa-thumbs-up" style="color: gray"></i></a>
+                <span style="font-size: 12px">Was this review helpful?</span>
+            </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div id="faq" class="text-container course-panel">
+      <div class="faq-heading">
+        <h2 class="heading-xl">FAQ</h2>
+        <p>Hỏi nhanh, trả lời nhanh, bày tỏ, báo cáo nếu sai.</p>
+      </div>
+
+      <% if (isPaid || isAdmin) { %>
+      <div class="faq-composer" id="faq-composer">
+        <div class="form-group">
+          <label for="faq-review">Câu hỏi hoặc nhận xét</label>
+          <textarea class="form-control" id="faq-review" rows="3" placeholder="Viết gì đó đi"></textarea>
+        </div>
+        <button id="faq-post-btn" type="button" class="btn btn-info">Gửi</button>
+      </div>
+      <% } %>
+
+      <div class="faq-thread-list">
+        <% faqThreads.forEach((thread) => { %>
+        <div class="faq-thread" data-review-id="<%= thread.id %>">
+          <div class="faq-main">
+            <img src="<%= thread.author.avatar %>" alt="<%= thread.author.name %>" class="faq-avatar" />
+            <div class="faq-body">
+              <div class="faq-head">
+                <strong><%= thread.author.name %></strong>
+                <span><%= thread.date ? thread.date.toDateString() : '' %></span>
+              </div>
+              <p><%= thread.text %></p>
+              <div class="faq-stats">
+                <span><%= thread.reactionSummary.total %> bày tỏ</span>
+                <span><%= thread.replyCount %> trả lời</span>
+                <% if (thread.reportCount > 0) { %>
+                <span><%= thread.reportCount %> báo cáo</span>
+                <% } %>
+              </div>
+              <div class="faq-actions">
+                <% if (isPaid || isAdmin) { %>
+                <button type="button" class="btn btn-link p-0 faq-reply-toggle" data-target="<%= thread.id %>">
+                  Trả lời
+                </button>
+                <button type="button" class="btn btn-link p-0 faq-report-btn" data-target="<%= thread.id %>">
+                  Báo cáo
+                </button>
+                <% } %>
+                <% if (isAdmin) { %>
+                <button type="button" class="btn btn-link p-0 faq-delete-btn" data-target="<%= thread.id %>">
+                  Xóa
+                </button>
+                <% } %>
+              </div>
+              <% if (isPaid || isAdmin) { %>
+              <div class="reaction-row">
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'like' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="like">
+                  <i class="far fa-thumbs-up"></i> Thích
+                </button>
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'love' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="love">
+                  <i class="fas fa-heart"></i> Yêu thích
+                </button>
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'haha' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="haha">
+                  <i class="far fa-laugh"></i> Haha
+                </button>
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'wow' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="wow">
+                  <i class="far fa-surprise"></i> Wow
+                </button>
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'sad' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="sad">
+                  <i class="far fa-frown"></i> Buồn
+                </button>
+                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'angry' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="angry">
+                  <i class="far fa-angry"></i> Giận
+                </button>
+              </div>
+              <div class="faq-reply-box" id="reply-box-<%= thread.id %>">
+                <textarea class="form-control faq-reply-input" rows="2" data-review-id="<%= thread.id %>" placeholder="Viết trả lời..."></textarea>
+                <div class="faq-reply-actions">
+                  <button type="button" class="btn btn-sm btn-primary faq-reply-submit" data-review-id="<%= thread.id %>">Gửi trả lời</button>
+                </div>
+              </div>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="faq-replies">
+            <% thread.replies.forEach((reply) => { %>
+            <div class="faq-reply" data-reply-id="<%= reply.id %>">
+              <img src="<%= reply.author.avatar %>" alt="<%= reply.author.name %>" class="faq-avatar faq-avatar-small" />
+              <div class="faq-body">
+                <div class="faq-head">
+                  <strong><%= reply.author.name %></strong>
+                  <span><%= reply.date ? reply.date.toDateString() : '' %></span>
+                </div>
+                <p><%= reply.text %></p>
+                <div class="faq-stats">
+                  <span><%= reply.reactionSummary.total %> bày tỏ</span>
+                  <% if (reply.reportCount > 0) { %>
+                  <span><%= reply.reportCount %> báo cáo</span>
+                  <% } %>
+                </div>
+                <div class="faq-actions">
+                  <% if (isPaid || isAdmin) { %>
+                  <button type="button" class="btn btn-link p-0 faq-report-btn" data-target="<%= reply.id %>" data-parent="<%= thread.id %>">
+                    Báo cáo
+                  </button>
+                  <% } %>
+                  <% if (isAdmin) { %>
+                  <button type="button" class="btn btn-link p-0 faq-delete-btn" data-target="<%= reply.id %>" data-parent="<%= thread.id %>">
+                    Xóa
+                  </button>
+                  <% } %>
+                </div>
+                <% if (isPaid || isAdmin) { %>
+                <div class="reaction-row">
+                  <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'like' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="like">
+                    <i class="far fa-thumbs-up"></i> Thích
+                  </button>
+                  <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'love' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="love">
+                    <i class="fas fa-heart"></i> Yêu thích
+                  </button>
+                  <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'haha' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="haha">
+                    <i class="far fa-laugh"></i> Haha
+                  </button>
+                </div>
+                <% } %>
+              </div>
+            </div>
+            <% }) %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bấm nút comment -->
+  <script type="text/javascript">
+  $(document).ready(() => {
+    const courseName = encodeURIComponent($("#nameCourse").attr("data-name"));
+
+    const showPanel = (panelId) => {
+      $(".course-tab").removeClass("active");
+      $(".course-panel").removeClass("active");
+      $(`.course-tab[data-target='${panelId}']`).addClass("active");
+      $(`#${panelId}`).addClass("active");
+    };
+
+    $(".course-tab").on("click", function () {
+      const target = $(this).attr("data-target");
+      if (target) {
+        showPanel(target);
+      }
+    });
+
+    showPanel("couser-intro");
+
+    $("#faq-post-btn").on("click", () => {
+      const review = $("#faq-review").val().trim();
+      if (review === "") {
+        return;
+      }
+      $.post(`/course/${courseName}/review`, { review }, () => window.location.reload());
+    });
+
+    $(document).on("click", ".faq-reply-toggle", function () {
+      const target = $(this).attr("data-target");
+      $(`#reply-box-${target}`).toggleClass("active");
+    });
+
+    $(document).on("click", ".faq-reply-submit", function () {
+      const reviewId = $(this).attr("data-review-id");
+      const reply = $(`.faq-reply-input[data-review-id='${reviewId}']`).val().trim();
+      if (reply === "") {
+        return;
+      }
+      $.post(`/course/${courseName}/review/${reviewId}/reply`, { reply }, () => window.location.reload());
+    });
+
+    $(document).on("click", ".faq-react-btn", function () {
+      const reactionType = $(this).attr("data-reaction");
+      const targetId = $(this).attr("data-target");
+      const parentId = $(this).attr("data-parent");
+      const reviewId = parentId || targetId;
+      const payload = parentId ? { targetId, reactionType } : { reactionType };
+      $.post(`/course/${courseName}/review/${reviewId}/react`, payload, () => window.location.reload());
+    });
+
+    $(document).on("click", ".faq-report-btn", function () {
+      const targetId = $(this).attr("data-target");
+      const parentId = $(this).attr("data-parent");
+      const reviewId = parentId || targetId;
+      const reason = prompt("Lý do báo cáo");
+      if (reason === null) {
+        return;
+      }
+      const payload = parentId ? { targetId, reason } : { reason };
+      $.post(`/course/${courseName}/review/${reviewId}/report`, payload, () => window.location.reload());
+    });
+
+    $(document).on("click", ".faq-delete-btn", function () {
+      const targetId = $(this).attr("data-target");
+      const parentId = $(this).attr("data-parent");
+      const reviewId = parentId || targetId;
+      if (!confirm("Xóa nội dung này?")) {
+        return;
+      }
+      const payload = parentId ? { targetId } : {};
+      $.post(`/course/${courseName}/review/${reviewId}/delete`, payload, () => window.location.reload());
+    });
+  });
+  </script>
+  <script>
+  //Bấm vào ngôi sao thứ 4
+  $("#eva-star4").on("click", () => {
+    console.log("4");
+    $("#eva-star4").addClass("yellow-star");
+    $("#eva-star3").addClass("yellow-star");
+    $("#eva-star2").addClass("yellow-star");
+    $("#eva-star1").addClass("yellow-star");
+    $("#eva-star0").addClass("yellow-star");
+  });
+  //Bấm vào ngôi sao thứ 3
+  $("#eva-star3").on("click", () => {
+    console.log("3");
+    $("#eva-star4").removeClass("yellow-star");
+    $("#eva-star3").addClass("yellow-star");
+    $("#eva-star2").addClass("yellow-star");
+    $("#eva-star1").addClass("yellow-star");
+    $("#eva-star0").addClass("yellow-star");
+  });
+  //Bấm vào ngôi sao thứ 2
+  $("#eva-star2").on("click", () => {
+    console.log("2");
+    $("#eva-star4").removeClass("yellow-star");
+    $("#eva-star3").removeClass("yellow-star");
+    $("#eva-star2").addClass("yellow-star");
+    $("#eva-star1").addClass("yellow-star");
+    $("#eva-star0").addClass("yellow-star");
+  });
+  //Bấm vào ngôi sao thứ 1
+  $("#eva-star1").on("click", () => {
+    console.log("1");
+    $("#eva-star4").removeClass("yellow-star");
+    $("#eva-star3").removeClass("yellow-star");
+    $("#eva-star2").removeClass("yellow-star");
+    $("#eva-star1").addClass("yellow-star");
+    $("#eva-star0").addClass("yellow-star");
+  });
+  //Bấm vào ngôi sao thứ 0
+  $("#eva-star0").on("click", () => {
+    console.log("0");
+    $("#eva-star4").removeClass("yellow-star");
+    $("#eva-star3").removeClass("yellow-star");
+    $("#eva-star2").removeClass("yellow-star");
+    $("#eva-star1").removeClass("yellow-star");
+    $("#eva-star0").addClass("yellow-star");
+  });
+  //Bấm gửi đánh giá
+  $("#eva-btn").on("click", () => {
+    const isAuthenticated = $("#nameCourse").attr("data-isAuthenticated");
+    const nameCourse = $("#nameCourse").attr("data-name");
+
+    if (isAuthenticated == "true") {
+      const isPaid = $("#eva-btn").attr("data-isPaid");
+      if (isPaid == "true") {
+        if ($("#eva-star4").hasClass("yellow-star")) {
+          const data = {
+            evaluationPoint: 5,
+          };
+          $.post(`/course/${nameCourse}/evaluate`, data, (json) => {
+            if (json == true) {
+              alert("Bạn đã gửi đánh giá thành công");
+            } else {
+              alert("Rất tiếc! đánh giá của bạn không được ghi nhận");
+            }
+          });
+        } else if ($("#eva-star3").hasClass("yellow-star")) {
+          const data = {
+            evaluationPoint: 4,
+          };
+          $.post(`/course/${nameCourse}/evaluate`, data, (json) => {
+            if (json == true) {
+              alert("Bạn đã gửi đánh giá thành công");
+            } else {
+              alert("Rất tiếc! đánh giá của bạn không được ghi nhận");
+            }
+          });
+        } else if ($("#eva-star2").hasClass("yellow-star")) {
+          const data = {
+            evaluationPoint: 3,
+          };
+          $.post(`/course/${nameCourse}/evaluate`, data, (json) => {
+            if (json == true) {
+              alert("Bạn đã gửi đánh giá thành công");
+            } else {
+              alert("Rất tiếc! đánh giá của bạn không được ghi nhận");
+            }
+          });
+        } else if ($("#eva-star1").hasClass("yellow-star")) {
+          const data = {
+            evaluationPoint: 2,
+          };
+          $.post(`/course/${nameCourse}/evaluate`, data, (json) => {
+            if (json == true) {
+              alert("Bạn đã gửi đánh giá thành công");
+            } else {
+              alert("Rất tiếc! đánh giá của bạn không được ghi nhận");
+            }
+          });
+        } else if ($("#eva-star0").hasClass("yellow-star")) {
+          const data = {
+            evaluationPoint: 1,
+          };
+          $.post(`/course/${nameCourse}/evaluate`, data, (json) => {
+            if (json == true) {
+              alert("Bạn đã gửi đánh giá thành công");
+            } else {
+              alert("Rất tiếc! đánh giá của bạn không được ghi nhận");
+            }
+          });
+        }
+        window.location.reload(true);
+      } else {
+        alert("Bạn hãy mua khóa học trước khi đánh giá");
+        window.location.replace(`/payment/${nameCourse}/checkout`);
+      }
+    } else {
+      window.location.replace("/users/login");
+    }
+  });
+  </script>
+  <script>
+    //Bấm vào hiện video
+    $(".btn-playVideo")
+      .on("click", (e) => {
+        console.log("hello");
+        //Mở tắt video
+        $(e.target).parent().siblings("video").toggleClass("show-video");
+        const isPaid = $("#nameCourse").attr("data-isPaid");
+
+        //Cập nhật thông tin learnedVideo
+        console.log($(e.target).attr("data-isLearned"));
+        if ($(e.target).attr("data-isLearned") == "false" && isPaid == "true") {
+          const nameCourse = $("#nameCourse").attr("data-name");
+          const videoIndex = $(e.target).attr("data-index");
+
+          const data = {
+            videoIndex: videoIndex,
+          };
+          $.post(`/users/${nameCourse}/updateLearnedVideo`, data, (json) => {
+            console.log("json: ", json);
+            if (json == true) {
+              $(e.target).attr("data-isLearned", "true");
+              console.log("Cập nhật lịch sử học thành công");
+            }
+          });
+        }
+      });
+  </script>
+  <script>
+    //Bấm vào nút Yêu thích
+    $("#wish-list").on("click", (e) => {
+      //Đổi màu button
+      $("#wish-list").children("i").toggleClass("red-heart");
+
+      //Kiểm tra đã đăng nhập chưa
+      const isAuthenticated = $("#nameCourse").attr("data-isAuthenticated");
+      console.log(isAuthenticated);
+      if (isAuthenticated == "true") {
+        //Dùng ajax gửi thông tin về cho server thay đổi danh sách yêu thích
+        const courseID = $("#nameCourse").attr("data-id");
+        const data = {
+          courseID: courseID,
+        };
+        $.post("/users/wish-list-change", data);
+      } else {
+        //điều hướng sang trang đăng nhập
+        location.replace("/users/login");
+      }
+    });
+  </script>
+  <script>
+    $("document").ready(() => {
+      //Đánh dấu trái tim đỏ
+      const isWishCourse = $("#nameCourse").attr("data-isWishCourse");
+      if (isWishCourse == "true") {
+        $("#heart").addClass("red-heart");
+      }
+      //Đánh dấu sao vàng dựa vào đánh giá chung
+      let evaPoint = +$("#nameCourse").attr("data-evaPoint");
+      evaPoint = evaPoint.toFixed(1);
+      if (evaPoint >= 5) {
+        $(".star0").addClass("yellow-star");
+        $(".star1").addClass("yellow-star");
+        $(".star2").addClass("yellow-star");
+        $(".star3").addClass("yellow-star");
+        $(".star4").addClass("yellow-star");
+      } else if (evaPoint >= 4) {
+        $(".star0").addClass("yellow-star");
+        $(".star1").addClass("yellow-star");
+        $(".star2").addClass("yellow-star");
+        $(".star3").addClass("yellow-star");
+      } else if (evaPoint >= 3) {
+        $(".star0").addClass("yellow-star");
+        $(".star1").addClass("yellow-star");
+        $(".star2").addClass("yellow-star");
+      } else if (evaPoint >= 2) {
+        $(".star0").addClass("yellow-star");
+        $(".star1").addClass("yellow-star");
+      } else if (evaPoint >= 1) {
+        $(".star0").addClass("yellow-star");
+      }
+
+      //Đánh dấu sao vàng dựa vào đánh giá của tôi
+      let myEvaPoint = +$("#nameCourse").attr("data-myEvaPoint");
+      myEvaPoint = myEvaPoint.toFixed(1);
+      if (myEvaPoint >= 5) {
+        $(".my-star0").addClass("yellow-star");
+        $(".my-star1").addClass("yellow-star");
+        $(".my-star2").addClass("yellow-star");
+        $(".my-star3").addClass("yellow-star");
+        $(".my-star4").addClass("yellow-star");
+      } else if (myEvaPoint >= 4) {
+        $(".my-star0").addClass("yellow-star");
+        $(".my-star1").addClass("yellow-star");
+        $(".my-star2").addClass("yellow-star");
+        $(".my-star3").addClass("yellow-star");
+      } else if (myEvaPoint >= 3) {
+        $(".my-star0").addClass("yellow-star");
+        $(".my-star1").addClass("yellow-star");
+        $(".my-star2").addClass("yellow-star");
+      } else if (myEvaPoint >= 2) {
+        $(".my-star0").addClass("yellow-star");
+        $(".my-star1").addClass("yellow-star");
+      } else if (myEvaPoint >= 1) {
+        $(".my-star0").addClass("yellow-star");
+      }
+    });
+  </script>
+</body>

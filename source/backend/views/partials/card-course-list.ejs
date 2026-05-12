@@ -1,0 +1,73 @@
+<style>
+  .course-list {
+    padding-top: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #dcdacb;
+  }
+
+  .course-list-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    color: inherit;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+  }
+
+  .course-list .img {
+    float: none;
+    width: 280px;
+    height: 160px;
+    margin-right: 0;
+    object-fit: cover;
+    border-radius: 6px;
+    flex: 0 0 280px;
+  }
+
+  .course-list-content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .course-list-content h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #111827;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+  }
+
+  .course-list-content .meta {
+    margin: 0 0 8px;
+    color: #555;
+    font-size: 14px;
+  }
+
+  .price {
+    float: none;
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: auto;
+    color: #ef4444;
+  }
+
+  .course-list-link:hover {
+    text-decoration: none;
+  }
+</style>
+
+<div class="course-list">
+  <a class="course-list-link" href="/course/<%=  course.name%>">
+    <img src="<%= course.poster %>" alt="" class="img" />
+    <div class="course-list-content">
+      <h4
+      >
+        <%= course.name %>
+      </h4>
+      <p class="meta"><%= course.idLecturer && course.idLecturer.name ? course.idLecturer.name : '' %></p>
+    </div>
+    <strong class="price">$<%= course.tuition || 10 %></strong>
+  </a>
+</div>

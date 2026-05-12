@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner trang chu</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/d62abf4f8f.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/stylesheet.css">
+    <style>
+        .banner-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+        .banner-slot {
+            border: 1px solid #dcdcdc;
+            padding: 16px;
+            background: #fff;
+        }
+        .banner-slot img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .banner-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .banner-actions .btn {
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <%- include('../common/header',{user: user}); -%>
+        <%- include('../common/column_left'); -%>
+        <div id="content">
+            <div class="page-header">
+                <div class="container-fluid">
+                    <div class="pull-right">
+                        <button class="btn btn-primary" id="saveBanners">
+                            <i class="fa fa-save"></i>
+                        </button>
+                    </div>
+                    <h2><%= data.title %></h2>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><i class="fa fa-image"></i> Upload home banners</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form action="/admin/home/banners" method="post" id="frmHomeBanners">
+                            <div class="banner-grid">
+                                <% for (let i = 0; i < 3; i++) { %>
+                                <div class="banner-slot">
+                                    <img id="banner-preview-<%= i + 1 %>" src="<%= data.banners[i] %>" alt="Banner <%= i + 1 %>">
+                                    <input type="hidden" name="banner<%= i + 1 %>" id="banner-<%= i + 1 %>" value="<%= data.banners[i] %>">
+                                    <input type="file" class="form-control" id="banner-file-<%= i + 1 %>" accept="image/*">
+                                    <div class="banner-actions">
+                                        <button type="button" class="btn btn-success upload-banner" data-slot="<%= i + 1 %>">
+                                            Upload image
+                                        </button>
+                                    </div>
+                                </div>
+                                <% } %>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <%- include('../common/footer'); -%>
+    </div>
+
+    <script>
+        $(".upload-banner").on("click", function () {
+            const slot = $(this).data("slot");
+            const input = document.getElementById(`banner-file-${slot}`);
+            const files = input.files;
+            if (!files || files.length === 0) {
+                alert("Please select image");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("file", files[0]);
+
+            $.ajax({
+                url: `/admin/upload?fileType=image&id=home-banner-${slot}&folder=/home-banner/&folder_cloud=webctt2/home-banner`,
+                type: "post",
+                data: fd,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response) {
+                        const stamp = new Date().getTime();
+                        $(`#banner-preview-${slot}`).attr("src", `${response}?t=${stamp}`);
+                        $(`#banner-` + slot).val(response);
+                        alert("Upload image success");
+                    } else {
+                        alert("File not uploaded");
+                    }
+                }
+            });
+        });
+
+        $("#saveBanners").on("click", function () {
+            $("#frmHomeBanners").submit();
+        });
+    </script>
+</body>
+</html>

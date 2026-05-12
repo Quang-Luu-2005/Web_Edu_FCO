@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title">
+  <title id="title">Quality badge</title>
+  <rect width="160" height="160" rx="34" fill="#ecfeff"/>
+  <path d="M80 24l45 18v35c0 28-18 51-45 64-27-13-45-36-45-64V42l45-18z" fill="#0891b2"/>
+  <path d="M80 37l31 12v27c0 20-12 37-31 47-19-10-31-27-31-47V49l31-12z" fill="#67e8f9"/>
+  <path d="M68 82l-11-11-10 10 21 21 45-45-10-10-35 35z" fill="#0f172a"/>
+  <circle cx="118" cy="42" r="16" fill="#f97316"/>
+  <path d="M118 33l3 7h8l-6 5 2 8-7-4-7 4 2-8-6-5h8l3-7z" fill="#fff7ed"/>
+</svg>

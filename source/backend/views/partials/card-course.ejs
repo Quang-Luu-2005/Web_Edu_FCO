@@ -1,0 +1,270 @@
+<style>
+  .course-carousel {
+    position: relative;
+    margin: 0 0 8px;
+    padding: 18px 56px;
+    border-radius: 22px;
+    background:
+      linear-gradient(110deg, rgba(59, 130, 246, 0.96) 0%, rgba(99, 102, 241, 0.68) 46%, rgba(244, 114, 182, 0.26) 100%),
+      #f8fbff;
+    overflow: hidden;
+  }
+
+  .course-carousel-track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 0 2px 2px;
+  }
+
+  .course-carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .course-node-link {
+    display: block;
+    flex: 0 0 clamp(220px, 22vw, 270px);
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    scroll-snap-align: start;
+  }
+
+  .course-node {
+    height: 100%;
+    min-height: 294px;
+    padding: 8px;
+    border: 1px solid rgba(226, 232, 240, 0.92);
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+
+  .course-node-media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #0f172a;
+  }
+
+  .course-node-media img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+  }
+
+  .course-node-price {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #facc15;
+    color: #111827;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .course-node-body {
+    min-height: 142px;
+    padding: 12px 8px 8px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .course-node-provider {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .course-node-provider i {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    color: #3b82f6;
+    font-size: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .course-node-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .course-node-provider-name {
+    color: #64748b;
+  }
+
+  .course-node-title {
+    margin: 12px 0 0;
+    color: #111827;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-wrap: balance;
+  }
+
+  .course-node-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .course-node-topic {
+    color: #334155;
+    font-weight: 600;
+  }
+
+  .course-node-views {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+  }
+
+  .course-node-link:hover {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .course-node-link:hover .course-node {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.2);
+  }
+
+  .course-node-link:hover .course-node-media img {
+    transform: scale(1.04);
+  }
+
+  .course-node-link:hover .course-node-price {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .course-carousel-btn {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d4ed8;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transform: translateY(-50%);
+  }
+
+  .course-carousel-btn:hover,
+  .course-carousel-btn:focus {
+    color: #111827;
+    outline: none;
+  }
+
+  .course-carousel-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .course-carousel-prev {
+    left: 12px;
+  }
+
+  .course-carousel-next {
+    right: 12px;
+  }
+
+  @media (max-width: 767px) {
+    .course-carousel {
+      padding: 14px 46px;
+      border-radius: 18px;
+    }
+
+    .course-node-link {
+      flex-basis: 78vw;
+    }
+
+    .course-node-price {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<div class="course-carousel" data-course-carousel>
+  <button type="button" class="course-carousel-btn course-carousel-prev" data-course-carousel-prev aria-label="Trượt qua trái">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <div class="course-carousel-track">
+    <% courses.forEach(course => { %>
+    <a class="course-node-link" href="/course/<%= course.name %>">
+      <article class="course-node">
+        <div class="course-node-media">
+          <img src="<%= course.poster %>" alt="<%= course.name %>">
+          <span class="course-node-price">$<%= course.tuition || 10 %></span>
+        </div>
+        <div class="course-node-body">
+          <div class="course-node-provider">
+            <i class="far fa-window-maximize"></i>
+            <span class="course-node-badge">Giảng viên</span>
+            <span class="course-node-provider-name"><%= course.idLecturer && course.idLecturer.name ? course.idLecturer.name : 'WEBCTT2' %></span>
+          </div>
+          <h5 class="course-node-title"><%= course.name %></h5>
+          <div class="course-node-meta">
+            <span class="course-node-topic"><%= course.idCourseTopic && course.idCourseTopic.name ? course.idCourseTopic.name : 'Khóa học' %></span>
+            <span class="course-node-views"><i class="fas fa-eye"></i> <%= course.numberOfView || 0 %> lượt xem</span>
+          </div>
+        </div>
+      </article>
+    </a>
+    <% }); %>
+  </div>
+
+  <button type="button" class="course-carousel-btn course-carousel-next" data-course-carousel-next aria-label="Trượt qua phải">
+    <i class="fas fa-chevron-right"></i>
+  </button>
+</div>

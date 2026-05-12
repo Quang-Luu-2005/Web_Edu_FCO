@@ -1,0 +1,325 @@
+<div id="body" class="container-wrap">
+  <div class="row top-section">
+    <div class="col-sm-8">
+      <div class="home-banner home-banner-main">
+        <img src="<%= homeBanners[0] %>" alt="Banner chính" />
+      </div>
+    </div>
+    <div class="col-sm-4 home-banner-stack">
+      <div class="home-banner home-banner-sub">
+        <img src="<%= homeBanners[1] %>" alt="Banner phụ 1" />
+      </div>
+      <div class="home-banner home-banner-sub">
+        <img src="<%= homeBanners[2] %>" alt="Banner phụ 2" />
+      </div>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <h4 class="section-title">3 khóa học được quan tâm nhất</h4>
+    <%- include('../partials/card-course', {courses: proCourses, type: 'proCourse'}) %>
+  </div>
+
+  <div class="section-block">
+    <h4 class="section-title">10 khóa học được xem nhiều nhất</h4>
+    <%- include('../partials/card-course', {courses: mostViewCourses, type: 'mostViewCourse'}) %>
+  </div>
+
+  <div class="section-block">
+    <h4 class="section-title">10 khóa học mới nhất</h4>
+    <%- include('../partials/card-course', {courses: latestCourses, type: 'latestCourse'}) %>
+  </div>
+
+  <div class="section-feature">
+    <div class="feature-heading">
+      <span>WEBCTT2 mang lại</span>
+      <h2>Học dễ hơn, rõ lộ trình hơn</h2>
+    </div>
+    <div class="row feature-grid">
+      <div class="col-sm-4">
+        <div class="feature-card feature-card-cyan">
+          <div class="feature-icon">
+            <img src="/images/features/quality.svg" alt="Chất lượng uy tín" />
+          </div>
+          <div>
+            <h3>Chất lượng uy tín</h3>
+            <p>Nội dung được chọn lọc, bám sát nhu cầu học và thực hành.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="feature-card feature-card-amber">
+          <div class="feature-icon">
+            <img src="/images/features/price.svg" alt="Giá cả phải chăng" />
+          </div>
+          <div>
+            <h3>Giá cả phải chăng</h3>
+            <p>Chi phí dễ tiếp cận, phù hợp cho sinh viên và người đi làm.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="feature-card feature-card-green">
+          <div class="feature-icon">
+            <img src="/images/features/video.svg" alt="Video đa dạng" />
+          </div>
+          <div>
+            <h3>Video đa dạng</h3>
+            <p>Bài học ngắn gọn, trực quan, xem lại bất cứ khi nào cần.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style type="text/css">
+  .section-block {
+    margin-top: 34px;
+  }
+
+  .section-title {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0;
+    color: #111827;
+    margin: 0 0 16px;
+    padding-left: 14px;
+    border-left: 5px solid #2563eb;
+    font-size: 24px;
+    text-wrap: balance;
+  }
+
+  .section-title-large {
+    font-size: 22px;
+  }
+
+  .course-more-detail {
+    display: none;
+  }
+
+  .course:hover .course-more-detail {
+    display: block;
+  }
+
+  .navbar-collapse {
+    flex-grow: 0;
+  }
+
+  .navbar-collapse-right {
+    margin-left: 750px;
+  }
+
+  .container-wrap {
+    width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 48px;
+  }
+
+  .row.top-section {
+    margin-top: 20px;
+    align-items: stretch;
+  }
+
+  .home-banner {
+    overflow: hidden;
+    background: #f5f5f5;
+    border-radius: 6px;
+  }
+
+  .home-banner img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  .home-banner-main {
+    height: 380px;
+  }
+
+  .home-banner-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .home-banner-sub {
+    height: calc((380px - 16px) / 2);
+  }
+
+  .course .image {
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .course {
+    margin: 0 10px;
+  }
+
+  .section-feature {
+    margin: 36px 0 34px;
+    padding: 28px;
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(236, 254, 255, 0.92), rgba(255, 247, 237, 0.88) 48%, rgba(240, 253, 244, 0.94)),
+      #ffffff;
+    border: 1px solid #e5e7eb;
+  }
+
+  .feature-heading {
+    margin-bottom: 18px;
+  }
+
+  .feature-heading span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .feature-heading h2 {
+    margin: 10px 0 0;
+    color: #111827;
+    font-size: 25px;
+    line-height: 1.28;
+  }
+
+  .feature-grid {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .section-feature .col-sm-4 {
+    display: flex;
+    padding: 12px;
+  }
+
+  .feature-card {
+    width: 100%;
+    min-height: 210px;
+    padding: 22px;
+    border-radius: 8px;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    background: #ffffff;
+    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.14);
+  }
+
+  .feature-card-cyan {
+    background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%);
+  }
+
+  .feature-card-amber {
+    background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+  }
+
+  .feature-card-green {
+    background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+  }
+
+  .feature-icon {
+    width: 78px;
+    height: 78px;
+  }
+
+  .feature-icon img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .feature-card h3 {
+    margin: 0 0 8px;
+    color: #111827;
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .feature-card p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 767px) {
+    .section-feature {
+      padding: 20px;
+    }
+
+    .feature-grid {
+      display: block;
+    }
+
+    .feature-card {
+      min-height: 0;
+    }
+  }
+
+  .footer-container {
+    padding-top: 30px;
+    padding-bottom: 20px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .footer-container {
+    font-size: 20px;
+    background: #171616;
+    color: white;
+  }
+
+</style>
+
+<script>
+  document.querySelectorAll("[data-course-carousel]").forEach((carousel) => {
+    const track = carousel.querySelector(".course-carousel-track");
+    const prev = carousel.querySelector("[data-course-carousel-prev]");
+    const next = carousel.querySelector("[data-course-carousel-next]");
+
+    if (!track || !prev || !next) {
+      return;
+    }
+
+    const getScrollAmount = () => Math.max(track.clientWidth * 0.82, 280);
+
+    const syncButtons = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 4;
+      next.disabled = track.scrollLeft >= maxScroll - 4;
+    };
+
+    prev.addEventListener("click", () => {
+      track.scrollBy({ left: -getScrollAmount(), behavior: "smooth" });
+    });
+
+    next.addEventListener("click", () => {
+      track.scrollBy({ left: getScrollAmount(), behavior: "smooth" });
+    });
+
+    track.addEventListener("scroll", syncButtons);
+    window.addEventListener("resize", syncButtons);
+    syncButtons();
+  });
+</script>

@@ -1,0 +1,71 @@
+</head>
+<header id="header" class="navbar navbar-static-top">
+  <div class="container-fluid">
+    <div class="col-sm-2">
+      <div id="header-logo" class="navbar-header">
+        <a href="/" class="navbar-brand">
+          <img src="/public/logo.png" alt="Managment" title="Managment" />
+        </a>
+      </div>
+    </div>
+    <div class="col-sm-7 search">
+      <form id="searchForm" action="/courses/search" class="toolbar-search" method="GET">
+        <input
+          id="searchInput"
+          class="form-control"
+          type="search"
+          placeholder="Tìm khóa học, giảng viên..."
+          aria-label="Search"
+          name="queryString"
+        />
+        <button id="searchButton" class="btn search-button" type="submit" aria-label="Search" title="Search">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+    <div class="col-sm-3 featured">
+      <div class="toolbar-actions">
+        <% if (!isAuthenticated) { %>
+        <a class="btn btn-sm btn-outline-light toolbar-btn" href="/users/login">
+          <i class="fas fa-sign-in-alt"></i>Login
+        </a>
+        <% }else{ %>
+        <div class="nav-item dropdown toolbar-user">
+          <a href="/users/account" data-toggle="dropdown" class="nav-link dropdown-toggle toolbar-btn">
+            <i class="fas fa-user-circle"></i> <%= user.name %>
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="/users/account">
+                <i class="fas fa-folder-open"></i> Account
+              </a>
+            </li>
+            <li>
+              <a href="/my-courses">
+                <i class="fas fa-folder-open"></i> My Courses
+              </a>
+            </li>
+            <li>
+              <a href="/my-wish-list">
+                <i class="fa fa-heart" aria-hidden="true"></i> Wish list
+              </a>
+            </li>
+          </ul>
+        </div>
+        <a class="btn btn-sm btn-outline-light toolbar-btn" href="/users/logout">
+          <i class="fas fa-sign-out-alt"></i>Logout
+        </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</header>
+<script>
+  $("#searchForm").on("submit", function (event) {
+    const val = $("#searchInput").val().trim();
+    if (val === "") {
+      event.preventDefault();
+      window.location.replace("/");
+    }
+  });
+</script>

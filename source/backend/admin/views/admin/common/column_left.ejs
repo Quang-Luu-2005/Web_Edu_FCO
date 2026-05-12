@@ -1,0 +1,31 @@
+<nav id="column-left">
+    <ul id="menu">
+        <% if (user.role != "user") { %>
+        <li>
+            <a href="/admin/account/edit">Account</a>
+        </li>
+        <li>
+            <a href="/admin/course/coursesList">Courses</a>
+        </li>
+        <li>
+            <a href="/admin/student/studentsList">Students</a>
+        </li>
+        <li>
+            <a href="/admin/lecturer/lecturersList">Lecturers</a>
+        </li>
+        <li>
+            <a href="/admin/course/categoryList">Categories</a>
+        </li>
+        <li>
+            <a href="/admin/home/banners">Home Banners</a>
+        </li>
+        <% } else { %>
+        <li>
+            <a href="/admin/account/edit">Account</a>
+        </li>
+        <li>
+            <a href="/admin/course/coursesList">Courses</a>
+        </li>
+        <% } %>
+    </ul>
+</nav>

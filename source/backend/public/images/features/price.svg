@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title">
+  <title id="title">Affordable badge</title>
+  <rect width="160" height="160" rx="34" fill="#fff7ed"/>
+  <circle cx="64" cy="64" r="26" fill="#f59e0b"/>
+  <circle cx="100" cy="96" r="30" fill="#fde68a"/>
+  <path d="M54 64c0-8 6-14 14-14 7 0 12 3 15 9l-11 3c-1-2-3-3-5-3-3 0-5 2-5 4 0 7 21 4 21 20 0 8-6 14-14 14-8 0-13-4-16-10l10-4c2 3 4 5 6 5 3 0 5-2 5-4 0-7-21-4-21-20z" fill="#fff"/>
+  <path d="M94 79h14l-9 17h10v10H82l11-19h-9V77l10-2z" fill="#1f2937"/>
+  <path d="M22 118c18-8 32-13 46-13" stroke="#fb923c" stroke-width="10" stroke-linecap="round" fill="none"/>
+</svg>
