@@ -33,17 +33,6 @@ const cloudinary = require("cloudinary").v2;
 const Course = require("../models/Course.model");
 
 const APP_URL = process.env.APP_URL || "http://localhost:8000";
-const GOOGLE_MAIL_CLIENT_ID = process.env.GOOGLE_MAIL_CLIENT_ID || "520933105747-lvrafi3nq92ia2hv9mkgrdh706sl0ei2.apps.googleusercontent.com";
-const GOOGLE_MAIL_CLIENT_SECRET = process.env.GOOGLE_MAIL_CLIENT_SECRET || "NAjZvQbzYipjQYBxnaHPHSr9";
-const GOOGLE_MAIL_REFRESH_TOKEN = process.env.GOOGLE_MAIL_REFRESH_TOKEN || "1//04pUalhF17quECgYIARAAGAQSNwF-L9IrtIab8o_JgFJXXg0bnTvA6q_3ODGZ2CxpgzTw2uMFQysLTh_YgX5PY4TWCszQ3ZVENzQ";
-const GOOGLE_MAIL_REDIRECT_URI = process.env.GOOGLE_MAIL_REDIRECT_URI || "https://developers.google.com/oauthplayground";
-const GOOGLE_MAIL_USER = process.env.GOOGLE_MAIL_USER || "minhthevo123@gmail.com";
-const MAIL_FROM = process.env.MAIL_FROM || process.env.SMTP_USER || GOOGLE_MAIL_USER;
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASS = process.env.SMTP_PASS || "";
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
@@ -79,74 +68,44 @@ const renderRegister = (req, res, extra = {}) => {
   });
 };
 
-const createMailTransporter = async () => {
-  if (SMTP_USER && SMTP_PASS) {
-    return nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_SECURE,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    });
-  }
-
-  if (!GOOGLE_MAIL_CLIENT_ID || !GOOGLE_MAIL_CLIENT_SECRET || !GOOGLE_MAIL_REFRESH_TOKEN || !GOOGLE_MAIL_USER) {
-    throw new Error("Mail sender is not configured");
-  }
-
-  const oAuth2Client = new OAuth2(
-    GOOGLE_MAIL_CLIENT_ID,
-    GOOGLE_MAIL_CLIENT_SECRET,
-    GOOGLE_MAIL_REDIRECT_URI
-  );
-
-  oAuth2Client.setCredentials({
-    refresh_token: GOOGLE_MAIL_REFRESH_TOKEN,
-  });
-
-  const accessTokenResponse = await oAuth2Client.getAccessToken();
-  const accessToken = accessTokenResponse && accessTokenResponse.token
-    ? accessTokenResponse.token
-    : accessTokenResponse;
-
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: GOOGLE_MAIL_USER,
-      clientId: GOOGLE_MAIL_CLIENT_ID,
-      clientSecret: GOOGLE_MAIL_CLIENT_SECRET,
-      refreshToken: GOOGLE_MAIL_REFRESH_TOKEN,
-      accessToken: accessToken,
-    },
-  });
-};
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendGoogleLoginMail = async (email, token) => {
   const confirmUrl = `${APP_URL}/users/auth/google/confirm/${token}`;
-  const transporter = await createMailTransporter();
-
-  return transporter.sendMail({
-    from: `WEBCTT2 <${MAIL_FROM}>`,
+  const { error } = await resend.emails.send({
+    from: 'WEBCTT2 <onboarding@resend.dev>',
     to: email,
-    subject: "Confirm Google login",
-    text: `Confirm Google login: ${confirmUrl}`,
-    html: `<p>Click link below to confirm login:</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`,
+    subject: 'Xác nhận đăng nhập Google - WEBCTT2',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
+        <h2 style="color:#111827;margin:0 0 8px">Xác nhận đăng nhập Google</h2>
+        <p style="color:#6b7280;margin:0 0 24px">Click nút bên dưới để xác nhận đăng nhập:</p>
+        <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">Xác nhận đăng nhập</a>
+        <p style="color:#9ca3af;font-size:12px;margin:16px 0 0">Link có hiệu lực trong 15 phút.</p>
+      </div>
+    `,
   });
+  if (error) throw new Error(error.message);
 };
 
 const sendOtpMail = async (email, otpNumber) => {
-  const transporter = await createMailTransporter();
-
-  return transporter.sendMail({
-    from: `WEBCTT2 <${MAIL_FROM}>`,
+  const { error } = await resend.emails.send({
+    from: 'WEBCTT2 <onboarding@resend.dev>',
     to: email,
-    subject: "Authenticte message",
-    text: "Hello form WEBCTT2",
-    html: `<h2>This is your OTP number: <b>${otpNumber}</b></h2>`,
+    subject: 'Mã xác nhận tài khoản WEBCTT2',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
+        <h2 style="color:#111827;margin:0 0 8px">Xác nhận tài khoản</h2>
+        <p style="color:#6b7280;margin:0 0 24px">Nhập mã OTP bên dưới để hoàn tất đăng ký. Mã có hiệu lực trong <strong>2 phút</strong>.</p>
+        <div style="font-size:40px;font-weight:700;letter-spacing:12px;color:#2563eb;text-align:center;padding:20px;background:#eff6ff;border-radius:8px">
+          ${otpNumber}
+        </div>
+        <p style="color:#9ca3af;font-size:12px;margin:16px 0 0">Không chia sẻ mã này cho ai. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
+      </div>
+    `,
   });
+  if (error) throw new Error(error.message);
 };
 
 //GET LOGIN
@@ -295,11 +254,12 @@ Router.post("/register", async function (req, res) {
 
     const newUser = new LocalUser();
     newUser.username = username.trim();
-    newUser.name = username.trim(); // dùng username làm name tạm, user cập nhật sau
+    newUser.name = username.trim();
     newUser.email = email;
     newUser.password = await bcrypt.hash(password, 10);
     newUser.gender = gender || 'other';
     newUser.otpNumber = otpNumber;
+    newUser.otpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 phút
     await newUser.save();
 
     req.session.currentEmail = email;
@@ -323,25 +283,48 @@ Router.post("/otp", async (req, res) => {
   const localUser = await LocalUser.findOne({
     email: req.session.currentEmail,
   });
+
+  if (!localUser) {
+    return res.render("./user/otp", {
+      errors: [{ msg: "Phiên hết hạn, vui lòng đăng ký lại" }],
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+    });
+  }
+
+  // Kiểm tra timeout 2 phút
+  if (!localUser.otpExpires || new Date() > localUser.otpExpires) {
+    // Xóa user chưa xác thực để cho phép đăng ký lại
+    await LocalUser.deleteOne({ _id: localUser._id });
+    req.session.currentEmail = undefined;
+    return res.render("./user/otp", {
+      errors: [{ msg: "Mã OTP đã hết hạn (2 phút). Vui lòng đăng ký lại." }],
+      expired: true,
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+    });
+  }
+
   if (otpNumber == localUser.otpNumber) {
-    LocalUser.findOne({
-      email: req.session.currentEmail,
-    }).then((user) => {
-      user.isAuth = true;
-      user.save();
-      req.flash("success_msg", "Xác nhận thành công! Đang đăng nhập...");
-      // Tự động đăng nhập luôn sau OTP
-      req.logIn(user, (err) => {
-        if (err) {
-          req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
-          return res.redirect("/users/login");
-        }
-        return res.redirect("/");
-      });
+    localUser.isAuth = true;
+    localUser.otpNumber = undefined;
+    localUser.otpExpires = undefined;
+    await localUser.save();
+
+    req.session.currentEmail = undefined;
+
+    req.logIn(localUser, (err) => {
+      if (err) {
+        req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
+        return res.redirect("/users/login");
+      }
+      req.flash("success_msg", "Chào mừng đến với WEBCTT2!");
+      return res.redirect("/");
     });
   } else {
     res.render("./user/otp", {
       errors: [{ msg: "Mã OTP không đúng, vui lòng thử lại" }],
+      otpExpires: localUser.otpExpires,
       isAuthenticated: req.isAuthenticated(),
       user: req.user
     });

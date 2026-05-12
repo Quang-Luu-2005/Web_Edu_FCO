@@ -47,6 +47,9 @@ const LocalUserSchema = mongoose.Schema({
     otpNumber: {
         type: String
     },
+    otpExpires: {
+        type: Date
+    },
     googleLoginToken: {
         type: String
     },

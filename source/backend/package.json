@@ -30,6 +30,7 @@
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "paypal-rest-sdk": "^1.8.1",
+    "resend": "^6.12.3",
     "video.js": "^7.10.2"
   }
 }
