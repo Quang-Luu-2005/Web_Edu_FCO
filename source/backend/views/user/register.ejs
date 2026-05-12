@@ -1,38 +1,259 @@
-<div class="row mt-5">
-    <div class="col-md-6 m-auto">
-        <div class="card card-body">
-            <h1 class="text-center mb-3">Register</h1>
-            <%- include('../partials/messages') %>
-            <form action="/users/register" method="POST">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="name" id="name" name="name" class="form-control" placeholder="Enter Name"/>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter Email"/>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control"
-                        placeholder="Create Password" autocomplete="new-password"/>
-                </div>
-                <div class="form-group">
-                    <label for="password2">Confirm Password</label>
-                    <input type="password" id="password2" name="password2" class="form-control"
-                        placeholder="Confirm Password" autocomplete="new-password"/>
-                </div>
-                <div class="form-group">
-                    <input type="radio" name="gender" id="female" value="female" checked="checked">
-                    <label for="female">Female</label>
-                    <input type="radio" name="gender" id="male" value="male">
-                    <label for="male">Male</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">
-                    Register
-                </button>
-            </form>
-            <p class="lead mt-4">Have An Account? <a href="/users/login">Login</a></p>
+<style>
+  .auth-page {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(15, 23, 42, 0.10);
+    padding: 40px 40px 32px;
+  }
+
+  .auth-title {
+    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+    text-align: center;
+    margin: 0 0 28px;
+  }
+
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .auth-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .auth-field input {
+    width: 100%;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 38px 0 14px; /* padding-right luôn nhường chỗ icon */
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #111827;
+    background: #f9fafb;
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+
+  .auth-field input:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  /* Chặn browser autofill đổi màu nền */
+  .auth-field input:-webkit-autofill,
+  .auth-field input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #f9fafb inset;
+    box-shadow: 0 0 0 1000px #f9fafb inset;
+  }
+
+  /* Input wrap để đặt icon bên trong */
+  .auth-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* Không override padding ở đây nữa — đã set ở .auth-field input */
+  .auth-input-wrap input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .auth-field-icon {
+    position: absolute;
+    right: 12px;
+    font-size: 15px;
+    pointer-events: none;
+  }
+
+  .auth-field-icon.valid   { color: #16a34a; }
+  .auth-field-icon.invalid { color: #dc2626; }
+
+  .auth-field-hint {
+    font-size: 12px;
+    height: 16px; /* fixed height thay vì min-height để không tạo khoảng trắng */
+    display: block;
+    margin-top: 3px;
+    user-select: none;
+    pointer-events: none; /* không cho click vào hint */
+  }
+
+  .auth-field-hint.valid   { color: #16a34a; }
+  .auth-field-hint.invalid { color: #dc2626; }
+
+  .auth-submit {
+    width: 100%;
+    height: 46px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .auth-submit:hover { background: #1d4ed8; }
+
+  .auth-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .auth-footer a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .auth-footer a:hover { text-decoration: underline; }
+</style>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <h1 class="auth-title">Đăng ký</h1>
+
+    <%- include('../partials/messages') %>
+
+    <form action="/users/register" method="POST" autocomplete="off">
+      <div class="auth-field" id="field-username">
+        <label for="username">Tên đăng nhập</label>
+        <div class="auth-input-wrap">
+          <input type="text" id="username" name="username"
+            placeholder="Nhập tên đăng nhập"
+            value="<%= typeof username !== 'undefined' ? username : '' %>" />
+          <span class="auth-field-icon" id="icon-username"></span>
         </div>
-    </div>
+        <span class="auth-field-hint" id="hint-username"></span>
+      </div>
+
+      <div class="auth-field" id="field-email">
+        <label for="email">Email <span style="font-weight:400;color:#6b7280">(dùng để xác nhận tài khoản)</span></label>
+        <div class="auth-input-wrap">
+          <input type="email" id="email" name="email"
+            placeholder="Nhập email"
+            value="<%= typeof email !== 'undefined' ? email : '' %>" />
+          <span class="auth-field-icon" id="icon-email"></span>
+        </div>
+        <span class="auth-field-hint" id="hint-email"></span>
+      </div>
+
+      <div class="auth-field" id="field-password">
+        <label for="password">Mật khẩu</label>
+        <div class="auth-input-wrap">
+          <input type="password" id="password" name="password"
+            placeholder="Tạo mật khẩu (ít nhất 6 ký tự)" autocomplete="new-password" />
+          <span class="auth-field-icon" id="icon-password"></span>
+        </div>
+        <span class="auth-field-hint" id="hint-password"></span>
+      </div>
+
+      <div class="auth-field" id="field-password2">
+        <label for="password2">Xác nhận mật khẩu</label>
+        <div class="auth-input-wrap">
+          <input type="password" id="password2" name="password2"
+            placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+          <span class="auth-field-icon" id="icon-password2"></span>
+        </div>
+        <span class="auth-field-hint" id="hint-password2"></span>
+      </div>
+
+      <input type="hidden" name="gender" value="other" />
+
+      <button type="submit" class="auth-submit">Đăng ký</button>
+    </form>
+
+    <p class="auth-footer">Đã có tài khoản? <a href="/users/login">Đăng nhập</a></p>
+  </div>
 </div>
+
+<script>
+  function setFieldState(inputId, iconId, hintId, isValid, msg) {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    const hint  = document.getElementById(hintId);
+    if (!input || !icon || !hint) return;
+
+    icon.className  = 'auth-field-icon ' + (isValid ? 'valid' : 'invalid');
+    icon.innerHTML  = isValid
+      ? '<i class="fas fa-check-circle"></i>'
+      : '<i class="fas fa-times-circle"></i>';
+    hint.className  = 'auth-field-hint ' + (isValid ? 'valid' : 'invalid');
+    hint.textContent = msg;
+
+    input.style.borderColor = isValid ? '#16a34a' : '#dc2626';
+  }
+
+  function clearField(inputId, iconId, hintId) {
+    const input = document.getElementById(inputId);
+    const icon  = document.getElementById(iconId);
+    const hint  = document.getElementById(hintId);
+    if (icon)  { icon.className = 'auth-field-icon'; icon.innerHTML = ''; }
+    if (hint)  { hint.className = 'auth-field-hint'; hint.textContent = ''; }
+    if (input) { input.style.borderColor = ''; }
+  }
+
+  // Username
+  document.getElementById('username').addEventListener('input', function() {
+    const v = this.value.trim();
+    if (!v) return clearField('username','icon-username','hint-username');
+    if (v.length < 4)
+      return setFieldState('username','icon-username','hint-username', false, 'Ít nhất 4 ký tự');
+    if (!/^[a-zA-Z0-9_]+$/.test(v))
+      return setFieldState('username','icon-username','hint-username', false, 'Chỉ dùng chữ, số và dấu _');
+    setFieldState('username','icon-username','hint-username', true, 'Hợp lệ');
+  });
+
+  // Email
+  document.getElementById('email').addEventListener('input', function() {
+    const v = this.value.trim();
+    if (!v) return clearField('email','icon-email','hint-email');
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    setFieldState('email','icon-email','hint-email', ok, ok ? 'Hợp lệ' : 'Email không đúng định dạng');
+  });
+
+  // Password
+  document.getElementById('password').addEventListener('input', function() {
+    const v = this.value;
+    if (!v) return clearField('password','icon-password','hint-password');
+    const ok = v.length >= 6;
+    setFieldState('password','icon-password','hint-password', ok, ok ? 'Hợp lệ' : 'Ít nhất 6 ký tự');
+    // Recheck confirm nếu đã nhập
+    const p2 = document.getElementById('password2').value;
+    if (p2) document.getElementById('password2').dispatchEvent(new Event('input'));
+  });
+
+  // Confirm password
+  document.getElementById('password2').addEventListener('input', function() {
+    const v  = this.value;
+    const p1 = document.getElementById('password').value;
+    if (!v) return clearField('password2','icon-password2','hint-password2');
+    const ok = v === p1;
+    setFieldState('password2','icon-password2','hint-password2', ok, ok ? 'Khớp' : 'Mật khẩu không khớp');
+  });
+</script>

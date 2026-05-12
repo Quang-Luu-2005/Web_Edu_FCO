@@ -1,29 +1,111 @@
-<% if(typeof errors != 'undefined'){ errors.forEach(function(error) { %>
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <p><%= error.msg %></p>
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
+<style>
+  .flash-wrap {
+    width: 80%;
+    margin: 16px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .flash {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    animation: flashIn 0.2s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .flash.hiding {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+  }
+
+  @keyframes flashIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .flash-warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+  .flash-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+  .flash-error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+
+  .flash-icon { flex: 0 0 auto; font-size: 16px; margin-top: 1px; }
+  .flash-body { flex: 1; min-width: 0; }
+
+  .flash-close {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0.45;
+    color: inherit;
+    transition: opacity 0.15s;
+  }
+  .flash-close:hover { opacity: 1; }
+</style>
+
+<%
+  // req.flash() trả về array — lấy phần tử đầu tiên nếu có
+  const _str = (v) => {
+    if (Array.isArray(v)) return (v[0] || '').toString().trim();
+    return (v || '').toString().trim();
+  };
+
+  const _flashItems = [];
+
+  if (typeof errors !== 'undefined' && Array.isArray(errors)) {
+    errors.forEach(function(e) {
+      if (e && e.msg && e.msg.toString().trim()) {
+        _flashItems.push({ type: 'warning', icon: 'fas fa-exclamation-circle', text: e.msg });
+      }
+    });
+  }
+  if (_str(typeof success_msg !== 'undefined' ? success_msg : '')) {
+    _flashItems.push({ type: 'success', icon: 'fas fa-check-circle', text: _str(success_msg) });
+  }
+  if (_str(typeof error_msg !== 'undefined' ? error_msg : '')) {
+    _flashItems.push({ type: 'error', icon: 'fas fa-times-circle', text: _str(error_msg) });
+  }
+  if (_str(typeof error !== 'undefined' ? error : '')) {
+    _flashItems.push({ type: 'error', icon: 'fas fa-times-circle', text: _str(error) });
+  }
+%>
+
+<% if (_flashItems.length > 0) { %>
+<div class="flash-wrap" id="flash-wrap">
+  <% _flashItems.forEach(function(item, idx) { %>
+  <div class="flash flash-<%= item.type %>" id="flash-<%= idx %>" role="alert">
+    <span class="flash-icon"><i class="<%= item.icon %>"></i></span>
+    <span class="flash-body"><%= item.text %></span>
+    <button class="flash-close" onclick="dismissFlash('flash-<%= idx %>')" aria-label="Đóng">&times;</button>
+  </div>
+  <% }); %>
 </div>
-<% }); } %> <% if(success_msg != ''){ %>
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <%= success_msg %>
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-<% } %> <% if(error_msg != ''){ %>
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <%= error_msg %>
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-<% } %> <% if(error != ''){ %>
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <%= error %>
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
+
+<script>
+  function dismissFlash(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('hiding');
+    setTimeout(() => el.remove(), 400);
+  }
+
+  // Auto-dismiss sau 2s
+  document.querySelectorAll('#flash-wrap .flash').forEach(function(el) {
+    setTimeout(function() {
+      el.classList.add('hiding');
+      setTimeout(function() { el.remove(); }, 400);
+    }, 2000);
+  });
+</script>
 <% } %>

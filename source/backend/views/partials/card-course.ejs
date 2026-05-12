@@ -1,29 +1,87 @@
 <style>
+  /* ── Carousel wrapper ── */
   .course-carousel {
     position: relative;
     margin: 0 0 8px;
-    padding: 18px 56px;
+    padding: 18px 16px 14px;
     border-radius: 22px;
     background:
-      linear-gradient(110deg, rgba(59, 130, 246, 0.96) 0%, rgba(99, 102, 241, 0.68) 46%, rgba(244, 114, 182, 0.26) 100%),
+      linear-gradient(110deg, rgba(59,130,246,0.96) 0%, rgba(99,102,241,0.68) 46%, rgba(244,114,182,0.26) 100%),
       #f8fbff;
+    /* clip card bị cắt — card không vừa sẽ bị ẩn, bấm nút mới thấy */
     overflow: hidden;
   }
 
+  /* ── Track ── */
   .course-carousel-track {
     display: flex;
-    gap: 16px;
+    gap: 24px;
     overflow-x: auto;
     scroll-behavior: smooth;
     scroll-snap-type: x mandatory;
+    padding: 4px 2px 12px;
     scrollbar-width: none;
-    padding: 0 2px 2px;
   }
+  .course-carousel-track::-webkit-scrollbar { display: none; }
 
-  .course-carousel-track::-webkit-scrollbar {
-    display: none;
+  /* ── Scrollbar tùy chỉnh ── */
+  .course-carousel-scrollbar {
+    position: relative;
+    height: 5px;
+    margin: 2px 4px 2px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.22);
+    cursor: pointer;
   }
+  .course-carousel-scrollbar-thumb {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    min-width: 40px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.7);
+    cursor: grab;
+    transition: background 0.15s;
+  }
+  .course-carousel-scrollbar:hover .course-carousel-scrollbar-thumb { background: #fff; }
+  .course-carousel-scrollbar-thumb:active { cursor: grabbing; }
 
+  /* ── Nút prev / next ── */
+  .course-carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-60%); /* lên trên scrollbar một chút */
+    z-index: 3;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1d4ed8;
+    box-shadow: 0 8px 22px rgba(15,23,42,0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    /* Mờ mặc định */
+    opacity: 0.35;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .course-carousel-btn:hover {
+    opacity: 1;
+    box-shadow: 0 12px 28px rgba(15,23,42,0.28);
+    outline: none;
+  }
+  .course-carousel-btn:focus { outline: none; }
+  .course-carousel-btn:disabled {
+    opacity: 0.12;
+    cursor: default;
+    pointer-events: none;
+  }
+  .course-carousel-prev { left: 10px; }
+  .course-carousel-next { right: 10px; }
+
+  /* ── Card ── */
   .course-node-link {
     display: block;
     flex: 0 0 clamp(220px, 22vw, 270px);
@@ -32,38 +90,32 @@
     text-decoration: none;
     scroll-snap-align: start;
   }
-
   .course-node {
     height: 100%;
     min-height: 294px;
     padding: 8px;
-    border: 1px solid rgba(226, 232, 240, 0.92);
+    border: 1px solid rgba(226,232,240,0.92);
     border-radius: 15px;
     background: #ffffff;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    box-shadow: 0 14px 34px rgba(15,23,42,0.14);
     transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
-
   .course-node-media {
     position: relative;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16/9;
     overflow: hidden;
     border-radius: 10px;
     background: #0f172a;
   }
-
   .course-node-media img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     display: block;
     object-fit: cover;
     transition: transform 0.35s ease;
   }
-
   .course-node-price {
     position: absolute;
-    left: 10px;
-    bottom: 10px;
+    left: 10px; bottom: 10px;
     display: inline-flex;
     align-items: center;
     min-height: 30px;
@@ -77,14 +129,12 @@
     transform: translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
-
   .course-node-body {
     min-height: 142px;
     padding: 12px 8px 8px;
     display: flex;
     flex-direction: column;
   }
-
   .course-node-provider {
     display: inline-flex;
     align-items: center;
@@ -94,10 +144,8 @@
     font-size: 13px;
     line-height: 1.3;
   }
-
   .course-node-provider i {
-    width: 16px;
-    height: 16px;
+    width: 16px; height: 16px;
     border: 1px solid #cbd5e1;
     border-radius: 4px;
     color: #3b82f6;
@@ -106,7 +154,6 @@
     align-items: center;
     justify-content: center;
   }
-
   .course-node-badge {
     display: inline-flex;
     align-items: center;
@@ -118,11 +165,7 @@
     font-size: 12px;
     font-weight: 700;
   }
-
-  .course-node-provider-name {
-    color: #64748b;
-  }
-
+  .course-node-provider-name { color: #64748b; }
   .course-node-title {
     margin: 12px 0 0;
     color: #111827;
@@ -130,14 +173,12 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 1.5;
-    letter-spacing: 0;
     display: -webkit-box;
     overflow: hidden;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     text-wrap: balance;
   }
-
   .course-node-meta {
     margin-top: auto;
     display: flex;
@@ -148,89 +189,31 @@
     font-size: 13px;
     line-height: 1.4;
   }
-
-  .course-node-topic {
-    color: #334155;
-    font-weight: 600;
-  }
-
+  .course-node-topic { color: #334155; font-weight: 600; }
   .course-node-views {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     color: #64748b;
+    font-size: 15px;
+    font-weight: 700;
   }
-
-  .course-node-link:hover {
-    color: inherit;
-    text-decoration: none;
+  .course-node-views i {
+    font-size: 16px;
   }
-
+  .course-node-link:hover { color: inherit; text-decoration: none; }
   .course-node-link:hover .course-node {
     transform: translateY(-3px);
-    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.2);
+    box-shadow: 0 20px 44px rgba(15,23,42,0.2);
   }
-
-  .course-node-link:hover .course-node-media img {
-    transform: scale(1.04);
-  }
-
-  .course-node-link:hover .course-node-price {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .course-carousel-btn {
-    position: absolute;
-    top: 50%;
-    z-index: 3;
-    width: 40px;
-    height: 40px;
-    border: 0;
-    border-radius: 999px;
-    background: #ffffff;
-    color: #1d4ed8;
-    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transform: translateY(-50%);
-  }
-
-  .course-carousel-btn:hover,
-  .course-carousel-btn:focus {
-    color: #111827;
-    outline: none;
-  }
-
-  .course-carousel-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-
-  .course-carousel-prev {
-    left: 12px;
-  }
-
-  .course-carousel-next {
-    right: 12px;
-  }
+  .course-node-link:hover .course-node-media img { transform: scale(1.04); }
+  .course-node-link:hover .course-node-price { opacity: 1; transform: translateY(0); }
 
   @media (max-width: 767px) {
-    .course-carousel {
-      padding: 14px 46px;
-      border-radius: 18px;
-    }
-
-    .course-node-link {
-      flex-basis: 78vw;
-    }
-
-    .course-node-price {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .course-carousel { padding: 14px 14px 14px; border-radius: 18px; }
+    .course-carousel-btn { display: none; }
+    .course-node-link { flex-basis: 78vw; }
+    .course-node-price { opacity: 1; transform: translateY(0); }
   }
 </style>
 
@@ -256,12 +239,17 @@
           <h5 class="course-node-title"><%= course.name %></h5>
           <div class="course-node-meta">
             <span class="course-node-topic"><%= course.idCourseTopic && course.idCourseTopic.name ? course.idCourseTopic.name : 'Khóa học' %></span>
-            <span class="course-node-views"><i class="fas fa-eye"></i> <%= course.numberOfView || 0 %> lượt xem</span>
+            <span class="course-node-views"><i class="fas fa-eye"></i> <%= course.numberOfView || 0 %></span>
           </div>
         </div>
       </article>
     </a>
     <% }); %>
+  </div>
+
+  <!-- Scrollbar tùy chỉnh -->
+  <div class="course-carousel-scrollbar" data-course-carousel-scrollbar>
+    <div class="course-carousel-scrollbar-thumb" data-course-carousel-thumb></div>
   </div>
 
   <button type="button" class="course-carousel-btn course-carousel-next" data-course-carousel-next aria-label="Trượt qua phải">

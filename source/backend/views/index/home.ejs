@@ -294,32 +294,74 @@
 
 <script>
   document.querySelectorAll("[data-course-carousel]").forEach((carousel) => {
-    const track = carousel.querySelector(".course-carousel-track");
-    const prev = carousel.querySelector("[data-course-carousel-prev]");
-    const next = carousel.querySelector("[data-course-carousel-next]");
+    const track  = carousel.querySelector(".course-carousel-track");
+    const prev   = carousel.querySelector("[data-course-carousel-prev]");
+    const next   = carousel.querySelector("[data-course-carousel-next]");
+    const sbWrap = carousel.querySelector("[data-course-carousel-scrollbar]");
+    const thumb  = carousel.querySelector("[data-course-carousel-thumb]");
 
-    if (!track || !prev || !next) {
-      return;
+    if (!track) return;
+
+    /* ── Scrollbar tùy chỉnh ── */
+    const updateThumb = () => {
+      if (!sbWrap || !thumb) return;
+      const ratio      = track.clientWidth / track.scrollWidth;
+      const thumbW     = Math.max(ratio * sbWrap.clientWidth, 40);
+      const maxLeft    = sbWrap.clientWidth - thumbW;
+      const scrollRatio = track.scrollLeft / (track.scrollWidth - track.clientWidth || 1);
+      thumb.style.width = thumbW + "px";
+      thumb.style.left  = scrollRatio * maxLeft + "px";
+    };
+
+    /* Kéo thumb */
+    if (thumb && sbWrap) {
+      let dragging = false, startX = 0, startLeft = 0;
+      thumb.addEventListener("mousedown", (e) => {
+        dragging = true; startX = e.clientX;
+        startLeft = parseFloat(thumb.style.left) || 0;
+        e.preventDefault();
+      });
+      document.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        const maxLeft = sbWrap.clientWidth - thumb.offsetWidth;
+        const newLeft = Math.min(Math.max(startLeft + e.clientX - startX, 0), maxLeft);
+        track.scrollLeft = (newLeft / (maxLeft || 1)) * (track.scrollWidth - track.clientWidth);
+      });
+      document.addEventListener("mouseup", () => { dragging = false; });
+
+      /* Click vào track scrollbar */
+      sbWrap.addEventListener("click", (e) => {
+        if (e.target === thumb) return;
+        const rect    = sbWrap.getBoundingClientRect();
+        const maxLeft = sbWrap.clientWidth - thumb.offsetWidth;
+        const ratio   = Math.min(Math.max((e.clientX - rect.left - thumb.offsetWidth / 2) / (maxLeft || 1), 0), 1);
+        track.scrollLeft = ratio * (track.scrollWidth - track.clientWidth);
+      });
     }
 
-    const getScrollAmount = () => Math.max(track.clientWidth * 0.82, 280);
+    /* ── Nút prev / next — scroll đúng số card vừa hiển thị ── */
+    const getPageWidth = () => {
+      const card = track.querySelector(".course-node-link");
+      if (!card) return track.clientWidth;
+      const cardW = card.offsetWidth + 24; // 24 = gap
+      const visibleCount = Math.floor(track.clientWidth / cardW);
+      return Math.max(visibleCount, 1) * cardW;
+    };
 
-    const syncButtons = () => {
+    const syncBtns = () => {
+      if (!prev || !next) return;
       const maxScroll = track.scrollWidth - track.clientWidth;
       prev.disabled = track.scrollLeft <= 4;
       next.disabled = track.scrollLeft >= maxScroll - 4;
     };
 
-    prev.addEventListener("click", () => {
-      track.scrollBy({ left: -getScrollAmount(), behavior: "smooth" });
-    });
+    if (prev) prev.addEventListener("click", () => track.scrollBy({ left: -getPageWidth(), behavior: "smooth" }));
+    if (next) next.addEventListener("click", () => track.scrollBy({ left:  getPageWidth(), behavior: "smooth" }));
 
-    next.addEventListener("click", () => {
-      track.scrollBy({ left: getScrollAmount(), behavior: "smooth" });
-    });
+    track.addEventListener("scroll", () => { syncBtns(); updateThumb(); });
+    window.addEventListener("resize", () => { syncBtns(); updateThumb(); });
 
-    track.addEventListener("scroll", syncButtons);
-    window.addEventListener("resize", syncButtons);
-    syncButtons();
+    syncBtns();
+    updateThumb();
   });
 </script>

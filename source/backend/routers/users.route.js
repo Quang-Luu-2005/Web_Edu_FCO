@@ -232,78 +232,89 @@ Router.get("/auth/google/confirm/:token", async (req, res, next) => {
 
 //POST register
 Router.post("/register", async function (req, res) {
-  const { name, email, password, password2, gender } = req.body;
+  const { username, email, password, password2, gender } = req.body;
 
   let errors = [];
 
-  if (!name || !email || !password || !password2) {
-    errors.push({
-      msg: "Please enter all fields",
+  if (!username || !username.trim()) errors.push({ msg: "Vui lòng nhập tên đăng nhập" });
+  if (!email    || !email.trim())    errors.push({ msg: "Vui lòng nhập email" });
+  if (!password)                     errors.push({ msg: "Vui lòng nhập mật khẩu" });
+  if (!password2)                    errors.push({ msg: "Vui lòng xác nhận mật khẩu" });
+
+  if (errors.length > 0) {
+    return res.render("./user/register", {
+      isAuthenticated: req.isAuthenticated(),
+      errors, user: req.user, username, email
     });
   }
 
-  if (password != password2) {
-    errors.push({
-      msg: "Passwords do not match",
-    });
+  if (username.trim().length < 4) {
+    errors.push({ msg: "Tên đăng nhập phải có ít nhất 4 ký tự" });
   }
 
-  if (password && password.length < 6) {
-    errors.push({
-      msg: "Password must be at least 6 characters",
-    });
+  if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
+    errors.push({ msg: "Tên đăng nhập chỉ được dùng chữ, số và dấu _" });
+  }
+
+  if (password !== password2) {
+    errors.push({ msg: "Mật khẩu không khớp" });
+  }
+
+  if (password.length < 6) {
+    errors.push({ msg: "Mật khẩu phải có ít nhất 6 ký tự" });
   }
 
   if (errors.length > 0) {
-    res.render("./user/register", {
+    return res.render("./user/register", {
       isAuthenticated: req.isAuthenticated(),
-      errors,
-      user: req.user
+      errors, user: req.user, username, email
     });
-  } else {
-    try {
-      const user = await isEmailInUse(email);
-      if (user) {
-        errors.push({
-          msg: "Account existed, Try another email",
-        });
-        return res.render("./user/register", {
-          isAuthenticated: req.isAuthenticated(),
-          errors,
-          user: req.user
-        });
-      }
+  }
 
-      const otpNumber = (
-        Math.floor(Math.random() * 900000) + 100000
-      ).toString();
-
-      await sendOtpMail(email, otpNumber);
-
-      const newUser = new LocalUser();
-      newUser.name = name;
-      newUser.email = email;
-      newUser.password = await bcrypt.hash(password, 10);
-      newUser.gender = gender;
-      newUser.otpNumber = otpNumber;
-      await newUser.save();
-
-      req.session.currentEmail = email;
-
-      return res.render("./user/otp", {
-        isAuthenticated: req.isAuthenticated(),
-        user: req.user
-      });
-    } catch (error) {
-      console.error("Register mail error:", error.message);
+  try {
+    const existEmail = await isEmailInUse(email);
+    if (existEmail) {
+      errors.push({ msg: "Email đã được sử dụng, vui lòng dùng email khác" });
       return res.render("./user/register", {
         isAuthenticated: req.isAuthenticated(),
-        errors: [{
-          msg: "Cannot send verification email. Check mail config."
-        }],
-        user: req.user
+        errors, user: req.user, username, email
       });
     }
+
+    const existUsername = await LocalUser.findOne({ username: username.trim() });
+    if (existUsername) {
+      errors.push({ msg: "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác" });
+      return res.render("./user/register", {
+        isAuthenticated: req.isAuthenticated(),
+        errors, user: req.user, username, email
+      });
+    }
+
+    const otpNumber = (Math.floor(Math.random() * 900000) + 100000).toString();
+    await sendOtpMail(email, otpNumber);
+
+    const newUser = new LocalUser();
+    newUser.username = username.trim();
+    newUser.name = username.trim(); // dùng username làm name tạm, user cập nhật sau
+    newUser.email = email;
+    newUser.password = await bcrypt.hash(password, 10);
+    newUser.gender = gender || 'other';
+    newUser.otpNumber = otpNumber;
+    await newUser.save();
+
+    req.session.currentEmail = email;
+
+    return res.render("./user/otp", {
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+    });
+  } catch (error) {
+    console.error("Register mail error:", error.message);
+    return res.render("./user/register", {
+      isAuthenticated: req.isAuthenticated(),
+      errors: [{ msg: "Không thể gửi email xác nhận. Kiểm tra cấu hình mail." }],
+      user: req.user
+    });
   }
 });
 
@@ -318,17 +329,19 @@ Router.post("/otp", async (req, res) => {
     }).then((user) => {
       user.isAuth = true;
       user.save();
-      req.flash("success_msg", "OTP correct! You can log in now");
-      res.redirect("/users/login");
+      req.flash("success_msg", "Xác nhận thành công! Đang đăng nhập...");
+      // Tự động đăng nhập luôn sau OTP
+      req.logIn(user, (err) => {
+        if (err) {
+          req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
+          return res.redirect("/users/login");
+        }
+        return res.redirect("/");
+      });
     });
   } else {
-    const errors = [
-      {
-        msg: "OTP not correct!!",
-      },
-    ];
     res.render("./user/otp", {
-      errors,
+      errors: [{ msg: "Mã OTP không đúng, vui lòng thử lại" }],
       isAuthenticated: req.isAuthenticated(),
       user: req.user
     });
@@ -385,55 +398,42 @@ Router.get("/account", ensureAuthenticated, (req, res) => {
 });
 
 Router.post("/updateInfor", ensureAuthenticated, async (req, res) => {
-  let { name, oldPassword, newPassword, confPassword, gender } = req.body;
+  let { name, oldPassword, newPassword, confPassword } = req.body;
   let errors = [];
 
   if (req.user.password != undefined) {
-    if (!name || !newPassword || !confPassword || !gender || !oldPassword) {
-      errors.push({
-        msg: "Please enter all fields",
-      });
-    } else {
-      if (newPassword != confPassword) {
-        errors.push({
-          msg: "Passwords do not match",
-        });
-      }
+    // Có password local — chỉ validate password nếu user muốn đổi
+    if (newPassword || confPassword || oldPassword) {
+      if (!oldPassword) errors.push({ msg: "Vui lòng nhập mật khẩu cũ" });
+      if (!newPassword) errors.push({ msg: "Vui lòng nhập mật khẩu mới" });
+      if (!confPassword) errors.push({ msg: "Vui lòng xác nhận mật khẩu mới" });
 
-      if (newPassword.length < 6) {
-        errors.push({
-          msg: "Password must be at least 6 characters",
-        });
+      if (newPassword && confPassword && newPassword !== confPassword) {
+        errors.push({ msg: "Mật khẩu mới không khớp" });
       }
-
-      await bcrypt.compare(oldPassword, req.user.password).then((isMatch) => {
-        if (!isMatch) {
-          errors.push({
-            msg: "Old password is uncorrect",
-          });
-        }
-      });
+      if (newPassword && newPassword.length < 6) {
+        errors.push({ msg: "Mật khẩu phải có ít nhất 6 ký tự" });
+      }
+      if (oldPassword && errors.length === 0) {
+        const isMatch = await bcrypt.compare(oldPassword, req.user.password);
+        if (!isMatch) errors.push({ msg: "Mật khẩu cũ không đúng" });
+      }
     }
-  } else if (!name) {
-    errors.push({
-      msg: "Please enter all fields",
-    });
   }
 
   if (errors.length > 0) {
-    await res.json(errors);
-  } else {
-    req.user.name = name;
-    req.user.gender = gender;
-
-    if (req.user.password != undefined) {
-      req.user.password = await bcrypt.hash(newPassword, 10);
-    }
-    req.user.save().then(() => {
-      req.flash("success_msg", "Your are updated");
-      res.json(true);
-    });
+    return res.json(errors);
   }
+
+  if (name && name.trim()) req.user.name = name.trim();
+  if (newPassword && req.user.password != undefined) {
+    req.user.password = await bcrypt.hash(newPassword, 10);
+  }
+
+  req.user.save().then(() => {
+    req.flash("success_msg", "Cập nhật thành công");
+    res.json(true);
+  });
 });
 
 //Upload avatar

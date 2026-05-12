@@ -27,6 +27,22 @@ const attachRole = (user, role) => {
     return user;
 };
 
+// Tìm user theo username (LocalUser) hoặc email (Admin/Lecturer)
+const findAccountByUsername = async (username) => {
+    // LocalUser: tìm theo username trước, fallback email
+    const localUser = await LocalUser.findOne({
+        $or: [{ username }, { email: username }]
+    });
+    if (localUser) return attachRole(localUser, 'user');
+
+    // Admin & Lecturer: vẫn dùng email
+    for (const source of [{ model: Admin, role: 'admin' }, { model: Lecturer, role: 'lecturer' }]) {
+        const user = await source.model.findOne({ email: username });
+        if (user) return attachRole(user, source.role);
+    }
+    return null;
+};
+
 const findAccountByEmail = async (email) => {
     for (const source of accountModels) {
         const user = await source.model.findOne({ email });
@@ -109,30 +125,30 @@ const findOrCreateGoogleUser = async (profile) => {
 };
 
 const buildLocalStrategy = () => new LocalStrategy({
-    usernameField: 'email'
-}, async (email, password, done) => {
+    usernameField: 'username'
+}, async (username, password, done) => {
     try {
-        const user = await findAccountByEmail(email);
+        const user = await findAccountByUsername(username);
         if (!user) {
-            return done(null, false, { message: 'That email is not registered' });
+            return done(null, false, { message: 'Tên đăng nhập không tồn tại' });
         }
 
         if (user.status === false) {
-            return done(null, false, { message: 'Your account has been blocked' });
+            return done(null, false, { message: 'Tài khoản đã bị khóa' });
         }
 
         if (!user.password) {
-            return done(null, false, { message: 'This account has no password login' });
+            return done(null, false, { message: 'Tài khoản này không có mật khẩu' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return done(null, false, { message: 'Password incorrect' });
+            return done(null, false, { message: 'Mật khẩu không đúng' });
         }
 
         if (user.role === 'user' && user.isAuth === false) {
             return done(null, false, {
-                message: 'Please fill correct OTP to login',
+                message: 'Vui lòng xác nhận OTP để đăng nhập',
                 needsOtp: true,
                 email: user.email
             });

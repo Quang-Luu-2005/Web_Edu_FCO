@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const LocalUserSchema = mongoose.Schema({
+    username: {
+        type: String,
+        default: ''
+    },
     email: {
         type: String,
         required: true
