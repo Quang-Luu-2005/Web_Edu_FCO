@@ -100,6 +100,14 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
 });
 
 Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
+    const { paymentId, PayerID } = req.query;
+
+    // Không có 2 param → bị bypass, từ chối
+    if (!paymentId || !PayerID) {
+        req.flash && req.flash('error_msg', 'Thiếu thông tin thanh toán');
+        return res.redirect('/');
+    }
+
     const course = await Course.findOne({
         name: req.params.nameCourse
     }).populate('idCourseTopic');
@@ -108,33 +116,69 @@ Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
         return renderNotFound(res);
     }
 
-    const purchasedCourses = safeArray(req.user.purchasedCourses);
-    req.user.purchasedCourses = purchasedCourses;
+    // Verify payment với PayPal
+    const execute_payment_json = {
+        payer_id: PayerID,
+        transactions: [{
+            amount: { currency: 'USD', total: String(course.tuition) }
+        }]
+    };
 
-    const alreadyPaid = purchasedCourses.some((item) => {
-        return item.idCourse && item.idCourse.toString() === course._id.toString();
+    paypal.payment.execute(paymentId, execute_payment_json, async (error, payment) => {
+        if (error) {
+            console.error('[PayPal execute error]', error.response || error.message);
+            req.flash && req.flash('error_msg', 'Xác thực thanh toán thất bại');
+            return res.redirect('/');
+        }
+
+        if (payment.state !== 'approved') {
+            req.flash && req.flash('error_msg', 'Thanh toán chưa được chấp thuận');
+            return res.redirect('/');
+        }
+
+        // OK → enroll
+        const purchasedCourses = safeArray(req.user.purchasedCourses);
+        req.user.purchasedCourses = purchasedCourses;
+
+        const alreadyPaid = purchasedCourses.some((item) =>
+            item.idCourse && item.idCourse.toString() === course._id.toString()
+        );
+
+        if (!alreadyPaid) {
+            await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
+
+            const courseTopicId    = course.idCourseTopic && course.idCourseTopic._id;
+            const courseCategoryId = course.idCourseTopic && course.idCourseTopic.idCourseCategory;
+
+            await Promise.all([
+                courseTopicId    ? CourseTopic.updateOne({ _id: courseTopicId },    { $inc: { numberOfSignUp: 1 } }) : null,
+                courseCategoryId ? CourseCategory.updateOne({ _id: courseCategoryId }, { $inc: { numberOfSignUp: 1 } }) : null
+            ].filter(Boolean));
+
+            purchasedCourses.push({
+                idCourse:      course._id,
+                learnedVideos: [],
+                enrolledAt:    new Date(),
+                lastLearnedAt: null
+            });
+
+            // Đồng bộ idCourses (legacy field)
+            const idCourses = safeArray(req.user.idCourses);
+            if (!idCourses.some(id => id.toString() === course._id.toString())) {
+                idCourses.push(course._id);
+                req.user.idCourses = idCourses;
+            }
+
+            await req.user.save();
+
+            // Refresh session
+            await new Promise((resolve, reject) => {
+                req.logIn(req.user, err => err ? reject(err) : resolve());
+            });
+        }
+
+        return res.redirect('/my-courses');
     });
-
-    if (!alreadyPaid) {
-        await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
-
-        const courseTopicId = course.idCourseTopic && course.idCourseTopic._id;
-        const courseCategoryId = course.idCourseTopic && course.idCourseTopic.idCourseCategory;
-
-        await Promise.all([
-            courseTopicId ? CourseTopic.updateOne({ _id: courseTopicId }, { $inc: { numberOfSignUp: 1 } }) : null,
-            courseCategoryId ? CourseCategory.updateOne({ _id: courseCategoryId }, { $inc: { numberOfSignUp: 1 } }) : null
-        ].filter(Boolean));
-
-        purchasedCourses.push({
-            idCourse: course._id,
-            learnedVideos: []
-        });
-
-        await req.user.save();
-    }
-
-    return res.redirect('/my-courses');
 });
 
 Router.get('/:nameCourse/fail', ensureAuthenticated, (req, res) => {

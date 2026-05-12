@@ -1,0 +1,197 @@
+<% const activePage = 'users'; const pageTitle = 'Người dùng'; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
+
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title">Người dùng</div>
+    <div class="adm-page-subtitle" id="user-count"><%= data.users.length %> người dùng</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="adm-card" style="margin-bottom:16px">
+  <div class="adm-filter-bar">
+    <div class="adm-field" style="max-width:200px">
+      <label>Lọc theo role</label>
+      <select id="role-filter">
+        <option value="">Tất cả</option>
+        <option value="user"     <%= data.roleFilter === 'user'     ? 'selected' : '' %>>Học viên</option>
+        <option value="lecturer" <%= data.roleFilter === 'lecturer' ? 'selected' : '' %>>Giảng viên</option>
+        <option value="admin"    <%= data.roleFilter === 'admin'    ? 'selected' : '' %>>Quản lý</option>
+      </select>
+    </div>
+    <div class="adm-field" style="max-width:280px">
+      <label>Tìm kiếm</label>
+      <input type="text" id="search-input" placeholder="Tên, email..." value="<%= data.search || '' %>" style="height:40px;padding:0 14px" />
+    </div>
+    <button class="adm-btn adm-btn-ghost" onclick="applyFilter()">
+      <i class="fas fa-filter"></i> Lọc
+    </button>
+    <button class="adm-btn adm-btn-ghost" onclick="clearFilter()">
+      <i class="fas fa-times"></i> Xoá lọc
+    </button>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="adm-card">
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Người dùng</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (data.users.length > 0) { %>
+          <% data.users.forEach(u => { %>
+          <tr id="row-<%= u._id %>">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <img class="adm-avatar" src="<%= u.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" alt="avatar" />
+                <div>
+                  <div style="font-weight:600;color:#f1f5f9"><%= u.name || u.username || '—' %></div>
+                  <div style="font-size:11px;color:#64748b"><%= u.username || '' %></div>
+                </div>
+              </div>
+            </td>
+            <td style="color:#94a3b8"><%= u.email %></td>
+            <td>
+              <select class="role-select adm-badge-select"
+                      data-id="<%= u._id %>"
+                      data-current="<%= u.role %>"
+                      onchange="changeRole(this)"
+                      style="background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600;cursor:pointer;outline:none;color:<%= u.role==='admin'?'#fbbf24':u.role==='lecturer'?'#93c5fd':'#86efac' %>">
+                <option value="user"     <%= u.role === 'user'     ? 'selected' : '' %> style="background:#1e293b;color:#86efac">⚽ Học viên</option>
+                <option value="lecturer" <%= u.role === 'lecturer' ? 'selected' : '' %> style="background:#1e293b;color:#93c5fd">🎓 Giảng viên</option>
+                <option value="admin"    <%= u.role === 'admin'    ? 'selected' : '' %> style="background:#1e293b;color:#fbbf24">⚙ Quản lý</option>
+              </select>
+            </td>
+            <td>
+              <span class="adm-badge <%= u.status ? 'adm-badge-green' : 'adm-badge-red' %>">
+                <%= u.status ? 'Hoạt động' : 'Bị khóa' %>
+              </span>
+            </td>
+            <td style="color:#64748b;font-size:12px">
+              <%= u.date ? new Date(u.date).toLocaleDateString('vi-VN') : '—' %>
+            </td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <input type="hidden" value="<%= u._id %>">
+                <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon"
+                        title="<%= u.status ? 'Khóa tài khoản' : 'Mở khóa' %>"
+                        onclick="toggleStatus('<%= u._id %>', <%= u.status %>)">
+                  <i class="fas fa-<%= u.status ? 'lock' : 'lock-open' %>"></i>
+                </button>
+                <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon"
+                        title="Xóa"
+                        onclick="deleteUser('<%= u._id %>')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        <% } else { %>
+          <tr><td colspan="6">
+            <div class="adm-empty"><i class="fas fa-users"></i><p>Không có người dùng nào</p></div>
+          </td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Filter ──
+function applyFilter() {
+  const role   = document.getElementById('role-filter').value;
+  const search = document.getElementById('search-input').value.trim();
+  const params = new URLSearchParams();
+  if (role)   params.set('role', role);
+  if (search) params.set('search', search);
+  location.href = '/admin/users?' + params.toString();
+}
+function clearFilter() { location.href = '/admin/users'; }
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyFilter();
+});
+
+// ── Đổi role ──
+async function changeRole(select) {
+  const id      = select.dataset.id;
+  const newRole = select.value;
+  const oldRole = select.dataset.current;
+  if (newRole === oldRole) return;
+
+  admConfirm(
+    `Đổi role thành "${newRole === 'admin' ? 'Quản lý' : newRole === 'lecturer' ? 'Giảng viên' : 'Học viên'}"?`,
+    async () => {
+      const res  = await fetch('/admin/users/' + id + '/role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      const json = await res.json();
+      if (json.ok) {
+        select.dataset.current = newRole;
+        const colorMap = { admin: '#fbbf24', lecturer: '#93c5fd', user: '#86efac' };
+        select.style.color = colorMap[newRole] || '#f1f5f9';
+        admToast('✓ Đã cập nhật role', 'success');
+      } else {
+        select.value = oldRole; // revert
+        admToast('✗ ' + (json.msg || 'Lỗi'), 'error');
+      }
+    },
+    '🔄'
+  );
+  // Nếu user cancel confirm → revert select
+  document.getElementById('adm-confirm').addEventListener('click', function onCancel(e) {
+    if (e.target.classList.contains('adm-btn-ghost')) {
+      select.value = oldRole;
+    }
+    this.removeEventListener('click', onCancel);
+  }, { once: true });
+}
+
+// ── Toggle status ──
+async function toggleStatus(id, currentStatus) {
+  const newStatus = !currentStatus;
+  admConfirm(
+    newStatus ? 'Mở khóa tài khoản này?' : 'Khóa tài khoản này?',
+    async () => {
+      const res  = await fetch('/admin/users/' + id + '/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const json = await res.json();
+      if (json.ok) {
+        admToast(newStatus ? '✓ Đã mở khóa' : '✓ Đã khóa tài khoản', 'success');
+        setTimeout(() => location.reload(), 800);
+      } else admToast('✗ Lỗi', 'error');
+    },
+    newStatus ? '🔓' : '🔒'
+  );
+}
+
+// ── Xóa user ──
+function deleteUser(id) {
+  admConfirm('Xóa người dùng này? Không thể hoàn tác.', async () => {
+    const res  = await fetch('/admin/users/' + id + '/delete', { method: 'POST' });
+    const json = await res.json();
+    if (json.ok) {
+      const row = document.getElementById('row-' + id);
+      if (row) row.remove();
+      admToast('✓ Đã xóa người dùng', 'success');
+    } else admToast('✗ Lỗi', 'error');
+  }, '🗑️');
+}
+</script>
+
+<%- include('../common/footer') %>

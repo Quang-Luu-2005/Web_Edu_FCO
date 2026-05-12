@@ -10,14 +10,8 @@ const {
 } = require("../config/auth.config");
 
 const LocalUser = require("../models/LocalUser.model");
-const Lecturer = require("../models/Lecturer.model");
-const Admin = require("../admin/models/Admin.model");
 
 const nodemailer = require("nodemailer");
-
-const { google } = require("googleapis");
-
-const OAuth2 = google.auth.OAuth2;
 
 const crypto = require("crypto");
 
@@ -32,17 +26,10 @@ const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const Course = require("../models/Course.model");
 
-const APP_URL = process.env.APP_URL || "http://localhost:8000";
-
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
 const isEmailInUse = async (email) => {
-  const [localUser, lecturer, admin] = await Promise.all([
-    LocalUser.findOne({ email }),
-    Lecturer.findOne({ email }),
-    Admin.findOne({ email })
-  ]);
-  return localUser || lecturer || admin;
+  return await LocalUser.findOne({ email });
 };
 
 const getLandingPath = (user) => {
@@ -68,45 +55,7 @@ const renderRegister = (req, res, extra = {}) => {
   });
 };
 
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const sendGoogleLoginMail = async (email, token) => {
-  const confirmUrl = `${APP_URL}/users/auth/google/confirm/${token}`;
-  const { error } = await resend.emails.send({
-    from: 'WEBCTT2 <onboarding@resend.dev>',
-    to: email,
-    subject: 'Xác nhận đăng nhập Google - WEBCTT2',
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#111827;margin:0 0 8px">Xác nhận đăng nhập Google</h2>
-        <p style="color:#6b7280;margin:0 0 24px">Click nút bên dưới để xác nhận đăng nhập:</p>
-        <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:700">Xác nhận đăng nhập</a>
-        <p style="color:#9ca3af;font-size:12px;margin:16px 0 0">Link có hiệu lực trong 15 phút.</p>
-      </div>
-    `,
-  });
-  if (error) throw new Error(error.message);
-};
-
-const sendOtpMail = async (email, otpNumber) => {
-  const { error } = await resend.emails.send({
-    from: 'WEBCTT2 <onboarding@resend.dev>',
-    to: email,
-    subject: 'Mã xác nhận tài khoản WEBCTT2',
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#111827;margin:0 0 8px">Xác nhận tài khoản</h2>
-        <p style="color:#6b7280;margin:0 0 24px">Nhập mã OTP bên dưới để hoàn tất đăng ký. Mã có hiệu lực trong <strong>2 phút</strong>.</p>
-        <div style="font-size:40px;font-weight:700;letter-spacing:12px;color:#2563eb;text-align:center;padding:20px;background:#eff6ff;border-radius:8px">
-          ${otpNumber}
-        </div>
-        <p style="color:#9ca3af;font-size:12px;margin:16px 0 0">Không chia sẻ mã này cho ai. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
-      </div>
-    `,
-  });
-  if (error) throw new Error(error.message);
-};
+const { sendOtpMail, sendGoogleLoginMail } = require('../config/mail.config');
 
 //GET LOGIN
 Router.get("/login", forwardAuthenticated, (req, res) => {
@@ -269,11 +218,13 @@ Router.post("/register", async function (req, res) {
       user: req.user
     });
   } catch (error) {
-    console.error("Register mail error:", error.message);
+    console.error("[Register] Lỗi gửi mail OTP:", error.message, error.stack);
     return res.render("./user/register", {
       isAuthenticated: req.isAuthenticated(),
-      errors: [{ msg: "Không thể gửi email xác nhận. Kiểm tra cấu hình mail." }],
-      user: req.user
+      errors: [{ msg: `Không thể gửi email xác nhận: ${error.message}` }],
+      user: req.user,
+      username,
+      email
     });
   }
 });
@@ -380,8 +331,8 @@ Router.get("/account", ensureAuthenticated, (req, res) => {
   });
 });
 
-Router.post("/updateInfor", ensureAuthenticated, async (req, res) => {
-  let { name, oldPassword, newPassword, confPassword } = req.body;
+Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res) => {
+  let { name, gender, description, oldPassword, newPassword, confPassword } = req.body;
   let errors = [];
 
   if (req.user.password != undefined) {
@@ -408,66 +359,131 @@ Router.post("/updateInfor", ensureAuthenticated, async (req, res) => {
     return res.json(errors);
   }
 
-  if (name && name.trim()) req.user.name = name.trim();
+  // Build update object — luôn update gender nếu có giá trị hợp lệ
+  const update = {};
+  if (name && name.trim())      update.name   = name.trim();
+  if (gender && ['male','female','other'].includes(gender)) {
+    update.gender = gender;
+  } else if (gender !== undefined && gender !== null && gender !== '') {
+    // gender gửi lên nhưng không hợp lệ — log để debug
+    console.warn('[updateInfor] invalid gender value:', JSON.stringify(gender));
+  }
+  if (typeof description === 'string') update.description = description.trim().slice(0, 500);
   if (newPassword && req.user.password != undefined) {
-    req.user.password = await bcrypt.hash(newPassword, 10);
+    update.password = await bcrypt.hash(newPassword, 10);
   }
 
-  req.user.save().then(() => {
-    req.flash("success_msg", "Cập nhật thành công");
-    res.json(true);
-  });
-});
+  console.log('[updateInfor] body received:', { name, gender, hasNewPw: !!newPassword });
+  console.log('[updateInfor] update to apply:', update);
 
-//Upload avatar
-Router.post("/updateAvatar", ensureAuthenticated, function (req, res) {
-  fs.mkdir(
-    path.join(__dirname, "../public/avatar/" + req.user._id.toString()),
-    () => {}
-  );
+  // Nếu không có gì để update (kể cả gender) → vẫn trả true
+  if (Object.keys(update).length === 0) {
+    return res.json(true);
+  }
 
-  const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "./public/avatar/" + req.user._id.toString());
-    },
-    filename: function (req, file, cb) {
-      let avatar =
-        "/public/avatar/" + req.user._id.toString() + "/" + "avatar.png";
-      req.user.avatar = avatar;
-      req.user.save();
-      cb(null, "avatar.png");
-    },
-  });
-  const upload = multer({
-    storage,
-  });
-  upload.single("fuMain")(req, res, async function async(err) {
-    if (err) {
-      console.log(err);
-    } else {
-      await res.redirect("/users/account");
+  try {
+    // Dùng findByIdAndUpdate để đảm bảo ghi DB thật sự
+    const updated = await LocalUser.findByIdAndUpdate(
+      req.user._id,
+      { $set: update },
+      { new: true }
+    );
+    if (!updated) {
+      return res.json([{ msg: 'Không tìm thấy tài khoản' }]);
     }
-  });
+    // Refresh session với object mới
+    await new Promise((resolve, reject) => {
+      req.logIn(updated, err => err ? reject(err) : resolve());
+    });
+    return res.json(true);
+  } catch (e) {
+    console.error('updateInfor save error:', e.message);
+    return res.json([{ msg: 'Lỗi lưu dữ liệu, thử lại sau.' }]);
+  }
 });
+
+//Upload avatar — nhận URL từ ImgBB (upload thẳng từ browser)
+Router.post("/updateAvatar", ensureAuthenticated, express.json(), async (req, res) => {
+  const { avatarUrl } = req.body;
+  if (!avatarUrl || typeof avatarUrl !== 'string' || !avatarUrl.startsWith('http')) {
+    return res.json(false);
+  }
+  try {
+    const updated = await LocalUser.findByIdAndUpdate(
+      req.user._id,
+      { $set: { avatar: avatarUrl } },
+      { new: true }
+    );
+    if (!updated) return res.json(false);
+    await new Promise((resolve, reject) => {
+      req.logIn(updated, err => err ? reject(err) : resolve());
+    });
+    return res.json(true);
+  } catch (e) {
+    console.error('updateAvatar error:', e.message);
+    return res.json(false);
+  }
+});
+
+const VerificationRequest = require('../models/VerificationRequest.model');
+
+Router.post("/verify-student", ensureAuthenticated, express.json(), async (req, res) => {
+  const { proofImageUrl, note } = req.body;
+
+  if (!proofImageUrl || typeof proofImageUrl !== 'string' || !proofImageUrl.startsWith('http')) {
+    return res.json({ ok: false, msg: 'URL ảnh không hợp lệ' });
+  }
+
+  // Chỉ cho phép nếu chưa là lecturer/admin và chưa có request pending
+  if (req.user.role !== 'user') {
+    return res.json({ ok: false, msg: 'Tài khoản không cần xác nhận' });
+  }
+
+  const existing = await VerificationRequest.findOne({
+    userId: req.user._id,
+    status: 'pending'
+  });
+  if (existing) {
+    return res.json({ ok: false, msg: 'Bạn đã có yêu cầu đang chờ xử lý' });
+  }
+
+  await VerificationRequest.create({
+    userId: req.user._id,
+    proofImageUrl,
+    note: (note || '').trim().slice(0, 500)
+  });
+
+  return res.json({ ok: true });
+});
+
+Router.get("/verify-student/status", ensureAuthenticated, async (req, res) => {
+  const latest = await VerificationRequest.findOne({ userId: req.user._id })
+    .sort({ createdAt: -1 });
+  return res.json({ request: latest || null });
+}); 
 
 Router.post("/wish-list-change", ensureAuthenticated, async (req, res) => {
   const courseID = req.body.courseID;
   const wishList = safeArray(req.user.idWishList);
   req.user.idWishList = wishList;
 
-  if (courseID != undefined) {
-    const index = wishList.findIndex((id) => id.toString() === courseID.toString());
-
-    if (index === -1) {
-      wishList.push(courseID);
-    } else {
-      wishList.splice(index, 1);
-    }
-
-    await req.user.save();
+  if (!courseID) {
+    return res.json({ ok: false, msg: 'Thiếu courseID' });
   }
 
-  res.end();
+  const index = wishList.findIndex((id) => id.toString() === courseID.toString());
+  const added = index === -1;
+
+  if (added) wishList.push(courseID);
+  else       wishList.splice(index, 1);
+
+  try {
+    await req.user.save();
+    return res.json({ ok: true, added, count: wishList.length });
+  } catch (e) {
+    console.error('wish-list-change error:', e.message);
+    return res.json({ ok: false, msg: 'Lỗi lưu dữ liệu' });
+  }
 });
 
 Router.post("/:nameCourse/updateLearnedVideo", ensureAuthenticated, async (req, res) => {
@@ -491,6 +507,7 @@ Router.post("/:nameCourse/updateLearnedVideo", ensureAuthenticated, async (req, 
     if (purchasedCourses[i].idCourse.toString() == course._id
         && learnedVideos.indexOf(videoIndex) == -1) {
       learnedVideos.push(videoIndex);
+      purchasedCourses[i].lastLearnedAt = new Date();
       await req.user.save();
       res.json(true);
       flag = true;

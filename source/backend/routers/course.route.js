@@ -10,10 +10,6 @@ const CourseTopic = require('../models/CourseTopic.model');
 
 const LocalUser = require('../models/LocalUser.model');
 
-const Lecturer = require('../models/Lecturer.model');
-
-const Admin = require('../admin/models/Admin.model');
-
 const {
     ensureAuthenticated
 } = require('../config/auth.config');
@@ -95,29 +91,13 @@ const normalizeReviewThread = (value) => ({
 });
 
 const findUserProfileById = async (userId) => {
-    if (!userId) {
-        return defaultUserProfile;
-    }
-
-    const id = userId.toString();
-    let user = await LocalUser.findOne({ _id: id });
-
-    if (!user) {
-        user = await Lecturer.findOne({ _id: id });
-    }
-
-    if (!user) {
-        user = await Admin.findOne({ _id: id });
-    }
-
-    if (!user) {
-        return defaultUserProfile;
-    }
-
+    if (!userId) return defaultUserProfile;
+    const user = await LocalUser.findOne({ _id: userId.toString() });
+    if (!user) return defaultUserProfile;
     return {
-        name: user.name || 'User',
+        name:   user.name   || 'User',
         avatar: user.avatar || defaultUserProfile.avatar,
-        role: user.role || 'user'
+        role:   user.role   || 'user'
     };
 };
 
@@ -358,7 +338,8 @@ Router.post('/:nameCourse/evaluate', ensureAuthenticated, async (req, res) => {
     }
 
     const sum = course.userEvaluations.reduce((total, item) => total + item.point, 0);
-    course.evaluationPoint = Number((sum / course.userEvaluations.length).toFixed(1));
+    course.evaluationPoint    = Number((sum / course.userEvaluations.length).toFixed(1));
+    course.numberOfEvaluation = course.userEvaluations.length;
 
     await course.save();
     return res.json(true);

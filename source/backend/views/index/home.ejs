@@ -31,41 +31,52 @@
   </div>
 
   <div class="section-feature">
-    <div class="feature-heading">
-      <span>WEBCTT2 mang lại</span>
-      <h2>Học dễ hơn, rõ lộ trình hơn</h2>
-    </div>
+    <div class="feature-label">⚽ WEBCTT2 mang lại</div>
     <div class="row feature-grid">
       <div class="col-sm-4">
         <div class="feature-card feature-card-cyan">
           <div class="feature-icon">
-            <img src="/images/features/quality.svg" alt="Chất lượng uy tín" />
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="28" fill="#dbeafe"/>
+              <path d="M20 33l8 8 16-16" stroke="#3b6fd4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="20" stroke="#3b6fd4" stroke-width="2.5" stroke-dasharray="4 3"/>
+            </svg>
           </div>
           <div>
             <h3>Chất lượng uy tín</h3>
-            <p>Nội dung được chọn lọc, bám sát nhu cầu học và thực hành.</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-sm-4">
-        <div class="feature-card feature-card-amber">
-          <div class="feature-icon">
-            <img src="/images/features/price.svg" alt="Giá cả phải chăng" />
-          </div>
-          <div>
-            <h3>Giá cả phải chăng</h3>
-            <p>Chi phí dễ tiếp cận, phù hợp cho sinh viên và người đi làm.</p>
+            <p>Cam kết đồng hành cùng học viên đến khi lên siêu sao, không giới hạn buổi thực hành.</p>
           </div>
         </div>
       </div>
       <div class="col-sm-4">
         <div class="feature-card feature-card-green">
           <div class="feature-icon">
-            <img src="/images/features/video.svg" alt="Video đa dạng" />
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="28" fill="#dcfce7"/>
+              <rect x="16" y="20" width="32" height="22" rx="4" stroke="#16a34a" stroke-width="2.5"/>
+              <path d="M24 42v4M40 42v4M20 46h24" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M26 29l4 4 8-8" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
           <div>
             <h3>Video đa dạng</h3>
-            <p>Bài học ngắn gọn, trực quan, xem lại bất cứ khi nào cần.</p>
+            <p>Luôn có hỗ trợ record video các buổi học, update video chiến thuật đối với meta mới.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="feature-card feature-card-amber">
+          <div class="feature-icon">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="28" fill="#fef3c7"/>
+              <path d="M32 18v4M32 42v4M18 32h4M42 32h4" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="32" cy="32" r="8" stroke="#d97706" stroke-width="2.5"/>
+              <path d="M28 32l3 3 5-5" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Chế độ hậu mãi</h3>
+            <p>Luôn được hỗ trợ, update meta game liên tục — không bao giờ bị bỏ lại phía sau.</p>
           </div>
         </div>
       </div>
@@ -83,10 +94,10 @@
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: 0;
-    color: #111827;
+    color: #1a1f2e;
     margin: 0 0 16px;
     padding-left: 14px;
-    border-left: 5px solid #2563eb;
+    border-left: 5px solid #3b6fd4;
     font-size: 24px;
     text-wrap: balance;
   }
@@ -163,104 +174,70 @@
 
   .section-feature {
     margin: 36px 0 34px;
-    padding: 28px;
-    border-radius: 8px;
-    background:
-      linear-gradient(135deg, rgba(236, 254, 255, 0.92), rgba(255, 247, 237, 0.88) 48%, rgba(240, 253, 244, 0.94)),
-      #ffffff;
-    border: 1px solid #e5e7eb;
+    padding: 24px 28px 28px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eef2ff 0%, #fdf6ec 50%, #edfaf3 100%);
+    border: 1px solid rgba(59,111,212,0.10);
+    box-shadow: 0 4px 24px rgba(26,31,46,0.06);
   }
 
-  .feature-heading {
-    margin-bottom: 18px;
-  }
-
-  .feature-heading span {
+  .feature-label {
     display: inline-flex;
     align-items: center;
-    min-height: 28px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: #111827;
-    color: #ffffff;
-    font-size: 12px;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: #1a1f2e;
+    color: #e2e8f0;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-  }
-
-  .feature-heading h2 {
-    margin: 10px 0 0;
-    color: #111827;
-    font-size: 25px;
-    line-height: 1.28;
-  }
-
-  .feature-grid {
-    display: flex;
-    align-items: stretch;
-  }
-
-  .section-feature .col-sm-4 {
-    display: flex;
-    padding: 12px;
+    margin-bottom: 20px;
   }
 
   .feature-card {
     width: 100%;
-    min-height: 210px;
+    min-height: 200px;
     padding: 22px;
-    border-radius: 8px;
-    border: 1px solid rgba(17, 24, 39, 0.08);
+    border-radius: 12px;
+    border: 1px solid rgba(26,31,46,0.07);
     background: #ffffff;
-    box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 20px rgba(26,31,46,0.07);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 18px;
+    gap: 14px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .feature-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.14);
+    box-shadow: 0 12px 32px rgba(26,31,46,0.13);
   }
 
-  .feature-card-cyan {
-    background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%);
-  }
-
-  .feature-card-amber {
-    background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
-  }
-
-  .feature-card-green {
-    background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
-  }
+  .feature-card-cyan  { background: linear-gradient(160deg, #ffffff 0%, #eff6ff 100%); }
+  .feature-card-amber { background: linear-gradient(160deg, #ffffff 0%, #fffbeb 100%); }
+  .feature-card-green { background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%); }
 
   .feature-icon {
-    width: 78px;
-    height: 78px;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 auto;
   }
-
-  .feature-icon img {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
+  .feature-icon svg { width: 100%; height: 100%; display: block; }
 
   .feature-card h3 {
     margin: 0 0 8px;
-    color: #111827;
-    font-size: 20px;
-    line-height: 1.25;
+    color: #1a1f2e;
+    font-size: 18px;
+    line-height: 1.3;
   }
 
   .feature-card p {
     margin: 0;
-    color: #4b5563;
+    color: #4a5568;
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.65;
   }
 
   @media (max-width: 767px) {
@@ -285,9 +262,10 @@
   }
 
   .footer-container {
-    font-size: 20px;
-    background: #171616;
-    color: white;
+    font-size: 15px;
+    background: #1a1f2e;
+    color: #94a3b8;
+    letter-spacing: 0.2px;
   }
 
 </style>

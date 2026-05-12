@@ -39,7 +39,11 @@ const LocalUserSchema = mongoose.Schema({
     avatar: {
         type: String,
         default: 'https://res.cloudinary.com/teamwebctt2/image/upload/v1610695375/webctt2/avatar/default/avatar.png'
-    }, 
+    },
+    description: {
+        type: String,
+        default: ''
+    },
     isAuth: {
         type: Boolean,
         default: false
@@ -74,7 +78,15 @@ const LocalUserSchema = mongoose.Schema({
             },
             learnedVideos: [{
                 type: Number
-            }]
+            }],
+            enrolledAt: {
+                type: Date,
+                default: Date.now
+            },
+            lastLearnedAt: {
+                type: Date,
+                default: null
+            }
         }],
         default: []
     },

@@ -1,244 +1,1002 @@
-<!DOCTYPE html>
-<html lang="vi">
+<style>
+/* ── Base ── */
+.profile-page {
+  min-height: calc(100vh - 120px);
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+  padding: 48px 16px 64px;
+  font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+}
 
-<head>
-    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.1.3/css/fileinput.min.css">
-    <title>Tài khoản</title>
-</head>
+/* ── Card ── */
+.profile-card {
+  max-width: 680px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
 
-<body>
-    <div id="site-content"></div>
-    <main class="main-container">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3">
-                    <ul class="nav nav-pills nav-stacked admin-menu">
-                        <img src="<%= user.avatar %>" height="210px" width="210px"
-                            style="padding-bottom: 10px; border-radius: 50%;">
-                        <li class="active"><a href="" data-target-id="profile"><i class="glyphicon glyphicon-user"></i>
-                                Hồ sơ người
-                                dùng</a>
-                        </li>
-                        <li><a href="" data-target-id="change-password"><i class="glyphicon glyphicon-lock"></i> Thay
-                                đổi thông tin cá nhân</a>
-                        </li>
-                        <li><a href="" data-target-id="settings"><i class="glyphicon glyphicon-picture"></i>
-                                Thay đổi
-                                ảnh đại diện</a>
-                        </li>
-                    </ul>
-                </div>
+/* ── Header banner ── */
+.profile-banner {
+  height: 90px;
+  background: linear-gradient(90deg, #1d4ed8 0%, #16a34a 50%, #ca8a04 100%);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 12px 16px;
+}
+.profile-banner::after {
+  content: '⚽';
+  position: absolute;
+  right: 24px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  opacity: 0.18;
+  pointer-events: none;
+}
 
-                <div class="col-md-9  admin-content" id="profile">
-                    <div class="panel panel-info" style="margin: 1em;">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Tên người dùng</h3>
-                        </div>
-                        <div class="panel-body">
-                            <%= user.name %>
-                        </div>
-                    </div>
-                    <div class="panel panel-info" style="margin: 1em;">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Email</h3>
-                        </div>
-                        <div class="panel-body">
-                            <%= user.email %>
-                        </div>
-                    </div>
-                    <div class="panel panel-info" style="margin: 1em;">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Giới tính</h3>
+.profile-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.30);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+  position: relative;
+  z-index: 1;
+}
+.profile-edit-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
 
-                        </div>
-                        <div class="panel-body">
-                            <%= user.gender %>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9  admin-content" id="settings">
-                    <form action="/users/updateAvatar" method="POST" enctype="multipart/form-data">
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">Chọn ảnh đại diện</h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <input id="fuMain" name="fuMain" type="file" multiple>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="pull-right" style="padding-right: 15px;">
-                                <button type="submit" class="form-control btn btn-primary" name="submit" id="submit"
-                                    style="width: 200px;">Submit </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+/* ── Avatar zone ── */
+.profile-avatar-zone {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 0 32px;
+  margin-top: -44px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
 
-                <div class="col-md-9  admin-content" id="change-password">
-                    <form id="myForm1" action="/users/updateInfor" method="POST">
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><label for="name" class="control-label panel-title">
-                                        Nhập tên
-                                        người dùng</label>
-                                </h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <div class="col-sm-10">
-                                        <input type="text" class="form-control" id="name" name="name"
-                                            value="<%= user.name %>">
-                                    </div>
-                                </div>
+.avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
 
-                            </div>
-                        </div>
-                        <% if (isLocalAccount) { %>
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><label for="oldPassword" class="control-label panel-title">
-                                        Nhập mật khẩu
-                                        cũ</label>
-                                </h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <div class="col-sm-10">
-                                        <input type="password" class="form-control" id="oldPassword" name="oldPassword"
-                                            autocomplete="new-password">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+.avatar-img {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 3px solid #1d4ed8;
+  object-fit: cover;
+  display: block;
+  background: #1e293b;
+  transition: filter 0.2s;
+}
 
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><label for="newPassword" class="control-label panel-title">
-                                        Nhập mật khẩu
-                                        mới</label>
-                                </h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <div class="col-sm-10">
-                                        <input type="password" class="form-control" id="newPassword" name="newPassword"
-                                            autocomplete="new-password">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+.avatar-wrap:hover .avatar-img { filter: brightness(0.65); }
 
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.avatar-wrap:hover .avatar-overlay { opacity: 1; }
+.avatar-overlay i { color: #fff; font-size: 22px; }
 
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><label for="confPassword" class="control-label panel-title">Xác
-                                        nhận mật
-                                        khẩu</label></h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <div class="col-sm-10">
-                                        <input type="password" class="form-control" id="confPassword"
-                                            name="confPassword" autocomplete="new-password">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <% } %>
+/* hidden file input */
+#avatar-file-input { display: none; }
 
+/* upload spinner */
+.avatar-uploading .avatar-img { filter: brightness(0.4); }
+.avatar-spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.avatar-uploading .avatar-spinner { display: flex; }
+.avatar-spinner i { color: #fff; font-size: 20px; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-                        <div class="panel panel-info" style="margin: 1em;">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><label for="sex" class="control-label panel-title">Giới
-                                        tính</label></h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <input id="male" type="radio" name="gender" value="Male" checked="checked" />
-                                    <label for="male">Male</label> <br>
-                                    <input id="female" type="radio" name="gender" value="Female" />
-                                    <label for="female">Female</label>
-                                </div>
-                            </div>
-                        </div>
+.profile-name-block {
+  padding-bottom: 6px;
+}
+.profile-display-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 2px;
+}
+.profile-role-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(37,99,235,0.25);
+  color: #93c5fd;
+  border: 1px solid rgba(37,99,235,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
-                        <div class="form-group">
-                            <div class="pull-right" style="padding-right: 15px;">
-                                <button type="button" class="form-control btn btn-primary" name="submit1" id="submit1"
-                                    style="width: 200px;">Submit</button>
-                            </div>
-                        </div>
+/* ── Info rows ── */
+.profile-body { padding: 0 32px 32px; }
 
-                    </form>
-                </div>
-            </div>
-        </div>
-    </main>
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  min-width: 110px;
+}
+
+.info-value {
+  font-size: 15px;
+  color: #e2e8f0;
+  font-weight: 500;
+  flex: 1;
+  padding: 0 12px;
+}
+
+/* password dots */
+.info-value.masked { letter-spacing: 4px; color: #94a3b8; font-size: 18px; }
+
+.edit-btn {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: #64748b;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+.edit-btn:hover { color: #2563eb; background: rgba(37,99,235,0.12); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  position: relative;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.modal-title i { color: #2563eb; }
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: none; border: none;
+  color: #64748b; font-size: 20px;
+  cursor: pointer; line-height: 1;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: #f1f5f9; }
+
+.modal-field {
+  margin-bottom: 16px;
+}
+.modal-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.modal-field .pw-wrap {
+  position: relative;
+}
+.modal-field input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 42px;
+  padding: 0 40px 0 14px;
+  background: #0f172a;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  color: #f1f5f9;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-field input:focus { border-color: #2563eb; }
+
+.pw-toggle {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: #64748b; cursor: pointer;
+  font-size: 14px; padding: 0;
+  transition: color 0.15s;
+}
+.pw-toggle:hover { color: #94a3b8; }
+
+.modal-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.modal-forgot {
+  font-size: 13px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.modal-forgot:hover { text-decoration: underline; }
+
+.modal-submit {
+  height: 40px;
+  padding: 0 24px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modal-submit:hover { background: #1d4ed8; }
+.modal-submit:disabled { background: #334155; color: #64748b; cursor: default; }
+
+.modal-error {
+  font-size: 13px;
+  color: #f87171;
+  margin-top: 12px;
+  min-height: 18px;
+}
+.modal-success {
+  font-size: 13px;
+  color: #4ade80;
+  margin-top: 12px;
+  min-height: 18px;
+}
+
+/* ── Gender radio group ── */
+.gender-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.gender-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  user-select: none;
+}
+.gender-opt input[type="radio"] {
+  /* Ẩn visual nhưng vẫn accessible và :checked hoạt động */
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.gender-opt:has(input:checked) {
+  border-color: #2563eb;
+  background: rgba(37,99,235,0.15);
+  color: #93c5fd;
+}
+
+/* ── Verify banner ── */
+.verify-banner {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 18px 32px 22px;
+  background: linear-gradient(90deg, rgba(37,99,235,0.08) 0%, rgba(22,163,74,0.06) 100%);
+}
+.verify-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.verify-icon { font-size: 28px; flex: 0 0 auto; }
+.verify-text { flex: 1; min-width: 0; }
+.verify-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+}
+.verify-sub {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+}
+.verify-sub.pending  { color: #fbbf24; }
+.verify-sub.approved { color: #4ade80; }
+.verify-sub.rejected { color: #f87171; }
+
+.verify-cta {
+  flex: 0 0 auto;
+  padding: 8px 18px;
+  background: linear-gradient(90deg, #2563eb, #16a34a);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+.verify-cta:hover { opacity: 0.88; transform: scale(1.03); }
+.verify-cta:disabled { background: #334155; color: #64748b; cursor: default; transform: none; }
+
+/* ── Verify modal ── */
+.verify-drop-zone {
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #0f172a;
+  position: relative;
+  overflow: hidden;
+}
+.verify-drop-zone:hover,
+.verify-drop-zone.drag-over {
+  border-color: #2563eb;
+  background: rgba(37,99,235,0.07);
+}
+.verify-drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.verify-drop-icon { font-size: 32px; margin-bottom: 8px; color: #475569; }
+.verify-drop-text { font-size: 13px; color: #64748b; }
+.verify-drop-text strong { color: #93c5fd; }
+.verify-preview {
+  display: none;
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ── Avatar toast ── */
+.avatar-toast {
+  position: fixed;
+  top: 80px; left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: #ffffff;
+  border: 1px solid rgba(22,163,74,0.3);
+  color: #166534;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(26,31,46,0.18);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 10000;
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.avatar-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+
+<div class="profile-page">
+  <div class="profile-card">
+
+    <!-- Banner -->
+    <div class="profile-banner">
+      <button class="profile-edit-btn" onclick="openModal()" title="Đổi mật khẩu">
+        <i class="fas fa-lock"></i> Đổi mật khẩu
+      </button>
+    </div>
+
+    <!-- Avatar + tên -->
+    <div class="profile-avatar-zone">
+      <div class="avatar-wrap" id="avatar-wrap" title="Đổi ảnh đại diện" onclick="document.getElementById('avatar-file-input').click()">
+        <img src="<%= user.avatar %>" alt="Avatar" class="avatar-img" id="avatar-preview" />
+        <div class="avatar-overlay"><i class="fas fa-camera"></i></div>
+        <div class="avatar-spinner"><i class="fas fa-circle-notch"></i></div>
+      </div>
+      <input type="file" id="avatar-file-input" accept="image/png,image/jpeg,image/gif,image/webp" />
+
+      <div class="profile-name-block">
+        <span class="profile-role-badge" id="role-badge">
+          <% if (user.role === 'admin') { %>⚙ Quản lý
+          <% } else if (user.role === 'lecturer') { %>🎓 Giảng viên
+          <% } else if (user.role === 'user' && user.isAuth) { %>⚽ Học viên
+          <% } else { %>👤 Khách<% } %>
+        </span>
+      </div>
+    </div>
+
+    <!-- Thông tin -->
+    <div class="profile-body">
+
+      <!-- Username -->
+      <div class="info-row">
+        <span class="info-label">Tên đăng nhập</span>
+        <span class="info-value"><%= user.username || user.email.split('@')[0] %></span>
+      </div>
+
+      <!-- Email -->
+      <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-value"><%= user.email %></span>
+      </div>
+
+      <!-- Giới tính -->
+      <div class="info-row">
+        <span class="info-label">Giới tính</span>
+        <span class="info-value">
+          <select id="gender-select" onchange="saveGender(this.value)"
+            style="background:transparent;border:none;color:#e2e8f0;font-size:15px;font-weight:500;cursor:pointer;outline:none;padding:0">
+            <option value="male"   <%= user.gender === 'male'   ? 'selected' : '' %> style="background:#1e293b">Nam</option>
+            <option value="female" <%= user.gender === 'female' ? 'selected' : '' %> style="background:#1e293b">Nữ</option>
+            <option value="other"  <%= (!user.gender || user.gender === 'other') ? 'selected' : '' %> style="background:#1e293b">Khác</option>
+          </select>
+        </span>
+      </div>
+
+      <!-- Mật khẩu -->
+      <% if (isLocalAccount) { %>
+      <div class="info-row">
+        <span class="info-label">Mật khẩu</span>
+        <span class="info-value masked">••••••••</span>
+      </div>
+      <% } %>
 
     </div>
-    <script type="text/javascript">
-        $('#submit1').on('click', () => {
-            const data = {
-                name: $('#name').val(),
-                oldPassword: $('#oldPassword').val(),
-                newPassword: $('#newPassword').val(),
-                confPassword: $('#confPassword').val(),
-                gender: $('input[name="gender"]:checked').val()
-            }
-            let myAjax = $.post('/users/updateInfor', data, (json) => {
-                console.log(json);
-                if (json == true) {
-                    window.location.replace('/users/account');
-                    alert('Bạn đã cập nhật thành công');
-                }
-                if (json != true) {
-                    let mess = 'Error: \n';
-                    for (let i = 0; i < json.length; i++) {
-                        mess += `${i}: ${json[i].msg} \n`;
-                    }
-                    alert(mess);
-                }
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function () {
-            var navItems = $('.admin-menu li > a');
-            var navListItems = $('.admin-menu li');
-            var allWells = $('.admin-content');
-            var allWellsExceptFirst = $('.admin-content:not(:first)');
-            allWellsExceptFirst.hide();
-            navItems.click(function (e) {
-                e.preventDefault();
-                navListItems.removeClass('active');
-                $(this).closest('li').addClass('active');
-                allWells.hide();
-                var target = $(this).attr('data-target-id');
-                $('#' + target).show();
-            });
-        });
 
-        $('#fuMain').fileinput({
-            theme: 'fa',
-            dropZoneEnabled: false,
-            allowedFileExtensions: ['png', 'jpg', 'gif'],
-        });
-    </script>
-</body>
+    <!-- ── Banner xác nhận học viên ── -->
+    <% if (user.role === 'user') { %>
+    <div class="verify-banner" id="verify-banner">
+      <div class="verify-banner-inner">
+        <span class="verify-icon">⚽</span>
+        <div class="verify-text">
+          <span class="verify-title" id="verify-title">Bạn có đang là học viên không?</span>
+          <span class="verify-sub" id="verify-sub">Nhấp vào để bắt đầu xác nhận</span>
+        </div>
+        <button class="verify-cta" id="verify-cta-btn" onclick="openVerifyModal()">Xác nhận ngay</button>
+      </div>
+    </div>
+    <% } %>
+
+  </div>
+</div>
+
+<!-- ── Modal chỉnh sửa ── -->
+<div class="modal-overlay" id="edit-modal" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()" aria-label="Đóng">&times;</button>
+    <h2 class="modal-title"><i class="fas fa-lock"></i> Đổi mật khẩu</h2>
+
+    <% if (isLocalAccount) { %>
+    <div class="modal-field">
+      <label for="m-old-pw">Mật khẩu hiện tại</label>
+      <div class="pw-wrap">
+        <input type="password" id="m-old-pw" placeholder="Nhập mật khẩu hiện tại" autocomplete="current-password" />
+        <button type="button" class="pw-toggle" onclick="togglePw('m-old-pw', this)"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label for="m-new-pw">Mật khẩu mới</label>
+      <div class="pw-wrap">
+        <input type="password" id="m-new-pw" placeholder="Ít nhất 6 ký tự" autocomplete="new-password" />
+        <button type="button" class="pw-toggle" onclick="togglePw('m-new-pw', this)"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <div class="modal-field">
+      <label for="m-conf-pw">Xác nhận mật khẩu mới</label>
+      <div class="pw-wrap">
+        <input type="password" id="m-conf-pw" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" />
+        <button type="button" class="pw-toggle" onclick="togglePw('m-conf-pw', this)"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <% } else { %>
+    <p style="font-size:13px;color:#94a3b8;margin:0">Tài khoản Google không có mật khẩu để đổi.</p>
+    <% } %>
+
+    <div class="modal-error" id="modal-error"></div>
+    <div class="modal-success" id="modal-success"></div>
+
+    <div class="modal-footer-row">
+      <% if (isLocalAccount) { %>
+      <a href="/users/forgot-password" class="modal-forgot">Quên mật khẩu?</a>
+      <% } else { %>
+      <span></span>
+      <% } %>
+      <button class="modal-submit" id="modal-save-btn" onclick="saveProfile()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast avatar -->
+<div class="avatar-toast" id="avatar-toast"></div>
+
+<!-- ── Crop modal ── -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
 <style>
-    #header-logo img{
-        margin-top: -17px;
-    }
-    .search input{
-        width: 100%!important;
-    }
-    .search button{
-        border: 1px solid;
-    }
+.crop-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 10001;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.crop-modal-overlay.open { display: flex; }
+
+.crop-modal-box {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%; max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  animation: modalIn 0.2s ease;
+}
+.crop-modal-title {
+  font-size: 16px; font-weight: 700; color: #f1f5f9;
+  margin: 0 0 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.crop-img-wrap {
+  width: 100%; max-height: 340px;
+  overflow: hidden; border-radius: 10px;
+  background: #0f172a;
+}
+.crop-img-wrap img { display: block; max-width: 100%; }
+.crop-hint {
+  font-size: 12px; color: #64748b;
+  margin: 10px 0 16px; text-align: center;
+}
+.crop-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.crop-btn-cancel {
+  height: 38px; padding: 0 18px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px; color: #94a3b8;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.crop-btn-cancel:hover { background: rgba(255,255,255,0.10); color: #f1f5f9; }
+.crop-btn-confirm {
+  height: 38px; padding: 0 20px;
+  background: #2563eb; border: none;
+  border-radius: 8px; color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s;
+}
+.crop-btn-confirm:hover { background: #1d4ed8; }
 </style>
+
+<div class="crop-modal-overlay" id="crop-modal">
+  <div class="crop-modal-box">
+    <div class="crop-modal-title"><i class="fas fa-crop-alt" style="color:#2563eb"></i> Cắt ảnh đại diện</div>
+    <div class="crop-img-wrap">
+      <img id="crop-img" src="" alt="crop" />
+    </div>
+    <p class="crop-hint">Kéo để di chuyển · Kéo góc để thay đổi kích thước · Tỉ lệ 1:1</p>
+    <div class="crop-actions">
+      <button class="crop-btn-cancel" onclick="closeCropModal()">Huỷ</button>
+      <button class="crop-btn-confirm" onclick="confirmCrop()"><i class="fas fa-check"></i> Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal xác nhận học viên ── -->
+<div class="modal-overlay" id="verify-modal" onclick="handleVerifyOverlay(event)">
+  <div class="modal-box" style="max-width:460px">
+    <button class="modal-close" onclick="closeVerifyModal()" aria-label="Đóng">&times;</button>
+    <h2 class="modal-title"><i class="fas fa-id-card"></i> Xác nhận học viên</h2>
+
+    <p style="font-size:13px;color:#94a3b8;margin:0 0 20px;line-height:1.6">
+      Tải lên ảnh chụp minh chứng bạn đã mua khóa học (hoá đơn, screenshot thanh toán…).
+      Admin sẽ xem xét và xác nhận trong thời gian sớm nhất.
+    </p>
+
+    <div class="modal-field">
+      <label>Ảnh minh chứng <span style="color:#f87171">*</span></label>
+      <div class="verify-drop-zone" id="verify-drop"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleVerifyDrop(event)">
+        <input type="file" id="verify-file" accept="image/*" onchange="handleVerifyFile(this.files[0])" />
+        <div id="verify-drop-content">
+          <div class="verify-drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <p class="verify-drop-text">Kéo thả hoặc <strong>nhấp để chọn ảnh</strong></p>
+        </div>
+        <img id="verify-preview" class="verify-preview" alt="Preview" />
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label for="verify-note">Ghi chú thêm (tuỳ chọn)</label>
+      <input type="text" id="verify-note" placeholder="VD: Đã mua khoá Python tháng 5/2026" style="padding-left:14px" />
+    </div>
+
+    <div class="modal-error"   id="verify-error"></div>
+    <div class="modal-success" id="verify-success"></div>
+
+    <div class="modal-footer-row" style="margin-top:20px">
+      <span></span>
+      <button class="modal-submit" id="verify-submit-btn" onclick="submitVerify()">Gửi yêu cầu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Crop modal state ──
+let _cropperInstance = null;
+let _cropCanvas      = null;
+
+// ── Modal edit ──
+function openModal() {
+  document.getElementById('edit-modal').classList.add('open');
+  document.getElementById('modal-error').textContent   = '';
+  document.getElementById('modal-success').textContent = '';
+}
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('edit-modal')) closeModal();
+}
+
+// ── Toggle password ──
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const icon  = btn.querySelector('i');
+  if (input.type === 'password') { input.type = 'text';     icon.className = 'fas fa-eye-slash'; }
+  else                           { input.type = 'password'; icon.className = 'fas fa-eye'; }
+}
+
+// ── Save profile — chỉ đổi mật khẩu ──
+async function saveProfile() {
+  const btn   = document.getElementById('modal-save-btn');
+  const errEl = document.getElementById('modal-error');
+  const okEl  = document.getElementById('modal-success');
+  errEl.textContent = '';
+  okEl.textContent  = '';
+
+  const oldPw  = document.getElementById('m-old-pw')  ? document.getElementById('m-old-pw').value  : '';
+  const newPw  = document.getElementById('m-new-pw')  ? document.getElementById('m-new-pw').value  : '';
+  const confPw = document.getElementById('m-conf-pw') ? document.getElementById('m-conf-pw').value : '';
+
+  if (!oldPw || !newPw || !confPw) {
+    errEl.textContent = 'Vui lòng điền đầy đủ các trường mật khẩu';
+    return;
+  }
+  if (newPw !== confPw) {
+    errEl.textContent = 'Mật khẩu mới không khớp';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Đang lưu...';
+  try {
+    const res  = await fetch('/users/updateInfor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw, confPassword: confPw })
+    });
+    const json = await res.json();
+    if (json === true) {
+      ['m-old-pw','m-new-pw','m-conf-pw'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      showToast('✓ Đổi mật khẩu thành công', false);
+      setTimeout(closeModal, 800);
+    } else {
+      errEl.textContent = Array.isArray(json) ? json.map(e => e.msg).join(' • ') : 'Có lỗi xảy ra';
+    }
+  } catch(e) {
+    errEl.textContent = 'Lỗi kết nối, thử lại sau.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Lưu thay đổi';
+  }
+}
+
+// ── Lưu giới tính ngay khi đổi dropdown ──
+async function saveGender(gender) {
+  try {
+    const res  = await fetch('/users/updateInfor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gender })
+    });
+    const json = await res.json();
+    if (json === true) showToast('✓ Đã lưu giới tính', false);
+    else showToast('✗ Lưu thất bại', true);
+  } catch(e) {
+    showToast('✗ Lỗi kết nối', true);
+  }
+}
+
+// ── Toast ──
+const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+
+function showToast(msg, isError) {
+  const t = document.getElementById('avatar-toast');
+  t.textContent = msg;
+  if (isError) {
+    t.style.borderColor = 'rgba(220,38,38,0.4)';
+    t.style.color = '#991b1b';
+  } else {
+    t.style.borderColor = 'rgba(22,163,74,0.3)';
+    t.style.color = '#166534';
+  }
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Crop modal ──
+function openCropModal(imageSrc) {
+  const overlay = document.getElementById('crop-modal');
+  const img     = document.getElementById('crop-img');
+  img.src = imageSrc;
+  overlay.classList.add('open');
+
+  // Khởi tạo cropper sau khi ảnh load
+  img.onload = () => {
+    if (_cropperInstance) { _cropperInstance.destroy(); _cropperInstance = null; }
+    _cropperInstance = new Cropper(img, {
+      aspectRatio: 1,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.85,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false,
+    });
+  };
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').classList.remove('open');
+  if (_cropperInstance) { _cropperInstance.destroy(); _cropperInstance = null; }
+  document.getElementById('avatar-file-input').value = '';
+}
+
+async function confirmCrop() {
+  if (!_cropperInstance) return;
+  const canvas = _cropperInstance.getCroppedCanvas({ width: 400, height: 400 });
+  _cropCanvas  = canvas;
+
+  // Preview ngay
+  document.getElementById('avatar-preview').src = canvas.toDataURL();
+  closeCropModal();
+
+  // Upload lên ImgBB
+  const wrap = document.getElementById('avatar-wrap');
+  wrap.classList.add('avatar-uploading');
+  showToast('Đang tải ảnh lên...', false);
+
+  canvas.toBlob(async (blob) => {
+    try {
+      const fd = new FormData();
+      fd.append('image', blob, 'avatar.jpg');
+      const res  = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Upload thất bại');
+
+      const saveRes  = await fetch('/users/updateAvatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: json.data.url })
+      });
+      const saveJson = await saveRes.json();
+      if (saveJson === true) {
+        document.getElementById('avatar-preview').src = json.data.url;
+        showToast('✓ Ảnh đại diện đã cập nhật', false);
+      } else throw new Error('Lưu URL thất bại');
+    } catch(e) {
+      showToast('✗ ' + e.message, true);
+      document.getElementById('avatar-preview').src = '<%= user.avatar %>';
+    } finally {
+      wrap.classList.remove('avatar-uploading');
+    }
+  }, 'image/jpeg', 0.92);
+}
+
+// Khi chọn file → mở crop modal
+document.getElementById('avatar-file-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => openCropModal(e.target.result);
+  reader.readAsDataURL(file);
+});
+
+// ── Verify modal ──
+let _verifyImageUrl = null;
+
+function openVerifyModal() {
+  document.getElementById('verify-modal').classList.add('open');
+  document.getElementById('verify-error').textContent   = '';
+  document.getElementById('verify-success').textContent = '';
+  _verifyImageUrl = null;
+}
+function closeVerifyModal() {
+  document.getElementById('verify-modal').classList.remove('open');
+}
+function handleVerifyOverlay(e) {
+  if (e.target === document.getElementById('verify-modal')) closeVerifyModal();
+}
+function handleVerifyDrop(e) {
+  e.preventDefault();
+  document.getElementById('verify-drop').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleVerifyFile(file);
+}
+function handleVerifyFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const preview = document.getElementById('verify-preview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+    document.getElementById('verify-drop-content').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  uploadVerifyImage(file);
+}
+async function uploadVerifyImage(file) {
+  const btn = document.getElementById('verify-submit-btn');
+  btn.disabled = true; btn.textContent = 'Đang tải ảnh...';
+  document.getElementById('verify-error').textContent = '';
+  try {
+    const fd = new FormData(); fd.append('image', file);
+    const res  = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error?.message || 'Upload thất bại');
+    _verifyImageUrl = json.data.url;
+  } catch(e) {
+    document.getElementById('verify-error').textContent = '✗ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gửi yêu cầu';
+  }
+}
+async function submitVerify() {
+  const errEl = document.getElementById('verify-error');
+  const okEl  = document.getElementById('verify-success');
+  errEl.textContent = ''; okEl.textContent = '';
+  if (!_verifyImageUrl) { errEl.textContent = 'Vui lòng chọn ảnh minh chứng'; return; }
+  const btn  = document.getElementById('verify-submit-btn');
+  const note = document.getElementById('verify-note').value.trim();
+  btn.disabled = true; btn.textContent = 'Đang gửi...';
+  try {
+    const res  = await fetch('/users/verify-student', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proofImageUrl: _verifyImageUrl, note })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      okEl.textContent = '✓ Yêu cầu đã gửi! Admin sẽ xem xét sớm.';
+      document.getElementById('verify-title').textContent = 'Yêu cầu xác nhận đang chờ xử lý';
+      document.getElementById('verify-sub').textContent   = 'Admin sẽ phản hồi sớm nhất có thể';
+      document.getElementById('verify-sub').className     = 'verify-sub pending';
+      document.getElementById('verify-cta-btn').disabled  = true;
+      document.getElementById('verify-cta-btn').textContent = '⏳ Đang chờ';
+      setTimeout(closeVerifyModal, 1500);
+    } else { errEl.textContent = json.msg || 'Có lỗi xảy ra'; }
+  } catch(e) { errEl.textContent = 'Lỗi kết nối, thử lại sau.'; }
+  finally { btn.disabled = false; btn.textContent = 'Gửi yêu cầu'; }
+}
+
+// Kiểm tra trạng thái verify khi load
+(async () => {
+  try {
+    const res  = await fetch('/users/verify-student/status');
+    const json = await res.json();
+    if (!json.request) return;
+    const r = json.request;
+    const titleEl = document.getElementById('verify-title');
+    const subEl   = document.getElementById('verify-sub');
+    const ctaBtn  = document.getElementById('verify-cta-btn');
+    if (!titleEl) return;
+    if (r.status === 'pending') {
+      titleEl.textContent = 'Yêu cầu xác nhận đang chờ xử lý';
+      subEl.textContent   = 'Admin sẽ phản hồi sớm nhất có thể';
+      subEl.className     = 'verify-sub pending';
+      ctaBtn.disabled = true; ctaBtn.textContent = '⏳ Đang chờ';
+    } else if (r.status === 'approved') {
+      titleEl.textContent  = 'Yêu cầu đã được duyệt ✓';
+      subEl.textContent    = r.adminNote || 'Tài khoản đã được xác nhận';
+      subEl.className      = 'verify-sub approved';
+      ctaBtn.style.display = 'none';
+    } else if (r.status === 'rejected') {
+      titleEl.textContent = 'Yêu cầu bị từ chối';
+      subEl.textContent   = r.adminNote || 'Vui lòng gửi lại với ảnh rõ hơn';
+      subEl.className     = 'verify-sub rejected';
+      ctaBtn.textContent  = 'Gửi lại';
+    }
+  } catch(_) {}
+})();
+</script>

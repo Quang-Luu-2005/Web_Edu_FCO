@@ -1,9 +1,7 @@
 const express = require('express');
 const path = require('path');
 
-try {
-    require('dotenv').config({ quiet: true });
-} catch (error) {}
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app = express();
 
@@ -18,6 +16,7 @@ app.use(express.static(adminPublicPath));
 
 //Default body-parser
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 require('./middlewares/dbLocal.mdw')(app);
 require('./middlewares/session.mdw')(app);
 require('./middlewares/passport.mdw')(app);

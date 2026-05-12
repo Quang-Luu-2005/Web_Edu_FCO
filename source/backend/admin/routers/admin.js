@@ -2,17 +2,13 @@ const express = require("express");
 
 const router = express.Router();
 
-const Admin = require("../models/Admin.model");
-
-const Lecturer = require("../models/Lecturer.model");
+const LocalUser = require("../models/LocalUser.model");
 
 const Course = require("../models/Course.model");
 
 const Category = require("../models/CourseCategory.model");
 
 const Topic = require("../models/CourseTopic.model");
-
-const LocalUser = require("../models/LocalUser.model");
 
 const cloudinary = require("cloudinary").v2;
 
@@ -93,150 +89,75 @@ router.get("/account/edit", ensureAuthenticated,  (req, res) => {
     })
 });
 
-router.post("/account/edit", ensureAuthenticated,  (req, res) => {
-  Admin.findOne({email:req.user.email}).then( async (user)=>{
-      if(user){
-          if( req.body.password !==""){
-            user.password =await bcrypt.hash(req.body.password, 10);
-          }
-          user.name = req.body.name;
-          user.gender = req.body.gender;
-          user.description = req.body.description;
-          user.avatar = req.body.avatar;
-          user.save();
-      }
-  });
-  Lecturer.findOne({email:req.user.email}).then(async (user)=>{
-      if(user){
-          if( req.body.password !==""){
-            user.password = await bcrypt.hash(req.body.password, 10);
-          }
-          user.name = req.body.name;
-          user.gender = req.body.gender;
-          user.description = req.body.description;
-          user.avatar = req.body.avatar;
-          user.save();
-      }
-  });
+router.post("/account/edit", ensureAuthenticated, async (req, res) => {
+  const user = await LocalUser.findById(req.user._id);
+  if (user) {
+    if (req.body.password && req.body.password !== '') {
+      user.password = await bcrypt.hash(req.body.password, 10);
+    }
+    user.name        = req.body.name;
+    user.gender      = req.body.gender;
+    user.description = req.body.description;
+    user.avatar      = req.body.avatar;
+    await user.save();
+  }
   res.redirect("/admin/account/edit");
 });
 
 //route for lecturers
-router.get("/lecturer/lecturersList", ensureAuthenticated,  (req, res) => {
-   
-    Lecturer.find({}, function(err, Lecturers) {
-        let data = [];
-        let Lecturers_arr = [];
-
-    
-        Lecturers.forEach(function(Lecturer) {
-
-            Lecturers_arr.push(Lecturer);
-
-        });
-
-        data['Lecturers'] = Lecturers_arr;
-
-        data["title"] = "Danh sách giảng viên";
-
-        res.render("admin/lecturer/lecturersList", {
-            user: req.user, data:data
-        })
-    });
-
-    
-});
-router.get("/lecturer/lecturerEdit",ensureAuthenticated, function (req, res) {
-
-  
-  Lecturer.findById(req.query.id).then((user)=>{
-      let data = [];
-      let Lecturer_info;
-
-      if(user){
-        Lecturer_info = user;
-      }
-
-      data["Lecturer_info"] = Lecturer_info;
-
-      data["title"] = "Thông tin giảng viên";
-      
-      res.render("admin/lecturer/lecturerEdit",{
-        user:req.user, data:data
-      });
+router.get("/lecturer/lecturersList", ensureAuthenticated, async (req, res) => {
+  const Lecturers = await LocalUser.find({ role: 'lecturer' });
+  res.render("admin/lecturer/lecturersList", {
+    user: req.user,
+    data: { Lecturers, title: "Danh sách giảng viên" }
   });
 });
-router.post("/lecturer/lecturerEdit",ensureAuthenticated,async function (req, res) {
-  const {
-    id,
-    name,
-    gender,
-    password,
-    description,
-    avatar, 
-    status,
-  } = req.body; 
 
-  Lecturer.findById(id).then(async (user)=>{
-    if(user){
-        if( password !==""){
-          user.password = await bcrypt.hash(req.body.password, 10);
-        }
-        user.name = req.body.name;
-        user.gender = req.body.gender;
-        user.description = req.body.description;
-        user.avatar = req.body.avatar;
-        user.status = req.body.status;
-
-        user.save();
-    }
+router.get("/lecturer/lecturerEdit", ensureAuthenticated, async (req, res) => {
+  const Lecturer_info = await LocalUser.findOne({ _id: req.query.id, role: 'lecturer' });
+  res.render("admin/lecturer/lecturerEdit", {
+    user: req.user,
+    data: { Lecturer_info, title: "Thông tin giảng viên" }
   });
+});
+
+router.post("/lecturer/lecturerEdit", ensureAuthenticated, async (req, res) => {
+  const { id, name, gender, password, description, avatar, status } = req.body;
+  const user = await LocalUser.findOne({ _id: id, role: 'lecturer' });
+  if (user) {
+    if (password && password !== '') user.password = await bcrypt.hash(password, 10);
+    user.name        = name;
+    user.gender      = gender;
+    user.description = description;
+    user.avatar      = avatar;
+    user.status      = status;
+    await user.save();
+  }
   res.redirect("/admin/lecturer/lecturersList");
 });
-router.get("/lecturer/lecturerAdd",ensureAuthenticated, function (req, res) {
-  
-      let data = [];
 
-      data["title"] = "Thêm giảng viên";
-      
-      res.render("admin/lecturer/lecturerAdd",{
-        user:req.user, data:data
-      });
- 
+router.get("/lecturer/lecturerAdd", ensureAuthenticated, (req, res) => {
+  res.render("admin/lecturer/lecturerAdd", {
+    user: req.user,
+    data: { title: "Thêm giảng viên" }
+  });
 });
-router.post("/lecturer/lecturerAdd",ensureAuthenticated,async function (req, res) {
-  const {
-    email,
-    name,
-    gender,
-    password,
-    description,
-    status
-  } = req.body; 
 
-    const newLecturer = new Lecturer({
-      email ,
-      password,
-      name,
-      gender,
-      description,
-      status,
-    });
-
-    newLecturer.password =  await bcrypt.hash(newLecturer.password, 10);
-    newLecturer.save().then(()=>{
-      console.log("user save");
-    });
+router.post("/lecturer/lecturerAdd", ensureAuthenticated, async (req, res) => {
+  const { email, name, gender, password, description, status } = req.body;
+  const newLecturer = new LocalUser({
+    email, name, gender, description, status,
+    role: 'lecturer',
+    isAuth: true,
+    password: await bcrypt.hash(password, 10)
+  });
+  await newLecturer.save();
   res.redirect("/admin/lecturer/lecturersList");
 });
-router.get("/lecturer/lecturerDelete",ensureAuthenticated,async function (req, res) {
-  Lecturer.findByIdAndDelete(req.query.id).then( async (user)=>{
-    if(user){
-      res.json(true);
-    }else{
-      res.json(false);
-    }
-  });
+
+router.get("/lecturer/lecturerDelete", ensureAuthenticated, async (req, res) => {
+  const result = await LocalUser.findOneAndDelete({ _id: req.query.id, role: 'lecturer' });
+  res.json(result ? true : false);
 });
 
 //route for Category
@@ -562,12 +483,7 @@ router.get("/course/coursesList", ensureAuthenticated, async  (req, res) => {
   data['CourseTopics_array'] = CourseTopics_array;
 
 
-  const Lecturers_array = await Lecturer.find({}).then(
-    (Lecturer_arr)=>{
-      if(Lecturer_arr){
-        return Lecturer_arr;
-      }
-  });
+  const Lecturers_array = await LocalUser.find({ role: 'lecturer' });
 
   data['Lecturers_array'] = Lecturers_array;
 
@@ -748,63 +664,113 @@ router.get("/register", function (req, res) {
   });
 });
 
-router.get("/is-user-available", ensureAuthenticated, function (req, res) {
-    Admin.findOne({email:req.query.email}).then((user)=>{
-        if(user){
-            res.json(false);
-            return;
-        }else{
-          Lecturer.findOne({email:req.query.email}).then((user)=>{
-            if(user){
-              res.json(false);
-            }else{
-              res.json(true);
-            }
-          });
-        }
-    });
-   
+router.get("/is-user-available", ensureAuthenticated, async (req, res) => {
+  const user = await LocalUser.findOne({
+    email: req.query.email,
+    role: { $in: ['admin', 'lecturer'] }
+  });
+  res.json(user ? false : true);
 });
 
-router.get("/is-local-user-available", ensureAuthenticated, function (req, res) {
-  LocalUser.findOne({email:req.query.email}).then((user)=>{
-      if(user){
-          res.json(false);
-      }else{
-          res.json(true);
-      }
+router.get("/is-local-user-available", ensureAuthenticated, async (req, res) => {
+  const user = await LocalUser.findOne({ email: req.query.email });
+  res.json(user ? false : true);
+});
+
+
+
+
+
+
+router.post("/register", async (req, res) => {
+  const { email, password, re_password } = req.body;
+  if (password === re_password) {
+    const newUser = new LocalUser({
+      email,
+      password: await bcrypt.hash(password, 10),
+      name: email.split('@')[0],
+      gender: 'other',
+      role: 'lecturer',
+      isAuth: true
+    });
+    await newUser.save();
+  }
+  res.redirect("/admin/register");
+});
+
+const VerificationRequest = require('../../models/VerificationRequest.model');
+
+// ── Users (gộp student + lecturer) ──
+router.get('/users', ensureAuthenticated, async (req, res) => {
+  const { role, search } = req.query;
+  const filter = {};
+  if (role && ['user','lecturer','admin'].includes(role)) filter.role = role;
+  if (search && search.trim()) {
+    const re = new RegExp(search.trim(), 'i');
+    filter.$or = [{ name: re }, { email: re }, { username: re }];
+  }
+  const users = await LocalUser.find(filter).sort({ date: -1 });
+  res.locals.layout = false;
+  res.render('admin/users/usersList', {
+    user: req.user,
+    data: { title: 'Người dùng', users, roleFilter: role || '', search: search || '' }
   });
 });
 
+router.post('/users/:id/role', ensureAuthenticated, express.json(), async (req, res) => {
+  const { role } = req.body;
+  if (!['user','lecturer','admin'].includes(role)) return res.json({ ok: false, msg: 'Role không hợp lệ' });
+  // Không cho tự đổi role của chính mình
+  if (req.params.id === req.user._id.toString()) return res.json({ ok: false, msg: 'Không thể đổi role của chính mình' });
+  const updated = await LocalUser.findByIdAndUpdate(req.params.id, { $set: { role } }, { new: true });
+  if (!updated) return res.json({ ok: false, msg: 'Không tìm thấy user' });
+  return res.json({ ok: true });
+});
 
+router.post('/users/:id/status', ensureAuthenticated, express.json(), async (req, res) => {
+  const { status } = req.body;
+  if (req.params.id === req.user._id.toString()) return res.json({ ok: false, msg: 'Không thể khóa chính mình' });
+  const updated = await LocalUser.findByIdAndUpdate(req.params.id, { $set: { status: !!status } }, { new: true });
+  if (!updated) return res.json({ ok: false, msg: 'Không tìm thấy user' });
+  return res.json({ ok: true });
+});
 
+router.post('/users/:id/delete', ensureAuthenticated, async (req, res) => {
+  if (req.params.id === req.user._id.toString()) return res.json({ ok: false, msg: 'Không thể xóa chính mình' });
+  const deleted = await LocalUser.findByIdAndDelete(req.params.id);
+  if (!deleted) return res.json({ ok: false, msg: 'Không tìm thấy user' });
+  return res.json({ ok: true });
+});
+router.get('/verifications', ensureAuthenticated, async (req, res) => {
+  const requests = await VerificationRequest.find({ status: 'pending' })
+    .populate('userId', 'username name email avatar')
+    .sort({ createdAt: 1 });
+  res.render('admin/student/verificationsList', {
+    user: req.user,
+    data: { title: 'Yêu cầu xác nhận học viên', requests }
+  });
+});
 
+router.post('/verifications/:id/approve', ensureAuthenticated, async (req, res) => {
+  const request = await VerificationRequest.findById(req.params.id).populate('userId');
+  if (!request) return res.json({ ok: false });
+  request.status = 'approved';
+  request.adminNote = (req.body.adminNote || '').trim();
+  request.reviewedAt = new Date();
+  await request.save();
+  // Nâng role user lên lecturer nếu muốn, hoặc chỉ đánh dấu verified
+  // Hiện tại chỉ approve request, admin tự quyết định nâng role riêng
+  return res.json({ ok: true });
+});
 
-
-router.post("/register",async function (req, res) {
-  const {
-    email,
-    password,
-    re_password
-  } = req.body; 
-  if(password == re_password){
-
-    const name = "minh";
-    const gender = "nam";
-
-    const newUser = new Lecturer({
-      email ,
-      password,
-      name,
-      gender
-    });
-
-    newUser.password =  await bcrypt.hash(newUser.password, 10);
-    newUser.save().then(()=>{
-      console.log("user save");
-    });
-  }
-  res.redirect("/admin/register");
+router.post('/verifications/:id/reject', ensureAuthenticated, async (req, res) => {
+  const request = await VerificationRequest.findById(req.params.id);
+  if (!request) return res.json({ ok: false });
+  request.status = 'rejected';
+  request.adminNote = (req.body.adminNote || '').trim();
+  request.reviewedAt = new Date();
+  await request.save();
+  return res.json({ ok: true });
 });
 
 router.post('/upload', function (req, res) {

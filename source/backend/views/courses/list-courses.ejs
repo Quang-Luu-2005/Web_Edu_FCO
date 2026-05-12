@@ -1,305 +1,394 @@
 <style>
-  .navbar-collapse {
-    flex-grow: 0;
-  }
+.lc-page {
+  min-height: calc(100vh - 120px);
+  background: #f8f7f4;
+  padding: 40px 0 64px;
+}
 
-  .navbar-collapse-right {
-    margin-left: 750px;
-  }
-
-  .container-wrap {
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 48px;
-  }
-
-  .course-list {
-    padding-top: 40px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #dcdacb;
-  }
-
-  .udlite-container {
-    width: 100%;
-    max-width: 1340px;
-    margin-right: auto;
-    margin-left: auto;
-    padding: 30px 2.4px 30px 2.4px;
-  }
-
-  .heading-xl {
-    font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: 0;
-    font-size: 24px;
-  }
-
-  .img {
-    float: left;
-    width: 260px;
-    height: 145px;
-    margin-right: 20px;
-  }
-
-  .btn-group {
-    margin-top: 20px;
-  }
-
-  .card-hot {
-    width: 40px;
-    height: 25px;
-    background-color: rgba(243, 70, 70, 0.788);
-  }
-
-  .card-new {
-    width: 40px;
-    height: 25px;
-    background-color: rgb(86, 202, 86);
-  }
-
-  .card-best {
-    width: 40px;
-    height: 25px;
-    background-color: rgb(226, 226, 73);
-  }
-
-  .price {
-    float: right;
-    font-size: 20px;
-  }
-
-  .fa-star {
-    font-size: 13px;
-  }
-
-  .footer-container {
-    padding-top: 30px;
-    padding-bottom: 20px;
-    font-size: 12px;
-    text-align: center;
-  }
-  .pagination {
-    margin-top: 20px;
-    margin-left: 600px;
-  }
-  .pagination a {
-    color: black;
-    float: left;
-    padding: 8px 16px;
-    text-decoration: none;
-    transition: background-color 0.3s;
-  }
-
-  .active {
-    background-color: red;
-    color: white;
-  }
-  #searchForm1 select{
-  background-color: #f6f6f6;
-  border: none;
-  color: #0d0d0d;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 5px;
+.lc-wrap {
   width: 85%;
-  border: 2px solid #f6f6f6;
-  -webkit-transition: all 0.5s ease-in-out;
-  -moz-transition: all 0.5s ease-in-out;
-  -ms-transition: all 0.5s ease-in-out;
-  -o-transition: all 0.5s ease-in-out;
-  transition: all 0.5s ease-in-out;
-  -webkit-border-radius: 5px 5px 5px 5px;
-  border-radius: 5px 5px 5px 5px;
-}
-#searchForm1{
-  margin-bottom: 20px;
-}
-#buttonFilter{
-  padding: 16px 23px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
+.lc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lc-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1f2e;
+}
+
+.lc-count {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 3px;
+}
+
+/* ── Filter bar ── */
+.lc-filter {
+  background: #ffffff;
+  border: 1px solid #e8e8e4;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 6px rgba(26,31,46,0.05);
+}
+
+.lc-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.lc-filter-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lc-filter-field select {
+  height: 38px;
+  padding: 0 12px;
+  background: #f8f7f4;
+  border: 1.5px solid #e8e8e4;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #2d3748;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.lc-filter-field select:focus { border-color: #3b6fd4; }
+
+.lc-filter-btn {
+  height: 38px;
+  padding: 0 18px;
+  background: #1a1f2e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.lc-filter-btn:hover { background: #3b6fd4; }
+
+/* ── Course list ── */
+.lc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lc-item {
+  background: #ffffff;
+  border: 1px solid #e8e8e4;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(26,31,46,0.05);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.lc-item:hover {
+  box-shadow: 0 6px 20px rgba(26,31,46,0.10);
+  transform: translateY(-2px);
+}
+
+.lc-item-link {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  text-decoration: none;
+  color: inherit;
+}
+.lc-item-link:hover { text-decoration: none; color: inherit; }
+
+.lc-poster {
+  width: 200px;
+  height: 120px;
+  object-fit: cover;
+  flex: 0 0 200px;
+  background: #e8e8e4;
+  display: block;
+}
+
+.lc-item-body {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 20px;
+}
+
+.lc-item-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1f2e;
+  line-height: 1.4;
+  margin: 0 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lc-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #718096;
+}
+
+.lc-item-meta i { font-size: 12px; }
+
+.lc-item-topic {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #eff4ff;
+  color: #3b6fd4;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.lc-item-right {
+  flex: 0 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  border-left: 1px solid #f0efe9;
+  min-width: 120px;
+}
+
+.lc-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1f2e;
+}
+
+.lc-btn-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  background: #3b6fd4;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.lc-btn-go:hover { background: #2d5ab8; color: #fff; text-decoration: none; }
+
+/* ── Pagination ── */
+.lc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 28px;
+}
+
+.lc-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #e8e8e4;
+  background: #fff;
+  color: #4a5568;
+  text-decoration: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.lc-page-btn:hover { background: #eff4ff; border-color: #3b6fd4; color: #3b6fd4; text-decoration: none; }
+.lc-page-btn.active { background: #3b6fd4; border-color: #3b6fd4; color: #fff; }
+.lc-page-btn:disabled,
+.lc-page-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+/* ── Empty ── */
+.lc-empty {
+  background: #ffffff;
+  border: 1px solid #e8e8e4;
+  border-radius: 14px;
+  text-align: center;
+  padding: 64px 24px;
+  color: #9ca3af;
+}
+.lc-empty-icon { font-size: 48px; margin-bottom: 16px; }
+.lc-empty-title { font-size: 18px; font-weight: 700; color: #4a5568; margin-bottom: 8px; }
+.lc-empty-sub { font-size: 14px; }
 </style>
 
-<body>
-  <div class="container-wrap">
+<div class="lc-page">
+  <div class="lc-wrap">
+
+    <div class="lc-header">
+      <div>
+        <h1 class="lc-title"><%= title %></h1>
+        <div class="lc-count"><%= courses.length %> khóa học</div>
+      </div>
+    </div>
+
     <% if (isFilter) { %>
-    <div class=" search">
-      <form
-        data-searchInput="<%= searchInput %>"
-        id="searchForm1"
-        action="/courses/search"
-        class="form-inline"
-        method="GET"
-      >
-        <div class="row">
-          <input
-            id="searchInput1"
-            type="hidden"
-            value="<%= searchInput%>"
-            name="queryString"
-          />
-          <input type="hidden" value="<%= page%>" name="page" />
-          <input type="hidden" />
-          <div class="form-group col-sm-5">
-            <select id="categorySelect" name="category" id="category">
-              <% for( let i=0; i < courseCategories.length; i++ ) { %>
-              <option
-                data-categoryID="<%= courseCategories[i]._id %>"
-                value="<%= courseCategories[i].name %>"
-              >
-                <%=courseCategories[i].name %>
-              </option>
-              <% } %>
-            </select>
-          </div>
-          <div class="form-group col-sm-5">
-            <!-- Truyền option topic cho select -->
-            <select id="topicSelect" name="courseTopicID"></select>
-          </div>
-          <div class="form-group col-sm-2">
-            <button class="btn btn-success" id="buttonFilter" type="button">Filter</button>
-          </div>
+    <div class="lc-filter">
+      <form id="searchForm1" action="/courses/search" method="GET" style="display:contents">
+        <input type="hidden" id="searchInput1" name="queryString" value="<%= typeof searchInput !== 'undefined' ? searchInput : '' %>" />
+        <input type="hidden" name="page" value="<%= page %>" />
+
+        <div class="lc-filter-field">
+          <label>Danh mục</label>
+          <select id="categorySelect" name="category">
+            <% if (typeof courseCategories !== 'undefined') { %>
+              <% courseCategories.forEach(cat => { %>
+              <option value="<%= cat.name %>"><%= cat.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
         </div>
+
+        <div class="lc-filter-field">
+          <label>Chủ đề</label>
+          <select id="topicSelect" name="courseTopicID"></select>
+        </div>
+
+        <button type="button" class="lc-filter-btn" id="buttonFilter">
+          <i class="fas fa-filter"></i> Lọc
+        </button>
       </form>
     </div>
+
     <script>
-      $(document).ready(() => {
-        $("#searchInput1").val($("#searchForm1").attr("data-searchInput") || "");
-      });
-    </script>
-    <script>
-      //Nhấp nút filter
-      $("#buttonFilter").on("click", () => {
-        console.log("hello");
-        const categoryName = $("#categorySelect").find(":selected").val();
-        const topicName = $("#topicSelect").find(":selected").val();
-        const queryString = ($("#searchForm1").attr("data-searchInput") || "").trim();
-
-        //Gán queryString searchForm1 = queryString searchForm
-        $("#searchInput1").val(queryString);
-
-        //Không điền thì trả về danh sách khóa học theo topic
-        if (queryString === "") {
-          window.location.href = `/courses/${categoryName}/${topicName}`;
-        }
-        //Ngược lại thực hiện truy vấn
-        else {
-          $("#searchForm1").submit();
-        }
-      });
-    </script>
-    <script type="text/javascript">
-      //Chuẩn bị cho việc mở trang
-      $(document).ready(() => {
-        //Thêm topic ban đầu
-        const categoryName = $("#categorySelect").find(":selected").val();
+    $(document).ready(() => {
+      const loadTopics = (categoryName) => {
         $.post(`/courses/${categoryName}/getTopics`, categoryName, (json) => {
-          const topics = json;
-          $("#topicSelect").find("option").remove();
-          topics.forEach((topic) => {
-            $("#topicSelect").append(
-              `<option value="${topic._id}">${topic.name}</option>`
-            );
-          });
+          $('#topicSelect').empty();
+          json.forEach(t => $('#topicSelect').append(`<option value="${t._id}">${t.name}</option>`));
         });
+      };
+      loadTopics($('#categorySelect').val());
+      $('#categorySelect').on('change', function() { loadTopics($(this).val()); });
+      $('#buttonFilter').on('click', () => {
+        const cat   = $('#categorySelect').val();
+        const topic = $('#topicSelect').val();
+        const q     = ($('#searchForm1').attr('data-searchInput') || '').trim();
+        if (!q) window.location.href = `/courses/${cat}/${topic}`;
+        else { $('#searchInput1').val(q); $('#searchForm1').submit(); }
       });
-
-      //Bắt sự kiện thay đổi giá trị category
-      $("#categorySelect").change(function () {
-        const categoryName = $(this).val();
-        $.post(`/courses/${categoryName}/getTopics`, categoryName, (json) => {
-          const topics = json;
-          $("#topicSelect").find("option").remove();
-          topics.forEach((topic) => {
-            $("#topicSelect").append(
-              `<option value="${topic._id}">${topic.name}</option>`
-            );
-          });
-        });
-      });
+    });
     </script>
     <% } %>
-    <h1><%= title %> </h1>
-    <% for( let i=0; i < courses.length; i++ ) { %> <%-
-    include('../partials/card-course-list', { course: courses[i],
-    isAuthenticated: isAuthenticated, index: i }) %> <% } %>
-  </div>
 
-  <div
-    data-currentPage="<%= page %>"
-    data-numberOfPage="<%= numberOfPage %>"
-    class="pagination"
-  >
-    <a id="prev-page" href="#">&laquo;</a>
-    <div class="sub-pages">
-      <% for(let i = 0; i < numberOfPage; i++ ) { %>
-      <a class="sub-page" data-page="<%= i + 1%>" href="#"><%= i +1 %></a>
-      <% } %>
+    <% if (courses.length > 0) { %>
+    <div class="lc-list">
+      <% courses.forEach(course => { %>
+      <div class="lc-item">
+        <a class="lc-item-link" href="/course/<%= encodeURIComponent(course.name) %>">
+          <img class="lc-poster"
+            src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>"
+            alt="<%= course.name %>" />
+          <div class="lc-item-body">
+            <div class="lc-item-name"><%= course.name %></div>
+            <div class="lc-item-meta">
+              <% if (course.idLecturer && course.idLecturer.name) { %>
+              <span><i class="fas fa-chalkboard-teacher"></i> <%= course.idLecturer.name %></span>
+              <% } %>
+              <% if (course.idCourseTopic && course.idCourseTopic.name) { %>
+              <span class="lc-item-topic"><%= course.idCourseTopic.name %></span>
+              <% } %>
+              <% if (course.numberOfView !== undefined) { %>
+              <span><i class="fas fa-eye"></i> <%= course.numberOfView || 0 %></span>
+              <% } %>
+              <% if (course.evaluationPoint) { %>
+              <span><i class="fas fa-star" style="color:#f59e0b"></i> <%= course.evaluationPoint.toFixed(1) %></span>
+              <% } %>
+            </div>
+          </div>
+          <div class="lc-item-right">
+            <span class="lc-price">$<%= course.tuition || 10 %></span>
+            <span class="lc-btn-go"><i class="fas fa-play"></i> Xem</span>
+          </div>
+        </a>
+      </div>
+      <% }) %>
     </div>
-    <a id="next-page" href="#">&raquo;</a>
+
+    <% if (numberOfPage > 1) { %>
+    <div class="lc-pagination" id="lc-pagination"
+         data-current="<%= page %>" data-total="<%= numberOfPage %>">
+      <a class="lc-page-btn <%= page <= 1 ? 'disabled' : '' %>" id="lc-prev">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+      <% for (let i = 1; i <= numberOfPage; i++) { %>
+      <a class="lc-page-btn <%= i === page ? 'active' : '' %>" data-page="<%= i %>"><%= i %></a>
+      <% } %>
+      <a class="lc-page-btn <%= page >= numberOfPage ? 'disabled' : '' %>" id="lc-next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    </div>
+    <% } %>
+
+    <% } else { %>
+    <div class="lc-empty">
+      <div class="lc-empty-icon">🔍</div>
+      <div class="lc-empty-title">Không có khóa học nào</div>
+      <div class="lc-empty-sub">Thử tìm kiếm với từ khóa khác hoặc khám phá tất cả khóa học.</div>
+    </div>
+    <% } %>
+
   </div>
-</body>
+</div>
 
 <script>
-  const numberOfPage = $(".pagination").attr("data-numberOfPage");
-  const currentPage = $(".pagination").attr("data-currentPage");
-  const currentURL = window.location.href;
-  const url = new URL(currentURL);
+(function() {
+  const pg = document.getElementById('lc-pagination');
+  if (!pg) return;
+  const url = new URL(window.location.href);
 
-  $(document).ready(() => {
-    $(".sub-page").each((index, e) => {
-      if (index + 1 == +currentPage) {
-        $(e).addClass("active");
-      }
+  pg.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      url.searchParams.set('page', btn.dataset.page);
+      window.location.replace(url.href);
     });
   });
 
-  //Bắt sự kiện nhấp vào trang con
-  $(".sub-page").on("click", (e) => {
-    console.log("num: ", numberOfPage);
-    console.log("url: ", url);
+  document.getElementById('lc-prev') && document.getElementById('lc-prev').addEventListener('click', () => {
+    const cur = +pg.dataset.current;
+    if (cur > 1) { url.searchParams.set('page', cur - 1); window.location.replace(url.href); }
+  });
 
-    const subPage = $(e.target).attr("data-page");
-    console.log("sub-page: ", subPage);
-    url.searchParams.set("page", subPage);
-    console.log(url.href);
-    //Chuyển trang
-    window.location.replace(url.href);
+  document.getElementById('lc-next') && document.getElementById('lc-next').addEventListener('click', () => {
+    const cur = +pg.dataset.current, tot = +pg.dataset.total;
+    if (cur < tot) { url.searchParams.set('page', cur + 1); window.location.replace(url.href); }
   });
-  //Bắt sự kiện nhấp vào nút trang trước đó
-  $("#prev-page").on("click", () => {
-    console.log("num: ", numberOfPage);
-    console.log("cur: ", currentPage);
-    console.log("url: ", url.href);
-
-    const page = +currentPage - 1;
-    if (currentPage > 1) {
-      url.searchParams.set("page", page);
-      console.log(url.href);
-    } else {
-      console.log(url.href);
-    }
-    //Chuyển trang
-    window.location.replace(url.href);
-  });
-  //Bắt sự kiện nhấp vào nút trang tiếp theo
-  $("#next-page").on("click", () => {
-    console.log("num: ", numberOfPage);
-    console.log("cur: ", currentPage);
-    console.log("url: ", url.href);
-    const page = +currentPage + 1;
-    if (currentPage < numberOfPage) {
-      url.searchParams.set("page", page);
-      console.log(url.href);
-    } else {
-      console.log(url.href);
-    }
-    //Chuyển trang
-    window.location.replace(url.href);
-  });
+})();
 </script>

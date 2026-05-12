@@ -1,1 +1,50 @@
-<footer id="footer"><a href="http://www.opencart.com">Cousera</a> © 2009-2021 copyright by SSS<br>Version 1.0</footer></div>
+    </div><!-- /.adm-content -->
+    <footer class="adm-footer">WEBCTT2 © 2024 — Admin Panel v2.0</footer>
+  </div><!-- /.adm-main -->
+</div><!-- /.adm-shell -->
+
+<!-- Confirm dialog -->
+<div class="adm-confirm-overlay" id="adm-confirm">
+  <div class="adm-confirm-box">
+    <div class="adm-confirm-icon" id="adm-confirm-icon">⚠️</div>
+    <div class="adm-confirm-title" id="adm-confirm-title">Xác nhận</div>
+    <div class="adm-confirm-msg"   id="adm-confirm-msg">Bạn có chắc chắn không?</div>
+    <div class="adm-confirm-actions">
+      <button class="adm-btn adm-btn-ghost" onclick="admConfirmCancel()">Huỷ</button>
+      <button class="adm-btn adm-btn-danger" id="adm-confirm-ok">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="adm-toast" id="adm-toast"></div>
+
+<script>
+// ── Toast ──
+function admToast(msg, type) {
+  const t = document.getElementById('adm-toast');
+  t.textContent = msg;
+  t.style.borderColor = type === 'error' ? 'rgba(248,113,113,0.4)' : 'rgba(74,222,128,0.4)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Confirm dialog ──
+let _confirmCb = null;
+function admConfirm(msg, cb, icon) {
+  document.getElementById('adm-confirm-msg').textContent   = msg;
+  document.getElementById('adm-confirm-icon').textContent  = icon || '⚠️';
+  document.getElementById('adm-confirm').classList.add('open');
+  _confirmCb = cb;
+}
+function admConfirmCancel() {
+  document.getElementById('adm-confirm').classList.remove('open');
+  _confirmCb = null;
+}
+document.getElementById('adm-confirm-ok').addEventListener('click', () => {
+  document.getElementById('adm-confirm').classList.remove('open');
+  if (_confirmCb) { _confirmCb(); _confirmCb = null; }
+});
+</script>
+</body>
+</html>

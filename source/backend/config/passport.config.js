@@ -3,75 +3,43 @@ const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const LocalUser = require('../models/LocalUser.model');
-const Lecturer = require('../models/Lecturer.model');
-const Admin = require('../admin/models/Admin.model');
 
 const DEFAULT_AVATAR = 'https://i.ibb.co/NnbNMtSw/default-avatar.png';
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8000/users/auth/google/callback';
+const GOOGLE_CALLBACK_URL  = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8000/users/auth/google/callback';
 
-const accountModels = [
-    { model: Admin, role: 'admin' },
-    { model: Lecturer, role: 'lecturer' },
-    { model: LocalUser, role: 'user' }
-];
-
-const attachRole = (user, role) => {
-    if (!user) {
-        return user;
-    }
-
-    user.role = user.role || role;
-    user.roll = user.role === 'user' ? false : user.role;
+// Tất cả user đều nằm trong LocalUser, phân biệt bằng role
+const attachRole = (user) => {
+    if (!user) return user;
+    user.roll = user.role !== 'user' ? user.role : false;
     return user;
 };
 
-// Tìm user theo username (LocalUser) hoặc email (Admin/Lecturer)
+// Tìm theo username (LocalUser) hoặc email (tất cả role)
 const findAccountByUsername = async (username) => {
-    // LocalUser: tìm theo username trước, fallback email
-    const localUser = await LocalUser.findOne({
+    const user = await LocalUser.findOne({
         $or: [{ username }, { email: username }]
     });
-    if (localUser) return attachRole(localUser, 'user');
-
-    // Admin & Lecturer: vẫn dùng email
-    for (const source of [{ model: Admin, role: 'admin' }, { model: Lecturer, role: 'lecturer' }]) {
-        const user = await source.model.findOne({ email: username });
-        if (user) return attachRole(user, source.role);
-    }
-    return null;
+    return user ? attachRole(user) : null;
 };
 
 const findAccountByEmail = async (email) => {
-    for (const source of accountModels) {
-        const user = await source.model.findOne({ email });
-        if (user) {
-            return attachRole(user, source.role);
-        }
-    }
-    return null;
+    const user = await LocalUser.findOne({ email });
+    return user ? attachRole(user) : null;
 };
 
 const profileEmail = (profile) => {
-    if (!profile || !profile.emails || !profile.emails.length) {
-        return '';
-    }
+    if (!profile || !profile.emails || !profile.emails.length) return '';
     return profile.emails[0].value;
 };
 
 const profileName = (profile, email) => {
-    if (profile && profile.displayName) {
-        return profile.displayName;
-    }
+    if (profile && profile.displayName) return profile.displayName;
     if (profile && profile.name) {
         const name = [profile.name.givenName, profile.name.familyName]
-            .filter(Boolean)
-            .join(' ')
-            .trim();
-        if (name) {
-            return name;
-        }
+            .filter(Boolean).join(' ').trim();
+        if (name) return name;
     }
     return email ? email.split('@')[0] : 'Google user';
 };
@@ -91,20 +59,23 @@ const findOrCreateGoogleUser = async (profile) => {
         throw error;
     }
 
-    const existingAccount = await findAccountByEmail(email);
-    if (existingAccount && existingAccount.role !== 'user') {
+    const existing = await findAccountByEmail(email);
+
+    // Admin/Lecturer không được đăng nhập bằng Google
+    if (existing && (existing.role === 'admin' || existing.role === 'lecturer')) {
         const error = new Error('Use email/password login for this account');
         error.code = 'GOOGLE_ROLE_BLOCKED';
         throw error;
     }
 
-    let user = existingAccount;
+    let user = existing;
     if (!user) {
         user = new LocalUser({
             email,
             role: 'user',
             provider: 'google',
-            status: true
+            status: true,
+            isAuth: true
         });
     }
 
@@ -115,13 +86,13 @@ const findOrCreateGoogleUser = async (profile) => {
     }
 
     user.provider = 'google';
-    user.googleId = profile.id;
-    user.email = email;
-    user.name = profileName(profile, email) || user.name;
-    user.avatar = profileAvatar(profile) || user.avatar;
+    user.googleId  = profile.id;
+    user.email     = email;
+    user.name      = profileName(profile, email) || user.name;
+    user.avatar    = profileAvatar(profile) || user.avatar;
     await user.save();
 
-    return attachRole(user, 'user');
+    return attachRole(user);
 };
 
 const buildLocalStrategy = () => new LocalStrategy({
@@ -132,11 +103,9 @@ const buildLocalStrategy = () => new LocalStrategy({
         if (!user) {
             return done(null, false, { message: 'Tên đăng nhập không tồn tại' });
         }
-
         if (user.status === false) {
             return done(null, false, { message: 'Tài khoản đã bị khóa' });
         }
-
         if (!user.password) {
             return done(null, false, { message: 'Tài khoản này không có mật khẩu' });
         }
@@ -146,6 +115,7 @@ const buildLocalStrategy = () => new LocalStrategy({
             return done(null, false, { message: 'Mật khẩu không đúng' });
         }
 
+        // Chỉ user thường mới cần OTP; admin/lecturer bỏ qua
         if (user.role === 'user' && user.isAuth === false) {
             return done(null, false, {
                 message: 'Vui lòng xác nhận OTP để đăng nhập',
@@ -161,9 +131,9 @@ const buildLocalStrategy = () => new LocalStrategy({
 });
 
 const buildGoogleStrategy = () => new GoogleStrategy({
-    clientID: GOOGLE_CLIENT_ID,
+    clientID:     GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: GOOGLE_CALLBACK_URL
+    callbackURL:  GOOGLE_CALLBACK_URL
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         const user = await findOrCreateGoogleUser(profile);
@@ -174,23 +144,19 @@ const buildGoogleStrategy = () => new GoogleStrategy({
 });
 
 module.exports = function (passport) {
-    passport.use('local', buildLocalStrategy());
+    passport.use('local',    buildLocalStrategy());
     passport.use('customer', buildLocalStrategy());
-    passport.use('admin', buildLocalStrategy());
-    passport.use('google', buildGoogleStrategy());
+    passport.use('admin',    buildLocalStrategy());
+    passport.use('google',   buildGoogleStrategy());
 
-    passport.serializeUser(function (user, done) {
+    passport.serializeUser((user, done) => {
         done(null, user._id);
     });
 
-    passport.deserializeUser(async function (id, done) {
+    passport.deserializeUser(async (id, done) => {
         try {
-            for (const source of accountModels) {
-                const user = await source.model.findById(id);
-                if (user) {
-                    return done(null, attachRole(user, source.role));
-                }
-            }
+            const user = await LocalUser.findById(id);
+            if (user) return done(null, attachRole(user));
             return done(null, false);
         } catch (error) {
             return done(error);

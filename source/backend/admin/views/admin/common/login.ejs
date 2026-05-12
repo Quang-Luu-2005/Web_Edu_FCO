@@ -1,29 +1,41 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/css/stylesheet.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WEBCTT2 Admin — Đăng nhập</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/public/css/admin.css" />
+  <link rel="shortcut icon" href="https://i.ibb.co/qMx5Hxys/logo.png" />
 </head>
 <body>
-    <div class="wrapper fadeInDown" id="loginForm">
-        <div id="formContent">
-          <!-- Tabs Titles -->
-              
-          <h2 class="active"> Log in   </h2>
-      
-          <!-- Login Form -->
-          <form action="" method="post">
-            <input type="text" id="email" class="fadeIn second" name="email" placeholder="login" value="<%= data.email%>">
-            <input type="password" id="password" class="fadeIn third" name="password" placeholder="password" value="<%= data.password%>">
-            <input type="submit" class="fadeIn fourth" value="Log In">
-          </form>
-      
-          <!-- Remind Passowrd -->
-      
-        </div>
+<div class="adm-login-page">
+  <div class="adm-login-card">
+    <div class="adm-login-logo">
+      <div class="icon">⚽</div>
+      <h1>WEBCTT2 Admin</h1>
+      <p>Đăng nhập để quản lý hệ thống</p>
     </div>
+
+    <form action="" method="post">
+      <div class="adm-field" style="margin-bottom:14px">
+        <label>Email / Tên đăng nhập</label>
+        <input type="text" name="email" placeholder="Nhập email hoặc username" value="<%= typeof data !== 'undefined' ? data.email || '' : '' %>" />
+      </div>
+      <div class="adm-field" style="margin-bottom:20px">
+        <label>Mật khẩu</label>
+        <input type="password" name="password" placeholder="••••••••" value="<%= typeof data !== 'undefined' ? data.password || '' : '' %>" />
+      </div>
+      <button type="submit" class="adm-login-btn">Đăng nhập</button>
+    </form>
+
+    <p style="text-align:center;margin-top:20px;font-size:13px;color:#475569">
+      <a href="/" style="color:#2563eb">← Về trang chủ</a>
+    </p>
+  </div>
+</div>
 </body>
 </html>
-

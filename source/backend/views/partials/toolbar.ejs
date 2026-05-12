@@ -27,34 +27,56 @@
       <div class="toolbar-actions">
         <% if (!isAuthenticated) { %>
         <a class="btn btn-sm btn-outline-light toolbar-btn" href="/users/login">
-          <i class="fas fa-sign-in-alt"></i>Login
+          <i class="fas fa-sign-in-alt"></i> Đăng nhập
         </a>
-        <% }else{ %>
+        <% } else { %>
         <div class="nav-item dropdown toolbar-user">
-          <a href="/users/account" data-toggle="dropdown" class="nav-link dropdown-toggle toolbar-btn">
-            <i class="fas fa-user-circle"></i> <%= user.name %>
+          <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle toolbar-btn toolbar-user-btn">
+            <img src="<%= user.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>"
+              class="toolbar-avatar" alt="avatar" />
+            <span class="toolbar-username"><%= user.name || user.username %></span>
           </a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu toolbar-dropdown">
+            <li class="dropdown-header-item">
+              <img src="<%= user.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>"
+                class="dd-avatar" alt="avatar" />
+              <div>
+                <div class="dd-name"><%= user.name || user.username %></div>
+                <div class="dd-email"><%= user.email %></div>
+              </div>
+            </li>
+            <li class="dd-divider"></li>
             <li>
-              <a href="/users/account">
-                <i class="fas fa-folder-open"></i> Account
+              <a href="/users/account" class="dd-item">
+                <i class="fas fa-user-circle"></i> Hồ sơ
               </a>
             </li>
             <li>
-              <a href="/my-courses">
-                <i class="fas fa-folder-open"></i> My Courses
+              <a href="/my-courses" class="dd-item">
+                <i class="fas fa-book-open"></i> Khóa học của tôi
               </a>
             </li>
             <li>
-              <a href="/my-wish-list">
-                <i class="fa fa-heart" aria-hidden="true"></i> Wish list
+              <a href="/my-wish-list" class="dd-item">
+                <i class="fas fa-heart"></i> Danh sách yêu thích
+              </a>
+            </li>
+            <% if (user.role === 'admin' || user.role === 'lecturer') { %>
+            <li class="dd-divider"></li>
+            <li>
+              <a href="/admin/homepage" class="dd-item dd-item-admin">
+                <i class="fas fa-shield-alt"></i> Quản lý
+              </a>
+            </li>
+            <% } %>
+            <li class="dd-divider"></li>
+            <li>
+              <a href="/users/logout" class="dd-item dd-item-danger">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
               </a>
             </li>
           </ul>
         </div>
-        <a class="btn btn-sm btn-outline-light toolbar-btn" href="/users/logout">
-          <i class="fas fa-sign-out-alt"></i>Logout
-        </a>
         <% } %>
       </div>
     </div>

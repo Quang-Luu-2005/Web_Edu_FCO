@@ -4,8 +4,6 @@ const Router = express.Router();
 
 const Course = require("../models/Course.model");
 
-const Lecturer = require("../models/Lecturer.model");
-
 const CourseTopic = require("../models/CourseTopic.model");
 
 const { readHomeBanners } = require("../config/home-banner.config");
@@ -114,54 +112,35 @@ Router.get("/my-wish-list", ensureAuthenticated, async (req, res) => {
 
 //Trang danh sách khóa học của tôi
 Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
-  let page = +req.query.page;
-
-  //Nếu page == undefined thi page = 1
-  if (Number.isNaN(page)) {
-    page = 1;
-  }
-
-  //Lấy ra danh sách khóa học
   const purchasedCourses = safeArray(req.user.purchasedCourses);
-  let courses = [];
-  let numberOfPage = 0;
-  for (let i = 0; i < purchasedCourses.length; i++) {
-    const course = await Course.findOne(
-      {
-        _id: purchasedCourses[i].idCourse,
-      },
-      [
-        "poster",
-        "_id",
-        "name",
-        "idLecturer",
-        "evaluationPoint",
-        "userEvaluations",
-        "tuition",
-        "numberOfStudent",
-        "idCourseTopic",
-        "numberOfView",
-      ]
-    )
-      .populate("idCourseTopic")
-      .populate("idLecturer");
-    if (course) {
-      await courses.push(course);
-    }
+
+  // Build danh sách kèm meta
+  const items = [];
+  for (const pc of purchasedCourses) {
+    const course = await Course.findOne({ _id: pc.idCourse })
+      .populate("idLecturer")
+      .populate("idCourseTopic");
+    if (!course) continue;
+
+    const totalVideos   = (course.videos || []).length || course.numberOfVideo || 0;
+    const learnedVideos = safeArray(pc.learnedVideos);
+    const progress      = totalVideos > 0 ? Math.round((learnedVideos.length / totalVideos) * 100) : 0;
+    const isDone        = totalVideos > 0 && learnedVideos.length >= totalVideos;
+
+    items.push({
+      course,
+      learnedCount:   learnedVideos.length,
+      totalVideos,
+      progress,
+      isDone,
+      enrolledAt:     pc.enrolledAt    || null,
+      lastLearnedAt:  pc.lastLearnedAt || null,
+    });
   }
-  numberOfPage = Math.ceil(courses.length / 5);
 
-  //Lấy ra đúng 5 khóa học 
-  courses = courses.slice((page - 1) * 5, (page - 1) *5 + 5);
-
-  //Render trang danh sách khóa học
-  await res.render("./courses/list-courses", {
+  await res.render("./courses/my-courses", {
     isAuthenticated: req.isAuthenticated(),
-    courses: courses,
-    title: `Các khóa học của tôi`,
-    page: page,
-    isFilter: false,
-    numberOfPage: numberOfPage,
+    items,
     user: req.user
   });
 });

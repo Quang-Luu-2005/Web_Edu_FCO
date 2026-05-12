@@ -1,23 +1,85 @@
-<header id="header" class="navbar navbar-static-top">
-    <div class="container-fluid">
-        <div id="header-logo" class="navbar-header">
-            <a href="/admin/homepage" class="navbar-brand">
-                <img src="/image/common/logo.png" alt="Managment" title="Managment">
-            </a>
-        </div>
-        <div class="nav navbar-nav navbar-right">
-            <div class="row" style="width:400px">
-                <div class="col-md-8">
-                    <a href="/admin/account/edit">
-                        <i class="fas fa-user"></i>  <%= user.email %>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="/admin/logout">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
-            </div>
-        </div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WEBCTT2 Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/public/css/admin.css" />
+  <link rel="shortcut icon" href="https://i.ibb.co/qMx5Hxys/logo.png" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+<div class="adm-shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="adm-sidebar" id="adm-sidebar">
+    <div class="adm-sidebar-logo">
+      <div class="logo-icon">⚽</div>
+      <div>
+        <div class="logo-text">WEBCTT2</div>
+        <div class="logo-sub">Admin Panel</div>
+      </div>
     </div>
-</header>
+
+    <nav class="adm-nav">
+      <% if (user.role === 'admin') { %>
+      <div class="adm-nav-section">Tổng quan</div>
+      <a href="/admin/course/coursesList" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">
+        <i class="fas fa-book-open"></i> Khóa học
+      </a>
+      <a href="/admin/users" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'users' ? 'active' : '' %>">
+        <i class="fas fa-users"></i> Người dùng
+      </a>
+      <a href="/admin/verifications" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'verifications' ? 'active' : '' %>">
+        <i class="fas fa-id-card-alt"></i> Xác nhận
+      </a>
+
+      <div class="adm-nav-section" style="margin-top:8px">Cấu hình</div>
+      <a href="/admin/course/categoryList" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'categories' ? 'active' : '' %>">
+        <i class="fas fa-tags"></i> Danh mục
+      </a>
+      <a href="/admin/home/banners" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'banners' ? 'active' : '' %>">
+        <i class="fas fa-images"></i> Banner
+      </a>
+      <% } else { %>
+      <div class="adm-nav-section">Quản lý</div>
+      <a href="/admin/course/coursesList" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'courses' ? 'active' : '' %>">
+        <i class="fas fa-book-open"></i> Khóa học của tôi
+      </a>
+      <% } %>
+
+      <div class="adm-nav-section" style="margin-top:8px">Tài khoản</div>
+      <a href="/admin/account/edit" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'account' ? 'active' : '' %>">
+        <i class="fas fa-user-cog"></i> Hồ sơ
+      </a>
+    </nav>
+
+    <div class="adm-sidebar-footer">
+      <div class="adm-user-chip">
+        <img class="adm-user-avatar" src="<%= user.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" alt="avatar" />
+        <div class="adm-user-info">
+          <div class="adm-user-name"><%= user.name || user.email %></div>
+          <div class="adm-user-role"><%= user.role === 'admin' ? 'Quản lý' : 'Giảng viên' %></div>
+        </div>
+        <a href="/admin/logout" class="adm-logout-btn" title="Đăng xuất">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="adm-main">
+    <header class="adm-topbar">
+      <span class="adm-topbar-title" id="adm-topbar-title">
+        <%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %>
+      </span>
+      <div class="adm-topbar-actions" id="adm-topbar-actions">
+        <!-- injected per page -->
+      </div>
+    </header>
+    <div class="adm-content">
