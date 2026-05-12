@@ -17,7 +17,7 @@ const CourseTopicSchema = mongoose.Schema({
     },
     image : {
         type: String,
-        default: '/public/avatar/default/avatar.png'
+        default: 'https://i.ibb.co/NnbNMtSw/default-avatar.png'
     },
     idCourseCategory: {
         type: mongoose.Schema.ObjectId,

@@ -1,7 +1,7 @@
 //Course
 Course.insertMany([{
     name: 'Graphing Python',
-    poster: '/public/poster/graphPython/poster.png',
+    poster: 'https://i.ibb.co/wr2CLVVd/default-poster.png',
     description: 'Bạn có thể học mọi thứ về đồ thị với Python qua khóa học của chúng tôi',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -41,7 +41,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Tutorial Android development',
-    poster: '/public/poster/beginerAdrDev/poster.png',
+    poster: 'https://i.ibb.co/b5DgrJNK/poster-beginer-Adr-Dev.jpg',
     description: 'Học xong khóa tutorial bạn sẽ trùm Android',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -72,7 +72,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Tutorial Javascript development',
-    poster: '/public/poster/beginerJvsDev/poster.png',
+    poster: 'https://i.ibb.co/sd2QH5Z4/poster-beginer-Jvs-Dev.jpg',
     description: 'Học xong lương 10000$',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -103,7 +103,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Tutorial Web development',
-    poster: '/public/poster/beginerWebDev/poster.png',
+    poster: 'https://i.ibb.co/RGnjBTmq/poster-beginer-Web-Dev.jpg',
     description: 'Học 2 buổi 10 chấm môn Web',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -134,7 +134,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Unity game development',
-    poster: '/public/poster/gameDevUnity/poster.png',
+    poster: 'https://i.ibb.co/xqQ6MTLg/poster-game-Dev-Unity.webp',
     description: 'Học 3 buổi là vào hệ thống',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -165,7 +165,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Communication tutorial',
-    poster: '/public/poster/tutCommunication/poster.png',
+    poster: 'https://i.ibb.co/W4NrBGVt/poster-tut-Communication.jpg',
     description: 'Bạn muốn làm đa cấp không thể bỏ qua khóa học này',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -196,7 +196,7 @@ Course.insertMany([{
     ]
 }, {
     name: 'Photoshop tutorial',
-    poster: '/public/poster/tutPhotoshop/poster.png',
+    poster: 'https://i.ibb.co/v4y7YD8z/poster-tut-Photoshop.jpg',
     description: 'Bạn muốn làm đa cấp không thể bỏ qua khóa học này',
     evaluationPoint: 0,
     numberOfStudent: 0,
@@ -234,7 +234,7 @@ Lecturer.insertMany({
     email: 'minhthevo123@gmail.com',
     password: '123',
     gender: 'Male',
-    avatar: '/public/avatar/default/avatar.png',
+    avatar: 'https://i.ibb.co/NnbNMtSw/default-avatar.png',
     description: 'Siêu giáo viên, tác giả của hơn 300 framwork nổi tiếng của Javascript, C#, ..., 30 năm kinh nghiệp giảng dạy các trường đại học danh tiếng',
     isAuth: true,
     otpNumber: '',

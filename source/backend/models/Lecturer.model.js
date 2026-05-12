@@ -31,7 +31,7 @@ const LecturerSchema = mongoose.Schema({
     },
     avatar: {
         type: String,
-        default: '/public/avatar/default/avatar.png'
+        default: 'https://i.ibb.co/NnbNMtSw/default-avatar.png'
     },
     description: {
         type: String,

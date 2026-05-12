@@ -6,8 +6,10 @@
 # Dependencies
 node_modules/
 
-# Build output
+# Build output (Babel transpiled files)
 dist/
+**/dist/
+**/*.dev.js
 
 # Logs
 logs/
@@ -21,3 +23,28 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# -----------------------------------------------
+# Static image assets (hosted on ImgBB)
+# -----------------------------------------------
+public/logo.png
+public/paypal.png
+public/image/
+public/images/
+admin/public/logo.png
+admin/public/avatar/default/
+admin/public/poster/default/
+admin/public/image/
+
+# User-generated uploads (created at runtime)
+public/avatar/*/
+admin/public/avatar/5*/
+admin/public/avatar/6*/
+admin/public/poster/5*/
+admin/public/poster/beginer*/
+admin/public/poster/game*/
+admin/public/poster/graph*/
+admin/public/poster/tut*/
+admin/public/image/category/5*/
+admin/public/image/category/undefined/
+admin/public/image/lecturer/5*/

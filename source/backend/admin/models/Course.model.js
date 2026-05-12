@@ -96,7 +96,7 @@ const CourseSchema = mongoose.Schema({
     },
     poster: {
         type: String,
-        default: '/public/poster/default/poster.png'
+        default: 'https://i.ibb.co/wr2CLVVd/default-poster.png'
     },
     description: {
         type: String,

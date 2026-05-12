@@ -49,7 +49,7 @@ const REACTION_TYPES = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
 
 const defaultUserProfile = {
     name: 'User',
-    avatar: '/public/avatar/default/avatar.png',
+    avatar: 'https://i.ibb.co/NnbNMtSw/default-avatar.png',
     role: 'user'
 };
 
