@@ -310,17 +310,6 @@ header img {
   padding-right: 0;
 }
 
-#header .container-fluid > .search {
-  position: absolute;
-  left: 50%;
-  width: min(760px, calc(100% - 520px));
-  transform: translateX(-50%);
-  flex: 0 1 auto;
-  min-width: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
-
 #header .container-fluid > .featured {
   flex: 0 0 auto;
   margin-left: auto;
@@ -573,71 +562,6 @@ a {
   flex: 0 0 auto;
 }
 
-#header .search {
-  display: flex;
-  align-items: center;
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
-#header .search .toolbar-search {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-}
-
-#header .search .form-control {
-  height: 46px;
-  border: 0;
-  border-radius: 0;
-  padding: 0 16px 0 18px;
-  background: transparent;
-  color: #0f172a;
-  box-shadow: none;
-}
-
-#header .search .form-control::placeholder {
-  color: #64748b;
-}
-
-#header .search .form-control:focus {
-  box-shadow: none;
-}
-
-#header .search .search-button {
-  width: 52px;
-  min-width: 52px;
-  height: 46px;
-  border: 0;
-  border-radius: 0;
-  background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%);
-  color: #111827;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  box-shadow: none;
-}
-
-#header .search .search-button:hover,
-#header .search .search-button:focus {
-  background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
-  color: #111827;
-  box-shadow: none;
-}
-
-#header .search .search-button i {
-  font-size: 15px;
-  margin-right: 0;
-}
-
 @media (max-width: 991px) {
   #header .container-fluid {
     flex-wrap: wrap;
@@ -652,20 +576,8 @@ a {
     max-width: none;
   }
 
-  #header .container-fluid > .search {
-    position: static;
-    width: 100%;
-    transform: none;
-    order: 3;
-    flex: 1 0 100%;
-  }
-
   #header .container-fluid > .featured {
     margin-left: auto;
-  }
-
-  #header .search .toolbar-search {
-    max-width: 100%;
   }
 }
 

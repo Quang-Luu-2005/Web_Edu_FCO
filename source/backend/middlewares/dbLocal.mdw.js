@@ -13,6 +13,7 @@ module.exports = function(app) {
     const options = {
         useNewUrlParser:    true,
         useUnifiedTopology: true,
+        useFindAndModify:   false,
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
     };

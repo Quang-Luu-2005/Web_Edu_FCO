@@ -14,6 +14,7 @@
     border-radius: 16px;
     box-shadow: 0 8px 40px rgba(15, 23, 42, 0.10);
     padding: 40px 40px 32px;
+    box-sizing: border-box;
   }
 
   .auth-title {
@@ -29,20 +30,22 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   .auth-field label {
     font-size: 13px;
     font-weight: 600;
     color: #374151;
+    display: block;
+    min-height: 18px;
   }
 
   .auth-field input {
     width: 100%;
     box-sizing: border-box;
     height: 44px;
-    padding: 0 38px 0 14px; /* padding-right luôn nhường chỗ icon */
+    padding: 0 38px 0 14px;
     border: 1.5px solid #d1d5db;
     border-radius: 8px;
     font-size: 14px;
@@ -51,6 +54,7 @@
     text-align: left;
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
+    display: block;
   }
 
   .auth-field input:focus {
@@ -66,25 +70,26 @@
     box-shadow: 0 0 0 1000px #f9fafb inset;
   }
 
-  /* Input wrap để đặt icon bên trong */
   .auth-input-wrap {
     position: relative;
-    display: flex;
-    align-items: center;
     width: 100%;
+    box-sizing: border-box;
   }
 
-  /* Không override padding ở đây nữa — đã set ở .auth-field input */
   .auth-input-wrap input {
     width: 100%;
     box-sizing: border-box;
+    display: block;
   }
 
   .auth-field-icon {
     position: absolute;
     right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 15px;
     pointer-events: none;
+    line-height: 1;
   }
 
   .auth-field-icon.valid   { color: #16a34a; }
@@ -92,11 +97,11 @@
 
   .auth-field-hint {
     font-size: 12px;
-    height: 16px; /* fixed height thay vì min-height để không tạo khoảng trắng */
+    height: 16px;
     display: block;
-    margin-top: 3px;
+    margin-top: 2px;
     user-select: none;
-    pointer-events: none; /* không cho click vào hint */
+    pointer-events: none;
   }
 
   .auth-field-hint.valid   { color: #16a34a; }

@@ -1,6 +1,35 @@
 <% const activePage = 'verifications'; const pageTitle = 'Xác nhận học viên'; %>
 <%- include('../common/header', {user, activePage, pageTitle}) %>
 
+<!-- Lightbox -->
+<style>
+.lb-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.88); z-index:99999;
+  align-items:center; justify-content:center;
+  cursor:zoom-out;
+}
+.lb-overlay.open { display:flex; }
+.lb-overlay img {
+  max-width:90vw; max-height:90vh;
+  border-radius:10px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.7);
+  cursor:default;
+}
+.lb-close {
+  position:fixed; top:20px; right:24px;
+  background:none; border:none; color:#fff;
+  font-size:28px; cursor:pointer; line-height:1;
+  opacity:0.7; transition:opacity 0.15s;
+}
+.lb-close:hover { opacity:1; }
+</style>
+
+<div class="lb-overlay" id="lb-overlay" onclick="closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">&times;</button>
+  <img id="lb-img" src="" alt="Ảnh minh chứng" onclick="event.stopPropagation()" />
+</div>
+
 <div class="adm-page-header">
   <div>
     <div class="adm-page-title">Yêu cầu xác nhận học viên</div>
@@ -18,7 +47,7 @@
 <% } else { %>
   <div style="display:flex;flex-direction:column;gap:12px">
     <% data.requests.forEach(r => { %>
-    <div class="adm-card" id="vr-<%= r._id %>" style="overflow:visible">
+    <div class="adm-card" id="vr-<%= r._id %>">
       <div class="adm-card-body" style="display:flex;gap:16px;align-items:flex-start">
         <img src="<%= r.userId.avatar %>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #2563eb;flex:0 0 auto" />
         <div style="flex:1;min-width:0">
@@ -27,10 +56,14 @@
           <% if (r.note) { %>
           <div style="font-size:13px;color:#94a3b8;margin-bottom:10px;font-style:italic">"<%= r.note %>"</div>
           <% } %>
-          <a href="<%= r.proofImageUrl %>" target="_blank">
-            <img src="<%= r.proofImageUrl %>" style="max-width:280px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);transition:transform 0.15s" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''" />
-          </a>
-          <div style="font-size:12px;color:#475569;margin-top:8px">
+          <!-- Ảnh minh chứng — click để phóng to -->
+          <img src="<%= r.proofImageUrl %>"
+            onclick="openLightbox('<%= r.proofImageUrl %>')"
+            style="max-width:260px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);cursor:zoom-in;transition:transform 0.15s,box-shadow 0.15s;display:block"
+            onmouseover="this.style.transform='scale(1.03)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.4)'"
+            onmouseout="this.style.transform='';this.style.boxShadow=''"
+            title="Nhấp để xem ảnh đầy đủ" />
+          <div style="font-size:11px;color:#475569;margin-top:6px">
             <i class="fas fa-clock"></i> <%= new Date(r.createdAt).toLocaleString('vi-VN') %>
           </div>
         </div>
@@ -49,6 +82,18 @@
 <% } %>
 
 <script>
+// ── Lightbox ──
+function openLightbox(url) {
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-overlay').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lb-overlay').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ── Duyệt / Từ chối ──
 async function handleRequest(id, action) {
   const note = action === 'reject' ? (prompt('Lý do từ chối (tuỳ chọn):') || '') : '';
   const res  = await fetch('/admin/verifications/' + id + '/' + action, {
@@ -58,10 +103,17 @@ async function handleRequest(id, action) {
   });
   const json = await res.json();
   if (json.ok) {
-    const el = document.getElementById('vr-' + id);
-    el.style.opacity = '0.4';
-    el.style.pointerEvents = 'none';
     admToast(action === 'approve' ? '✓ Đã duyệt yêu cầu' : '✗ Đã từ chối yêu cầu', action === 'approve' ? 'success' : 'error');
+    // Xoá card khỏi DOM rồi reload sau 800ms
+    const el = document.getElementById('vr-' + id);
+    if (el) {
+      el.style.transition = 'opacity 0.3s, transform 0.3s';
+      el.style.opacity    = '0';
+      el.style.transform  = 'translateX(20px)';
+    }
+    setTimeout(() => location.reload(), 800);
+  } else {
+    admToast('✗ Có lỗi xảy ra', 'error');
   }
 }
 </script>

@@ -578,6 +578,8 @@ router.get("/course/courseAdd",ensureAuthenticated,async function (req, res) {
 });
 router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
   const { name, lecture_id, category, description, tuition, status } = req.body;
+  // Ưu tiên markdown nếu có
+  const finalDescription = req.body.description_md || description || '';
 
   // Tên lấy từ topic trong DB — không phụ thuộc FE
   const categoryId = (category || '').toString().trim();
@@ -618,7 +620,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
     name:          finalName,
     idLecturer:    lecture_id,
     idCourseTopic: categoryId,
-    description:   description || '',
+    description:   finalDescription,
     tuition:       Number(tuition) || 10,
     poster:        req.body.image || '',
     status:        status === '1' || status === true,
@@ -771,14 +773,22 @@ router.get('/verifications', ensureAuthenticated, async (req, res) => {
 });
 
 router.post('/verifications/:id/approve', ensureAuthenticated, async (req, res) => {
-  const request = await VerificationRequest.findById(req.params.id).populate('userId');
+  const request = await VerificationRequest.findById(req.params.id);
   if (!request) return res.json({ ok: false });
-  request.status = 'approved';
-  request.adminNote = (req.body.adminNote || '').trim();
+
+  request.status     = 'approved';
+  request.adminNote  = (req.body.adminNote || '').trim();
   request.reviewedAt = new Date();
   await request.save();
-  // Nâng role user lên lecturer nếu muốn, hoặc chỉ đánh dấu verified
-  // Hiện tại chỉ approve request, admin tự quyết định nâng role riêng
+
+  // Đổi role → 'user' (học viên) — dùng userId trực tiếp, không cần populate
+  const updated = await LocalUser.findByIdAndUpdate(
+    request.userId,
+    { $set: { role: 'user' } },
+    { new: true }
+  );
+  console.log('[approve] userId:', request.userId, '| new role:', updated ? updated.role : 'NOT FOUND');
+
   return res.json({ ok: true });
 });
 

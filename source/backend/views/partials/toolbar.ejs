@@ -8,22 +8,7 @@
         </a>
       </div>
     </div>
-    <div class="col-sm-7 search">
-      <form id="searchForm" action="/courses/search" class="toolbar-search" method="GET">
-        <input
-          id="searchInput"
-          class="form-control"
-          type="search"
-          placeholder="Tìm khóa học, giảng viên..."
-          aria-label="Search"
-          name="queryString"
-        />
-        <button id="searchButton" class="btn search-button" type="submit" aria-label="Search" title="Search">
-          <i class="fas fa-search"></i>
-        </button>
-      </form>
-    </div>
-    <div class="col-sm-3 featured">
+    <div class="col-sm-10 featured" style="margin-left:auto">
       <div class="toolbar-actions">
         <% if (!isAuthenticated) { %>
         <a class="btn btn-sm btn-outline-light toolbar-btn" href="/users/login">
@@ -82,12 +67,3 @@
     </div>
   </div>
 </header>
-<script>
-  $("#searchForm").on("submit", function (event) {
-    const val = $("#searchInput").val().trim();
-    if (val === "") {
-      event.preventDefault();
-      window.location.replace("/");
-    }
-  });
-</script>
