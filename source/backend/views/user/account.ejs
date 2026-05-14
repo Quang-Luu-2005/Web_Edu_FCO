@@ -484,7 +484,7 @@
         <span class="profile-role-badge" id="role-badge">
           <% if (user.role === 'admin') { %>⚙ Quản lý
           <% } else if (user.role === 'lecturer') { %>🎓 Giảng viên
-          <% } else if (user.role === 'user' && user.isAuth) { %>⚽ Học viên
+          <% } else if (user.role === 'user') { %>⚽ Học viên
           <% } else { %>👤 Khách<% } %>
         </span>
       </div>
@@ -529,7 +529,7 @@
     </div>
 
     <!-- ── Banner xác nhận học viên ── -->
-    <% if (user.role === 'user') { %>
+    <% if (user.role === 'guest') { %>
     <div class="verify-banner" id="verify-banner">
       <div class="verify-banner-inner">
         <span class="verify-icon">⚽</span>

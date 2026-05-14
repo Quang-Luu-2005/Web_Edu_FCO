@@ -174,6 +174,28 @@ const CourseSchema = mongoose.Schema({
     status: {
         type: Boolean,
         default: true
+    },
+    // Mã giảm giá
+    discountCodes: {
+        type: [{
+            code:       { type: String, required: true },
+            percent:    { type: Number, default: 0 },   // % giảm
+            maxUses:    { type: Number, default: 0 },   // 0 = không giới hạn
+            usedCount:  { type: Number, default: 0 },
+            expiresAt:  { type: Date,   default: null },
+            active:     { type: Boolean, default: true }
+        }],
+        default: []
+    },
+    // Buổi học (link + mô tả)
+    sessions: {
+        type: [{
+            title:      { type: String, default: '' },
+            link:       { type: String, default: '' },
+            date:       { type: Date,   default: null },
+            note:       { type: String, default: '' }
+        }],
+        default: []
     }
 });
 

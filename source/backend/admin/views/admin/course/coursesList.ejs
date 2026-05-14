@@ -1,6 +1,101 @@
 <% const activePage = 'courses'; const pageTitle = 'Khóa học'; %>
 <%- include('../common/header', {user, activePage, pageTitle}) %>
 
+<style>
+/* ── Filter selects ── */
+.courses-filter-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+
+.cf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 180px;
+  flex: 1;
+}
+
+.cf-field label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* Segment buttons cho danh mục */
+.cf-segment {
+  display: flex;
+  gap: 4px;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.cf-seg-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.cf-seg-btn:hover { background: rgba(255,255,255,0.06); color: #cbd5e1; }
+.cf-seg-btn.active { background: #2563eb; color: #fff; }
+
+/* Custom select giảng viên */
+.cf-select-wrap {
+  position: relative;
+}
+
+.cf-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #64748b;
+  pointer-events: none;
+}
+
+.cf-select {
+  width: 100%;
+  height: 38px;
+  padding: 0 32px 0 12px;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s;
+}
+
+.cf-select:focus { border-color: #2563eb; }
+.cf-select option { background: #1e293b; color: #f1f5f9; }
+</style>
+
 <div class="adm-page-header">
   <div>
     <div class="adm-page-title">Danh sách khóa học</div>
@@ -13,30 +108,41 @@
 
 <div class="adm-card">
   <% if(user.role === 'admin') { %>
-  <div class="adm-filter-bar">
-    <div class="adm-field">
+  <div class="courses-filter-bar">
+
+    <!-- Danh mục — custom select -->
+    <div class="cf-field" style="max-width:220px">
       <label>Danh mục</label>
-      <select name="category_filter" id="category_filter">
-        <option value="">Tất cả</option>
-        <% data.CourseTopics_array && data.CourseTopics_array.forEach(cat => { %>
-          <option value="<%= cat._id %>" <%= data.category_filter && data.category_filter.toString() === cat._id.toString() ? 'selected' : '' %>>
-            <%= cat.idCourseCategory.name %> → <%= cat.name %>
-          </option>
-        <% }) %>
-      </select>
+      <div class="cf-select-wrap">
+        <select class="cf-select" id="category_filter" onchange="_catVal=this.value">
+          <option value="">Tất cả danh mục</option>
+          <% data.CourseTopics_array && data.CourseTopics_array.forEach(cat => { %>
+            <option value="<%= cat._id %>"
+              <%= data.category_filter && data.category_filter.toString() === cat._id.toString() ? 'selected' : '' %>>
+              <%= cat.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
     </div>
-    <div class="adm-field">
+
+    <!-- Giảng viên — custom select -->
+    <div class="cf-field" style="max-width:220px">
       <label>Giảng viên</label>
-      <select name="lecturer_filter" id="lecturer_filter">
-        <option value="">Tất cả</option>
-        <% data.Lecturers_array && data.Lecturers_array.forEach(lec => { %>
-          <option value="<%= lec._id %>" <%= data.lecture_filter && data.lecture_filter.toString() === lec._id.toString() ? 'selected' : '' %>>
-            <%= lec.name %>
-          </option>
-        <% }) %>
-      </select>
+      <div class="cf-select-wrap">
+        <select class="cf-select" id="lecturer_filter">
+          <option value="">Tất cả giảng viên</option>
+          <% data.Lecturers_array && data.Lecturers_array.forEach(lec => { %>
+            <option value="<%= lec._id %>"
+              <%= data.lecture_filter && data.lecture_filter.toString() === lec._id.toString() ? 'selected' : '' %>>
+              <%= lec.name %>
+            </option>
+          <% }) %>
+        </select>
+      </div>
     </div>
-    <button class="adm-btn adm-btn-ghost" onclick="applyFilter()">
+
+    <button class="adm-btn adm-btn-primary" style="height:38px;align-self:flex-end" onclick="applyFilter()">
       <i class="fas fa-filter"></i> Lọc
     </button>
   </div>
@@ -67,7 +173,7 @@
             </td>
             <td style="color:#64748b"><%= new Date(course.uploadDate).toLocaleDateString('vi-VN') %></td>
             <td>
-              <div class="adm-td-actions" style="display:flex;gap:6px">
+              <div style="display:flex;gap:6px">
                 <input type="hidden" value="<%= course._id %>">
                 <button class="adm-btn adm-btn-primary adm-btn-sm adm-btn-icon viewCourse" title="Chỉnh sửa">
                   <i class="fas fa-pen"></i>
@@ -90,10 +196,22 @@
 </div>
 
 <script>
+let _catVal = '<%= data.category_filter || "" %>';
+
+function applyFilter() {
+  const cat = document.getElementById('category_filter').value;
+  const lec = document.getElementById('lecturer_filter').value;
+  const params = new URLSearchParams();
+  if (cat) params.set('category_filter', cat);
+  if (lec) params.set('lecture_filter', lec);
+  location.href = '/admin/course/coursesList?' + params.toString();
+}
+
 $('.viewCourse').on('click', function() {
   const id = $(this).closest('tr').find('input[type=hidden]').val();
   location.href = '/admin/course/courseEdit?id=' + id;
 });
+
 $('.deleteCourse').on('click', function() {
   const id = $(this).closest('tr').find('input[type=hidden]').val();
   const row = $(this).closest('tr');
@@ -104,11 +222,6 @@ $('.deleteCourse').on('click', function() {
     });
   }, '🗑️');
 });
-function applyFilter() {
-  const cat = $('#category_filter').val();
-  const lec = $('#lecturer_filter').val();
-  location.href = '/admin/course/coursesList?category_filter=' + cat + '&lecture_filter=' + lec;
-}
 </script>
 
 <%- include('../common/footer') %>

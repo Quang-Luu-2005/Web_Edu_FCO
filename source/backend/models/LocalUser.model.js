@@ -26,7 +26,7 @@ const LocalUserSchema = mongoose.Schema({
     },
     role: {
         type: String,
-        default: 'user'
+        default: 'guest'
     },
     gender: {
         type: String,

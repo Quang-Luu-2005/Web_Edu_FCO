@@ -207,6 +207,7 @@ Router.post("/register", async function (req, res) {
     newUser.email = email;
     newUser.password = await bcrypt.hash(password, 10);
     newUser.gender = gender || 'other';
+    newUser.role = 'guest';
     newUser.otpNumber = otpNumber;
     newUser.otpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 phút
     await newUser.save();
@@ -435,8 +436,8 @@ Router.post("/verify-student", ensureAuthenticated, express.json(), async (req, 
   }
 
   // Chỉ cho phép nếu chưa là lecturer/admin và chưa có request pending
-  if (req.user.role !== 'user') {
-    return res.json({ ok: false, msg: 'Tài khoản không cần xác nhận' });
+  if (req.user.role !== 'guest') {
+    return res.json({ ok: false, msg: 'Chỉ tài khoản Khách mới cần xác nhận' });
   }
 
   const existing = await VerificationRequest.findOne({

@@ -1,150 +1,230 @@
-<!DOCTYPE html>
-<html lang="vi">
+<% const activePage = 'courses'; const pageTitle = 'Thêm khóa học'; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://kit.fontawesome.com/d62abf4f8f.js" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.js"
-        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.1.3/js/fileinput.min.js"
-        integrity="sha512-vDrq7v1F/VUDuBTB+eILVfb9ErriIMW7Dn3JC/HOQLI8ZzTBTRRKrKJO3vfMmZFQpEGVpi+EYJFatPgVFxOKGA=="
-        crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/css/stylesheet.css">
-    <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
-    <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+<style>
+/* Custom select đẹp */
+.ca-select-wrap { position:relative; display:block; }
+.ca-select-wrap::after {
+  content:'';
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  width:0; height:0;
+  border-left:4px solid transparent;
+  border-right:4px solid transparent;
+  border-top:5px solid #64748b;
+  pointer-events:none;
+}
+.ca-select {
+  width:100%; height:42px;
+  padding:0 36px 0 14px;
+  background:#0f172a;
+  border:1.5px solid rgba(255,255,255,0.10);
+  border-radius:10px;
+  color:#e2e8f0;
+  font-size:13px; font-weight:500; font-family:inherit;
+  outline:none; cursor:pointer;
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  box-sizing:border-box;
+  transition:border-color 0.15s;
+}
+.ca-select:focus { border-color:#2563eb; }
+.ca-select option { background:#1e293b; color:#f1f5f9; }
 
-    <!-- summer note -->
+/* Poster drop zone */
+.poster-zone {
+  border:2px dashed rgba(255,255,255,0.12);
+  border-radius:10px;
+  background:#0f172a;
+  cursor:pointer;
+  transition:border-color 0.15s, background 0.15s;
+  overflow:hidden;
+  position:relative;
+}
+.poster-zone:hover { border-color:#2563eb; background:rgba(37,99,235,0.05); }
+.poster-zone.has-img { border-style:solid; border-color:rgba(255,255,255,0.12); }
+.poster-preview {
+  width:100%; height:160px;
+  object-fit:cover; display:block;
+}
+.poster-placeholder {
+  height:140px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:8px; color:#475569;
+}
+.poster-placeholder i { font-size:28px; }
+.poster-placeholder span { font-size:13px; font-weight:500; }
+.poster-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.5);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity 0.2s;
+  color:#fff; font-size:13px; font-weight:600; gap:6px;
+}
+.poster-zone:hover .poster-overlay { opacity:1; }
+</style>
 
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-        crossorigin="anonymous"></script>
-    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-</head>
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title">Thêm khóa học mới</div>
+    <div class="adm-page-subtitle"><a href="/admin/course/coursesList" style="color:#2563eb">← Quay lại danh sách</a></div>
+  </div>
+</div>
 
-<body>
-    <div id="container">
-        <%- include('../common/header',{user: user}); -%>
-            <%- include('../common/column_left'); -%>
-                <div id="content">
-                    <div class="page-header">
-                        <div class="container-fluid">
-                            <div class="pull-right">
-                                <button class="btn btn-primary" id="addcategory">
-                                    <i class="fa fa-save"></i>
-                                </button>
-                            </div>
-                            <h2>
-                                <%= data.title %>
-                            </h2>
-                        </div>
-                    </div>
-                    <div class="course-info">
-                        <div class="container-fluid">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title"><i class="fa fa-pencil"></i> Thông tin khóa học </h3>
-                                </div>
-                                <div class="panel-body">
-                                    <form action="" method="post" id="frmAddCourse">
-                                        <div class="course-detail">
-                                            <div class="form-group hidden">
-                                                <label class="col-sm-2 control-label" for="my-input">Tên khóa học</label>
-                                                <div class="col-sm-10">
-                                                    <input class="form-control" type="text" name="lecture_id"
-                                                        value="<%=user._id%>">
-                                                </div>
-                                            </div>
-                                            <div class="form-group required">
-                                                <label class="col-sm-2 control-label" for="my-input">Tên khóa học</label>
-                                                <div class="col-sm-10">
-                                                    <input class="form-control" type="text" name="name"
-                                                        value="">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label" for="my-input">Category</label>
-                                                <div class="col-sm-10">
-                                                    <select class="form-control" type="text" name="category">
-                                                        <% data.categories.forEach((category)=> { %>
-                                                            <option value="<%=category._id%>" selected="selected">
-                                                                <%=category.idCourseCategory.name%> --> <%=category.name%>
-                                                            </option>
-                                                            <% }); %>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label" for="my-input">Số lượng bài giảng</label>
-                                                <div class="col-sm-10">
-                                                    <select class="form-control" name="number_of_video">
-                                                        <% for (var i=1; i <=10; i++ ) { %>
-                                                            <option value="<%= i %> ">
-                                                                <%= i %>
-                                                            </option>
-                                                            <% } %>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label" for="my-input">Mô tả khóa học</label>
-                                                <div class="col-sm-10">
-                                                    <textarea id="summernote" class="summernote"
-                                                        name="description"></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="col-sm-2 control-label" for="my-input">Những gì bạn đạt được</label>
-                                                <div class="col-sm-10">
-                                                    <textarea id="summernote" class="summernote"
-                                                        name="what_you_learn"></textarea>
-                                                </div>
-                                            </div>
-                                            <div class="form-group ">
-                                                <label class="col-sm-2 control-label" for="my-input">Status</label>
-                                                <div class="col-sm-10">
-                                                    <select class="form-control" type="text" name = "status">
-                                                            <option value="1" selected="selected"> Enable</option>
-                                                            <option value="0" > Disable</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                       
-                        
-                    </div>
-                </div>
-                <%- include('../common/footer'); -%>
+<form action="" method="post" id="frmAdd" enctype="multipart/form-data">
+  <input type="hidden" name="lecture_id" value="<%= user._id %>" />
+  <input type="hidden" name="image" id="poster-url" value="" />
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start">
+
+    <!-- Cột trái -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="adm-card">
+        <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-info-circle" style="color:#2563eb;margin-right:8px"></i>Thông tin cơ bản</span></div>
+        <div class="adm-card-body">
+          <div class="adm-form-grid">
+            <div class="adm-field">
+              <label>Danh mục <span style="color:#f87171">*</span></label>
+              <div class="ca-select-wrap">
+                <select name="category" id="category-select" class="ca-select" required onchange="syncName(this)">
+                  <% data.categories && data.categories.forEach(cat => { %>
+                    <option value="<%= cat._id %>" data-name="<%= cat.name %>"><%= cat.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+            <div class="adm-field">
+              <label>Trạng thái</label>
+              <div class="ca-select-wrap">
+                <select name="status" class="ca-select">
+                  <option value="1">Hiển thị</option>
+                  <option value="0">Ẩn</option>
+                </select>
+              </div>
+            </div>
+            <!-- name ẩn — tự lấy từ danh mục -->
+            <input type="hidden" name="name" id="course-name" value="<%= data.categories && data.categories[0] ? data.categories[0].name : '' %>" />
+            <div class="adm-field adm-field-full">
+              <label>Mô tả khóa học</label>
+              <textarea name="description" rows="4" placeholder="Mô tả ngắn về khóa học..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-</body>
+    <!-- Cột phải -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Poster -->
+      <div class="adm-card">
+        <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-image" style="color:#d97706;margin-right:8px"></i>Ảnh khóa học</span></div>
+        <div class="adm-card-body" style="padding:12px">
+          <div class="poster-zone" id="poster-zone" onclick="document.getElementById('poster-file').click()">
+            <img id="poster-preview" class="poster-preview" src="" alt="" style="display:none" />
+            <div class="poster-placeholder" id="poster-placeholder">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>Nhấp để chọn ảnh</span>
+              <span style="font-size:11px;color:#64748b">PNG, JPG — tỉ lệ 16:9</span>
+            </div>
+            <div class="poster-overlay"><i class="fas fa-camera"></i> Đổi ảnh</div>
+          </div>
+          <input type="file" id="poster-file" accept="image/*" style="display:none" />
+        </div>
+      </div>
+
+      <!-- Giá & Mã giảm giá -->
+      <div class="adm-card">
+        <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-tag" style="color:#16a34a;margin-right:8px"></i>Giá & Mã giảm giá</span></div>
+        <div class="adm-card-body">
+          <div class="adm-field" style="margin-bottom:16px">
+            <label>Giá (USD) <span style="color:#f87171">*</span></label>
+            <input type="number" name="tuition" value="10" min="0" step="0.01" />
+          </div>
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
+            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Mã giảm giá</div>
+            <div style="display:grid;grid-template-columns:1fr 60px 60px 24px;gap:6px;margin-bottom:6px">
+              <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Mã code</span>
+              <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Giảm</span>
+              <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Lượt</span>
+              <span></span>
+            </div>
+            <div id="discount-list" style="display:flex;flex-direction:column;gap:6px"></div>
+            <button type="button" class="adm-btn adm-btn-ghost" style="width:100%;margin-top:8px;height:32px;font-size:12px" onclick="addDiscount()">
+              <i class="fas fa-plus"></i> Thêm mã
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+    <button type="button" class="adm-btn adm-btn-ghost" onclick="location.href='/admin/course/coursesList'">Huỷ</button>
+    <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Tạo khóa học</button>
+  </div>
+</form>
+
 <script>
-    $(document).ready(function () {
-        $("#addcategory").on("click",function () {
-            $("#frmAddCourse").submit();
-        });
-      
-        $(document).ready(function () {
-            $('.summernote').summernote({
-                tabsize: 2,
-                height: 400
-            });
-        });
-    });
+const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+
+// Đồng bộ name ẩn theo danh mục đã chọn
+function syncName(select) {
+  const opt = select.options[select.selectedIndex];
+  document.getElementById('course-name').value = opt.dataset.name || opt.text;
+}
+// Gọi ngay khi load để set giá trị mặc định
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('category-select');
+  if (sel) syncName(sel);
+});
+
+// ── Upload poster → ImgBB ──
+document.getElementById('poster-file').addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  // Preview ngay
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('poster-preview');
+    const ph  = document.getElementById('poster-placeholder');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    document.getElementById('poster-zone').classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+
+  // Upload ImgBB
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
+    const json = await res.json();
+    if (json.success) {
+      document.getElementById('poster-url').value = json.data.url;
+    }
+  } catch(e) { console.error('poster upload error', e); }
+});
+
+// ── Mã giảm giá ──
+let discountCount = 0;
+function addDiscount() {
+  const i = discountCount++;
+  const inp = 'height:32px;padding:0 8px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:7px;color:#f1f5f9;font-size:12px;outline:none;width:100%;box-sizing:border-box;font-family:inherit';
+  const html = `
+    <div id="dc-${i}" style="display:grid;grid-template-columns:1fr 60px 60px 24px;gap:6px;align-items:center">
+      <input type="text"   name="discountCodes[${i}][code]"    placeholder="SALE20" style="${inp};text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
+      <div style="position:relative">
+        <input type="number" name="discountCodes[${i}][percent]" placeholder="0" min="1" max="100" style="${inp};padding-right:18px" />
+        <span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;color:#64748b;pointer-events:none">%</span>
+      </div>
+      <input type="number" name="discountCodes[${i}][maxUses]" placeholder="∞" min="0" style="${inp}" title="0 = không giới hạn" />
+      <button type="button" onclick="document.getElementById('dc-${i}').remove()" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:13px;padding:0;line-height:1"><i class="fas fa-times"></i></button>
+    </div>`;
+  document.getElementById('discount-list').insertAdjacentHTML('beforeend', html);
+}
 </script>
 
-</html>
+<%- include('../common/footer') %>

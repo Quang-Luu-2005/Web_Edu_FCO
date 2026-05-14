@@ -1,5 +1,6 @@
 module.exports = {
     DEVELOPMENT: 'Development',
     BUSINESS: 'Business',
-    DESIGN: 'Design'
+    DESIGN: 'Design',
+    FOOTBALL: 'Football Coaching'
 }

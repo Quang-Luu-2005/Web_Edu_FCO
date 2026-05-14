@@ -9,5 +9,8 @@ module.exports = {
     BUSINESS_SALE: 'Sales',
     DESIGN_WEB: 'Web Design',
     DESIGN_GAME: 'Game Design',
-    DESIGN_TOOL: 'Design Tools' 
+    DESIGN_TOOL: 'Design Tools',
+    FOOTBALL_2M:     'Khóa học 2M',
+    FOOTBALL_1VS1:   'Khóa học 1vs1',
+    FOOTBALL_CUSTOM: 'Khóa học theo giờ'
 }

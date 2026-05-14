@@ -505,116 +505,128 @@ router.get("/course/coursesList", ensureAuthenticated, async  (req, res) => {
 });
 
 router.get("/course/courseEdit",ensureAuthenticated, async function (req, res) {
-  
-  let data = [];
-  
-  data["title"] = "CHỈNH SỬA KHÓA HỌC";
-  const CourseTopics_array = await Topic.find({}).populate('idCourseCategory').then(
-    (CourseTopics)=>{
-      if(CourseTopics){
-        return CourseTopics;
-      }
-  });
-  const Course_info = await  Course.findById(req.query.id);;
-
-  data["course_info"] = Course_info;
-  data["categories"] = CourseTopics_array;
-  res.render("admin/course/courseEdit",{
-    user:req.user, data:data
+  const categories  = await Topic.find({}).populate('idCourseCategory');
+  const course_info = await Course.findById(req.query.id);
+  res.locals.layout = false;
+  res.render("admin/course/courseEdit", {
+    user: req.user,
+    data: { title: "CHỈNH SỬA KHÓA HỌC", course_info, categories }
   });
 });
 
 router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
-  const {
-    name,
-    lecture_id,
-    category,
-    number_of_video,
-    description,
-    what_you_learn,
-    id,
-    image,
-    videos,
-    status,
-  } = req.body;  
+  const { name, lecture_id, category, description, tuition, id, image, status } = req.body;
 
-
-  //add video
-  let courses_video = [];
-  if(videos){
-    videos.forEach((video) => {
-        video_item = {
-          name: video.name,
-          source: video.href,
-        }
-        courses_video.push(video_item);
-
+  // Parse sessions
+  const sessions = [];
+  if (req.body.sessions) {
+    const raw = req.body.sessions;
+    Object.keys(raw).forEach(k => {
+      const s = raw[k];
+      if (s.title || s.link) {
+        sessions.push({
+          title: (s.title || '').trim(),
+          link:  (s.link  || '').trim(),
+          note:  (s.note  || '').trim(),
+          date:  s.date ? new Date(s.date) : null
+        });
+      }
     });
   }
-   Course.findById(id).then((Course_finded)=>{
-    if(Course_finded){
-      Course_finded.name = name;
-      Course_finded.idLecturer = lecture_id;
-      Course_finded.idCourseTopic = category;
-      Course_finded.numberOfVideo = number_of_video;
-      Course_finded.description = description;
-      Course_finded.whatYoullLearn = normalizeLearnItems(what_you_learn);
-      Course_finded.poster = image;
-      Course_finded.videos = courses_video;
-      Course_finded.status = status;
 
-      Course_finded.save();
-      console.log("course saved");
-    } 
+  // Parse discount codes
+  const discountCodes = [];
+  if (req.body.discountCodes) {
+    const raw = req.body.discountCodes;
+    Object.keys(raw).forEach(k => {
+      const dc = raw[k];
+      if (dc.code && dc.code.trim()) {
+        discountCodes.push({
+          code:      dc.code.trim().toUpperCase(),
+          percent:   Number(dc.percent) || 0,
+          maxUses:   Number(dc.maxUses) || 0,
+          expiresAt: dc.expiresAt ? new Date(dc.expiresAt) : null,
+          active:    true
+        });
+      }
     });
+  }
+
+  Course.findById(id).then(c => {
+    if (!c) return res.redirect("/admin/course/coursesList");
+    c.name          = name;
+    c.idLecturer    = lecture_id;
+    c.idCourseTopic = category;
+    c.description   = description || '';
+    c.tuition       = Number(tuition) || c.tuition;
+    c.poster        = image || c.poster;
+    c.status        = status === '1' || status === true;
+    c.sessions      = sessions;
+    c.discountCodes = discountCodes;
+    c.save();
     res.redirect("/admin/course/coursesList");
+  });
 });
 
 router.get("/course/courseAdd",ensureAuthenticated,async function (req, res) {
-  let data = [];
-  
-  data["title"] = "TẠO KHÓA HỌC";
-  const CourseTopics_array = await Topic.find({}).populate('idCourseCategory').then(
-    (CourseTopics)=>{
-      let CourseTopics_array = [];
-      if(CourseTopics){
-        return CourseTopics;
-      
-      }
+  const categories = await Topic.find({}).populate('idCourseCategory');
+  res.locals.layout = false;
+  res.render("admin/course/courseAdd", {
+    user: req.user,
+    data: { title: "TẠO KHÓA HỌC", categories }
   });
-
-  data["categories"] = CourseTopics_array;
-
-  res.render("admin/course/courseAdd",{
-    user:req.user, data:data
-  });
- 
-
 });
 router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
-  const {
-    name,
-    lecture_id,
-    category,
-    number_of_video,
-    description,
-    what_you_learn,
-    status,
-  } = req.body;  
+  const { name, lecture_id, category, description, tuition, status } = req.body;
+
+  // Tên lấy từ topic trong DB — không phụ thuộc FE
+  const categoryId = (category || '').toString().trim();
+  let topic = null;
+  try {
+    if (categoryId && categoryId.length === 24) {
+      topic = await Topic.findById(categoryId);
+    }
+  } catch(e) { console.error('[courseAdd] findById error:', e.message); }
+  
+  const topicName = topic && topic.name ? String(topic.name) : null;
+  const existCount = topicName ? await Course.countDocuments({ idCourseTopic: categoryId }) : 0;
+  const finalName = topicName
+    ? (existCount > 0 ? `${topicName} #${existCount + 1}` : topicName)
+    : `Khóa học ${Date.now()}`;
+
+  console.log('[courseAdd] categoryId:', categoryId, '| topic:', topicName, '| finalName:', finalName);
+
+  // Parse discount codes
+  const discountCodes = [];
+  if (req.body.discountCodes) {
+    const raw = req.body.discountCodes;
+    Object.keys(raw).forEach(k => {
+      const dc = raw[k];
+      if (dc.code && dc.code.trim()) {
+        discountCodes.push({
+          code:      dc.code.trim().toUpperCase(),
+          percent:   Number(dc.percent) || 0,
+          maxUses:   Number(dc.maxUses) || 0,
+          expiresAt: dc.expiresAt ? new Date(dc.expiresAt) : null,
+          active:    true
+        });
+      }
+    });
+  }
 
   const Course_new = new Course({
-    name,
-    idLecturer:lecture_id,
-    idCourseTopic: category,
-    numberOfVideo:number_of_video,
-    description,
-    whatYoullLearn:normalizeLearnItems(what_you_learn),
-    status,
+    name:          finalName,
+    idLecturer:    lecture_id,
+    idCourseTopic: categoryId,
+    description:   description || '',
+    tuition:       Number(tuition) || 10,
+    poster:        req.body.image || '',
+    status:        status === '1' || status === true,
+    discountCodes,
   });
 
-  Course_new.save().then(()=>{
-    console.log("course save");
-    res.redirect("/admin/course/courseEdit?id="+Course_new._id);
+  Course_new.save().then(() => {
+    res.redirect("/admin/course/courseEdit?id=" + Course_new._id);
   });
 });
 
@@ -704,7 +716,14 @@ const VerificationRequest = require('../../models/VerificationRequest.model');
 router.get('/users', ensureAuthenticated, async (req, res) => {
   const { role, search } = req.query;
   const filter = {};
-  if (role && ['user','lecturer','admin'].includes(role)) filter.role = role;
+  if (role) {
+    if (role === 'guest') {
+      // guest = role là 'guest', null, hoặc undefined
+      filter.$or = [{ role: 'guest' }, { role: null }, { role: { $exists: false } }];
+    } else if (['user','lecturer','admin'].includes(role)) {
+      filter.role = role;
+    }
+  }
   if (search && search.trim()) {
     const re = new RegExp(search.trim(), 'i');
     filter.$or = [{ name: re }, { email: re }, { username: re }];
@@ -719,7 +738,7 @@ router.get('/users', ensureAuthenticated, async (req, res) => {
 
 router.post('/users/:id/role', ensureAuthenticated, express.json(), async (req, res) => {
   const { role } = req.body;
-  if (!['user','lecturer','admin'].includes(role)) return res.json({ ok: false, msg: 'Role không hợp lệ' });
+  if (!['user','lecturer','admin','guest'].includes(role)) return res.json({ ok: false, msg: 'Role không hợp lệ' });
   // Không cho tự đổi role của chính mình
   if (req.params.id === req.user._id.toString()) return res.json({ ok: false, msg: 'Không thể đổi role của chính mình' });
   const updated = await LocalUser.findByIdAndUpdate(req.params.id, { $set: { role } }, { new: true });

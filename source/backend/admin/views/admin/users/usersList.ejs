@@ -1,6 +1,64 @@
 <% const activePage = 'users'; const pageTitle = 'Người dùng'; %>
 <%- include('../common/header', {user, activePage, pageTitle}) %>
 
+<style>
+.uf-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  flex-wrap: wrap;
+}
+.uf-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.uf-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+/* Cả select lẫn input đều dùng chung class này */
+.uf-input {
+  height: 38px;
+  padding: 0 12px;
+  background: #0f172a !important;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  color: #e2e8f0 !important;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none;
+  box-sizing: border-box;
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+.uf-input:focus { border-color: #2563eb; }
+.uf-select-wrap {
+  position: relative;
+  display: block;
+}
+.uf-select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #64748b;
+  pointer-events: none;
+}
+.uf-select-wrap .uf-input { padding-right: 28px; cursor: pointer; }
+</style>
+
 <div class="adm-page-header">
   <div>
     <div class="adm-page-title">Người dùng</div>
@@ -10,26 +68,28 @@
 
 <!-- Filter bar -->
 <div class="adm-card" style="margin-bottom:16px">
-  <div class="adm-filter-bar">
-    <div class="adm-field" style="max-width:200px">
-      <label>Lọc theo role</label>
-      <select id="role-filter">
-        <option value="">Tất cả</option>
-        <option value="user"     <%= data.roleFilter === 'user'     ? 'selected' : '' %>>Học viên</option>
-        <option value="lecturer" <%= data.roleFilter === 'lecturer' ? 'selected' : '' %>>Giảng viên</option>
-        <option value="admin"    <%= data.roleFilter === 'admin'    ? 'selected' : '' %>>Quản lý</option>
-      </select>
-    </div>
-    <div class="adm-field" style="max-width:280px">
-      <label>Tìm kiếm</label>
-      <input type="text" id="search-input" placeholder="Tên, email..." value="<%= data.search || '' %>" style="height:40px;padding:0 14px" />
-    </div>
-    <button class="adm-btn adm-btn-ghost" onclick="applyFilter()">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;flex-wrap:wrap">
+
+    <select id="role-filter" class="uf-input" style="flex:1;min-width:0">
+      <option value=""         style="background:#1e293b" <%= data.roleFilter === ''         ? 'selected' : '' %>>Tất cả role</option>
+      <option value="guest"    style="background:#1e293b" <%= data.roleFilter === 'guest'    ? 'selected' : '' %>>Khách</option>
+      <option value="user"     style="background:#1e293b" <%= data.roleFilter === 'user'     ? 'selected' : '' %>>Học viên</option>
+      <option value="lecturer" style="background:#1e293b" <%= data.roleFilter === 'lecturer' ? 'selected' : '' %>>Giảng viên</option>
+      <option value="admin"    style="background:#1e293b" <%= data.roleFilter === 'admin'    ? 'selected' : '' %>>Quản lý</option>
+    </select>
+
+    <input type="text" id="search-input" class="uf-input"
+      placeholder="🔍  Tên, email..."
+      value="<%= data.search || '' %>"
+      style="flex:1;min-width:0" />
+
+    <button class="adm-btn adm-btn-primary" style="height:38px;flex-shrink:0" onclick="applyFilter()">
       <i class="fas fa-filter"></i> Lọc
     </button>
-    <button class="adm-btn adm-btn-ghost" onclick="clearFilter()">
-      <i class="fas fa-times"></i> Xoá lọc
+    <button class="adm-btn adm-btn-ghost" style="height:38px;flex-shrink:0" onclick="clearFilter()">
+      <i class="fas fa-times"></i>
     </button>
+
   </div>
 </div>
 
@@ -62,14 +122,19 @@
             </td>
             <td style="color:#94a3b8"><%= u.email %></td>
             <td>
-              <select class="role-select adm-badge-select"
+              <select class="role-select"
                       data-id="<%= u._id %>"
                       data-current="<%= u.role %>"
                       onchange="changeRole(this)"
-                      style="background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600;cursor:pointer;outline:none;color:<%= u.role==='admin'?'#fbbf24':u.role==='lecturer'?'#93c5fd':'#86efac' %>">
-                <option value="user"     <%= u.role === 'user'     ? 'selected' : '' %> style="background:#1e293b;color:#86efac">⚽ Học viên</option>
-                <option value="lecturer" <%= u.role === 'lecturer' ? 'selected' : '' %> style="background:#1e293b;color:#93c5fd">🎓 Giảng viên</option>
-                <option value="admin"    <%= u.role === 'admin'    ? 'selected' : '' %> style="background:#1e293b;color:#fbbf24">⚙ Quản lý</option>
+                      style="background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;color:<%=
+                        u.role==='admin'    ? '#fbbf24' :
+                        u.role==='lecturer' ? '#93c5fd' :
+                        u.role==='user'     ? '#86efac' : '#94a3b8'
+                      %>">
+                <option value="guest"    <%= (!u.role || u.role === 'guest') ? 'selected' : '' %> style="background:#1e293b;color:#94a3b8">Khách</option>
+                <option value="user"     <%= u.role === 'user'     ? 'selected' : '' %> style="background:#1e293b;color:#86efac">Học viên</option>
+                <option value="lecturer" <%= u.role === 'lecturer' ? 'selected' : '' %> style="background:#1e293b;color:#93c5fd">Giảng viên</option>
+                <option value="admin"    <%= u.role === 'admin'    ? 'selected' : '' %> style="background:#1e293b;color:#fbbf24">Quản lý</option>
               </select>
             </td>
             <td>
@@ -140,7 +205,7 @@ async function changeRole(select) {
       const json = await res.json();
       if (json.ok) {
         select.dataset.current = newRole;
-        const colorMap = { admin: '#fbbf24', lecturer: '#93c5fd', user: '#86efac' };
+        const colorMap = { admin: '#fbbf24', lecturer: '#93c5fd', user: '#86efac', guest: '#94a3b8' };
         select.style.color = colorMap[newRole] || '#f1f5f9';
         admToast('✓ Đã cập nhật role', 'success');
       } else {
