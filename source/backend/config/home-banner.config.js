@@ -1,15 +1,14 @@
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 
 const bannerFile = path.join(__dirname, 'home-banners.json');
-const bannerCount = 3;
 
+// Không giới hạn số lượng banner
 const normalizeBanners = (value) => {
-    const items = Array.isArray(value) ? value : [];
-    return Array.from({ length: bannerCount }, (_, index) => {
-        const image = items[index];
-        return typeof image === 'string' ? image.trim() : '';
-    });
+    if (!Array.isArray(value)) return [];
+    return value
+        .map(item => (typeof item === 'string' ? item.trim() : ''))
+        .filter(Boolean);
 };
 
 const readHomeBanners = () => {
@@ -17,7 +16,7 @@ const readHomeBanners = () => {
         const raw = fs.readFileSync(bannerFile, 'utf8');
         return normalizeBanners(JSON.parse(raw));
     } catch (error) {
-        return normalizeBanners([]);
+        return [];
     }
 };
 
@@ -29,8 +28,4 @@ const writeHomeBanners = (banners) => {
     );
 };
 
-module.exports = {
-    readHomeBanners,
-    writeHomeBanners,
-    normalizeBanners
-};
+module.exports = { readHomeBanners, writeHomeBanners, normalizeBanners };

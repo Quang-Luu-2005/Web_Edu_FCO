@@ -71,14 +71,18 @@ router.get("/home/banners", ensureAuthenticated, (req, res) => {
 });
 
 router.post("/home/banners", ensureAuthenticated, (req, res) => {
-  const banners = normalizeBanners([
-    req.body.banner1,
-    req.body.banner2,
-    req.body.banner3
-  ]);
-
-  writeHomeBanners(banners);
-  res.redirect("/admin/home/banners");
+  // Nhận banners[] từ URLSearchParams
+  let raw = req.body['banners[]'] || req.body.banners || [];
+  if (!Array.isArray(raw)) raw = [raw];
+  raw = raw.filter(Boolean);
+  console.log('[home/banners POST] saving:', raw.length, 'banners');
+  try {
+    writeHomeBanners(raw);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[home/banners POST] write error:', err.message);
+    return res.json({ ok: false, msg: err.message });
+  }
 });
 
 router.get("/account/edit", ensureAuthenticated,  (req, res) => {
@@ -516,6 +520,7 @@ router.get("/course/courseEdit",ensureAuthenticated, async function (req, res) {
 
 router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
   const { name, lecture_id, category, description, tuition, id, image, status } = req.body;
+  const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
 
   // Parse sessions
   const sessions = [];
@@ -558,7 +563,8 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
     c.idLecturer    = lecture_id;
     c.idCourseTopic = category;
     c.description   = description || '';
-    c.tuition       = Number(tuition) || c.tuition;
+    c.tuition       = priceType === 'contact' ? 0 : (Number(tuition) || c.tuition);
+    c.priceType     = priceType;
     c.poster        = image || c.poster;
     c.status        = status === '1' || status === true;
     c.sessions      = sessions;
@@ -580,6 +586,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
   const { name, lecture_id, category, description, tuition, status } = req.body;
   // Ưu tiên markdown nếu có
   const finalDescription = req.body.description_md || description || '';
+  const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
 
   // Tên lấy từ topic trong DB — không phụ thuộc FE
   const categoryId = (category || '').toString().trim();
@@ -621,15 +628,29 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
     idLecturer:    lecture_id,
     idCourseTopic: categoryId,
     description:   finalDescription,
-    tuition:       Number(tuition) || 10,
+    tuition:       priceType === 'contact' ? 0 : (Number(tuition) || 500000),
+    priceType,
     poster:        req.body.image || '',
     status:        status === '1' || status === true,
     discountCodes,
   });
 
-  Course_new.save().then(() => {
-    res.redirect("/admin/course/courseEdit?id=" + Course_new._id);
-  });
+  try {
+    await Course_new.save();
+    req.flash && req.flash('success_msg', `Đã tạo khóa học "${Course_new.name}" thành công`);
+    res.redirect('/admin/course/coursesList');
+  } catch (err) {
+    console.error('[courseAdd] save error:', err.message);
+    // Nếu trùng tên thì thêm timestamp
+    if (err.code === 11000) {
+      Course_new.name = finalName + ' ' + Date.now().toString().slice(-4);
+      await Course_new.save();
+      req.flash && req.flash('success_msg', `Đã tạo khóa học thành công`);
+      res.redirect('/admin/course/coursesList');
+    } else {
+      res.redirect('/admin/course/coursesList?error=1');
+    }
+  }
 });
 
 router.get("/course/courseDelete",ensureAuthenticated,async function (req, res) {

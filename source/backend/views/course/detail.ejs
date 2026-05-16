@@ -559,19 +559,36 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 7px 10px;
+    padding: 6px 14px;
     border: 1px solid #dbe4ea;
     border-radius: 999px;
     background: #fff;
     color: #374151;
     font-size: 13px;
     line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s;
   }
+  .reaction-btn:hover { border-color: #3b6fd4; color: #3b6fd4; }
 
   .reaction-btn.selected {
     border-color: #2563eb;
     color: #2563eb;
     background: #eff6ff;
+  }
+
+  .reaction-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
   }
 
   .faq-reply-box {
@@ -665,7 +682,7 @@
           <p>
             Giảng viên:
             <a href="#" style="color: rgb(144, 205, 247)"
-              ><strong><%= course.idLecturer.name %></strong></a
+              ><strong><%= course.idLecturer ? course.idLecturer.name : 'WEBCTT2' %></strong></a
             >
           </p>
           <div class="course-actions">
@@ -688,48 +705,27 @@
   <div class="container-wrap">
     <div class="course-tabs" role="tablist" aria-label="Course sections">
       <button type="button" class="course-tab active" data-target="couser-intro">Giới thiệu</button>
-      <button type="button" class="course-tab" data-target="couser-content">Nội dung</button>
       <button type="button" class="course-tab" data-target="student-feedback">Reviews</button>
       <button type="button" class="course-tab" data-target="faq">FAQ</button>
     </div>
 
     <div id="couser-intro" class="text-container course-panel active">
-      <h2 class="heading-xl">Về chuyên môn này</h2>
-      <p>
-        Chuyên ngành này được xây dựng dựa trên sự thành công của khóa học
-        Python cho mọi người và sẽ giới thiệu các khái niệm lập trình cơ bản bao
-        gồm cấu trúc dữ liệu, giao diện chương trình ứng dụng được nối mạng và
-        cơ sở dữ liệu, sử dụng ngôn ngữ lập trình Python. Trong Dự án Capstone,
-        bạn sẽ sử dụng các công nghệ đã học trong suốt Chuyên môn để thiết kế và
-        tạo các ứng dụng của riêng bạn để truy xuất, xử lý và hiển thị dữ liệu.
-      </p>
-      <p>Khóa học này dành cho:</p>
-      <ul>
-        <li>Bất kỳ ai quan tâm đến Machine Learning</li>
-        <li>
-          Học sinh có ít nhất kiến thức trung học về toán và những người muốn
-          bắt đầu học Machine Learning.
-        </li>
-        <li>
-          Bất kỳ trình độ trung cấp nào là những người biết kiến thức cơ bản về
-          Machine Learning, bao gồm các thuật toán cổ điển như hồi quy tuyến
-          tính hoặc hồi quy logistic, nhưng những người muốn tìm hiểu thêm về nó
-          và khám phá tất cả các lĩnh vực khác nhau của Machine Learning.
-        </li>
-      </ul>
-      <div class="what-you-will-learn">
-        <h3 style="margin: 0 0 1.6rem">
-          <strong>Bạn sẽ được học</strong>
-        </h3>
+      <h2 class="heading-xl">Giới thiệu khóa học</h2>
+      <% if (course.description) { %>
+        <div style="line-height:1.8;color:#374151;white-space:pre-wrap"><%= course.description %></div>
+      <% } else { %>
+        <p style="color:#9ca3af">Chưa có mô tả cho khóa học này.</p>
+      <% } %>
+      <% if (course.whatYoullLearn && course.whatYoullLearn.length > 0) { %>
+      <div class="what-you-will-learn" style="margin-top:24px">
+        <h3 style="margin:0 0 1.2rem"><strong>Bạn sẽ được học</strong></h3>
         <ul class="what-you-will-learn-content">
-          <% for( let i = 0; i < course.whatYoullLearn.length; i++ ) { %>
-          <li>
-            <i class="fas fa-check"></i>
-            <span><%= course.whatYoullLearn[i] %></span>
-          </li>
+          <% for(let i = 0; i < course.whatYoullLearn.length; i++) { %>
+          <li><i class="fas fa-check"></i><span><%= course.whatYoullLearn[i] %></span></li>
           <% } %>
         </ul>
       </div>
+      <% } %>
     </div>
 
     <div id="couser-content" class="text-container course-panel">
@@ -801,7 +797,7 @@
       <p style="color: gray">Development Team Lead</p>
       <div class="row">
         <div class="col-sm-2">
-          <img src="<%= course.idLecturer.avatar %>" alt="" class="rounded-circle teacher-avt" />
+          <img src="<%= course.idLecturer ? course.idLecturer.avatar : '' %>" alt="" class="rounded-circle teacher-avt" />
         </div>
         <div class="col-sm-6 info">
           <i class="fas fa-star text-warning"></i>
@@ -813,7 +809,7 @@
           <span style="margin-left: 8px">20 Course</span><br />
         </div>
         <p style="padding-top: 20px">
-          <%= course.idLecturer.description %> 
+          <%= course.idLecturer ? course.idLecturer.description : '' %> 
         </p>
       </div>
     </div>
@@ -937,7 +933,7 @@
     <div id="faq" class="text-container course-panel">
       <div class="faq-heading">
         <h2 class="heading-xl">FAQ</h2>
-        <p>Hỏi nhanh, trả lời nhanh, bày tỏ, báo cáo nếu sai.</p>
+        <p>Hỏi nhanh, trả lời nhanh, báo cáo nếu sai.</p>
       </div>
 
       <% if (isPaid || isAdmin) { %>
@@ -952,7 +948,7 @@
 
       <div class="faq-thread-list">
         <% faqThreads.forEach((thread) => { %>
-        <div class="faq-thread" data-review-id="<%= thread.id %>">
+        <div class="faq-thread" data-review-id="<%= thread.id %>" data-thread-id="<%= thread.id %>">
           <div class="faq-main">
             <img src="<%= thread.author.avatar %>" alt="<%= thread.author.name %>" class="faq-avatar" />
             <div class="faq-body">
@@ -962,7 +958,7 @@
               </div>
               <p><%= thread.text %></p>
               <div class="faq-stats">
-                <span><%= thread.reactionSummary.total %> bày tỏ</span>
+                <span id="like-count-<%= thread.id %>"><%= thread.reactionSummary.like || 0 %> lượt thích</span>
                 <span><%= thread.replyCount %> trả lời</span>
                 <% if (thread.reportCount > 0) { %>
                 <span><%= thread.reportCount %> báo cáo</span>
@@ -987,21 +983,9 @@
               <div class="reaction-row">
                 <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'like' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="like">
                   <i class="far fa-thumbs-up"></i> Thích
-                </button>
-                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'love' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="love">
-                  <i class="fas fa-heart"></i> Yêu thích
-                </button>
-                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'haha' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="haha">
-                  <i class="far fa-laugh"></i> Haha
-                </button>
-                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'wow' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="wow">
-                  <i class="far fa-surprise"></i> Wow
-                </button>
-                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'sad' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="sad">
-                  <i class="far fa-frown"></i> Buồn
-                </button>
-                <button type="button" class="reaction-btn faq-react-btn <%= thread.currentUserReaction === 'angry' ? 'selected' : '' %>" data-target="<%= thread.id %>" data-reaction="angry">
-                  <i class="far fa-angry"></i> Giận
+                  <% if (thread.reactionSummary && thread.reactionSummary.like > 0) { %>
+                  <span class="reaction-count"><%= thread.reactionSummary.like %></span>
+                  <% } %>
                 </button>
               </div>
               <div class="faq-reply-box" id="reply-box-<%= thread.id %>">
@@ -1025,7 +1009,7 @@
                 </div>
                 <p><%= reply.text %></p>
                 <div class="faq-stats">
-                  <span><%= reply.reactionSummary.total %> bày tỏ</span>
+                  <span id="like-count-<%= reply.id %>"><%= reply.reactionSummary.like || 0 %> lượt thích</span>
                   <% if (reply.reportCount > 0) { %>
                   <span><%= reply.reportCount %> báo cáo</span>
                   <% } %>
@@ -1046,12 +1030,9 @@
                 <div class="reaction-row">
                   <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'like' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="like">
                     <i class="far fa-thumbs-up"></i> Thích
-                  </button>
-                  <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'love' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="love">
-                    <i class="fas fa-heart"></i> Yêu thích
-                  </button>
-                  <button type="button" class="reaction-btn faq-react-btn <%= reply.currentUserReaction === 'haha' ? 'selected' : '' %>" data-target="<%= reply.id %>" data-parent="<%= thread.id %>" data-reaction="haha">
-                    <i class="far fa-laugh"></i> Haha
+                    <% if (reply.reactionSummary && reply.reactionSummary.like > 0) { %>
+                    <span class="reaction-count"><%= reply.reactionSummary.like %></span>
+                    <% } %>
                   </button>
                 </div>
                 <% } %>
@@ -1091,7 +1072,11 @@
       if (review === "") {
         return;
       }
-      $.post(`/course/${courseName}/review`, { review }, () => window.location.reload());
+      $.post(`/course/${courseName}/review`, { review }, () => {
+        $('#faq-review').val('');
+        // Thêm comment mới vào DOM không reload
+        location.reload();
+      });
     });
 
     $(document).on("click", ".faq-reply-toggle", function () {
@@ -1105,7 +1090,11 @@
       if (reply === "") {
         return;
       }
-      $.post(`/course/${courseName}/review/${reviewId}/reply`, { reply }, () => window.location.reload());
+      $.post(`/course/${courseName}/review/${reviewId}/reply`, { reply }, () => {
+        $(`.faq-reply-input[data-review-id='${reviewId}']`).val('');
+        $(`#reply-box-${reviewId}`).removeClass('active');
+        location.reload();
+      });
     });
 
     $(document).on("click", ".faq-react-btn", function () {
@@ -1114,31 +1103,93 @@
       const parentId = $(this).attr("data-parent");
       const reviewId = parentId || targetId;
       const payload = parentId ? { targetId, reactionType } : { reactionType };
-      $.post(`/course/${courseName}/review/${reviewId}/react`, payload, () => window.location.reload());
+      const $btn = $(this);
+      $.post(`/course/${courseName}/review/${reviewId}/react`, payload, () => {
+        // Toggle selected state
+        const wasSelected = $btn.hasClass('selected');
+        $btn.toggleClass('selected');
+        // Cập nhật số lượt thích
+        const countId = '#like-count-' + (targetId);
+        const $count = $(countId);
+        if ($count.length) {
+          const cur = parseInt($count.text()) || 0;
+          const next = wasSelected ? Math.max(0, cur - 1) : cur + 1;
+          $count.text(next + ' lượt thích');
+        }
+        // Cập nhật badge trong nút
+        const $badge = $btn.find('.reaction-count');
+        if (wasSelected) {
+          $badge.remove();
+        } else {
+          if (!$badge.length) $btn.append('<span class="reaction-count">1</span>');
+          else $badge.text(parseInt($badge.text()) + 1);
+        }
+      });
     });
 
     $(document).on("click", ".faq-report-btn", function () {
       const targetId = $(this).attr("data-target");
       const parentId = $(this).attr("data-parent");
-      const reviewId = parentId || targetId;
-      const reason = prompt("Lý do báo cáo");
-      if (reason === null) {
-        return;
-      }
-      const payload = parentId ? { targetId, reason } : { reason };
-      $.post(`/course/${courseName}/review/${reviewId}/report`, payload, () => window.location.reload());
+      // Mở popup báo cáo
+      $('#report-modal').data({ targetId, parentId }).fadeIn(150);
+      $('#report-reason').val('').focus();
     });
 
     $(document).on("click", ".faq-delete-btn", function () {
       const targetId = $(this).attr("data-target");
       const parentId = $(this).attr("data-parent");
       const reviewId = parentId || targetId;
-      if (!confirm("Xóa nội dung này?")) {
-        return;
-      }
+      if (!confirm("Xóa nội dung này?")) return;
       const payload = parentId ? { targetId } : {};
-      $.post(`/course/${courseName}/review/${reviewId}/delete`, payload, () => window.location.reload());
+      $.post(`/course/${courseName}/review/${reviewId}/delete`, payload, () => {
+        // Xóa DOM element không reload
+        if (parentId) {
+          $(`[data-reply-id="${targetId}"]`).fadeOut(300, function() { $(this).remove(); });
+        } else {
+          $(`[data-thread-id="${targetId}"]`).fadeOut(300, function() { $(this).remove(); });
+        }
+      });
     });
+  });
+  </script>
+
+  <!-- Popup báo cáo -->
+  <div id="report-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;display:none">
+    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:400px;box-shadow:0 16px 40px rgba(0,0,0,0.2);margin:auto;position:relative;top:50%;transform:translateY(-50%)">
+      <h3 style="font-size:16px;font-weight:700;color:#1a1f2e;margin:0 0 8px">Báo cáo nội dung</h3>
+      <p style="font-size:13px;color:#718096;margin:0 0 16px">Vui lòng cho biết lý do báo cáo nội dung này.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <% ['Nội dung không phù hợp','Spam','Thông tin sai lệch','Ngôn ngữ thô tục','Khác'].forEach(r => { %>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;border-radius:8px;border:1px solid #e8e8e4;font-size:13px;color:#374151">
+          <input type="radio" name="report-reason-opt" value="<%= r %>" style="accent-color:#3b6fd4" onchange="document.getElementById('report-reason').value=this.value" />
+          <%= r %>
+        </label>
+        <% }) %>
+        <input type="text" id="report-reason" placeholder="Hoặc nhập lý do khác..." style="height:38px;padding:0 12px;border:1px solid #e8e8e4;border-radius:8px;font-size:13px;color:#1a1f2e;outline:none;margin-top:4px" />
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="$('#report-modal').hide()" style="height:36px;padding:0 16px;background:transparent;border:1px solid #e8e8e4;border-radius:8px;font-size:13px;cursor:pointer;color:#718096">Huỷ</button>
+        <button onclick="submitReport()" style="height:36px;padding:0 16px;background:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:600;color:#fff;cursor:pointer">Gửi báo cáo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function submitReport() {
+    const reason = $('#report-reason').val().trim();
+    if (!reason) { alert('Vui lòng nhập lý do'); return; }
+    const { targetId, parentId } = $('#report-modal').data();
+    const reviewId = parentId || targetId;
+    const courseName = encodeURIComponent($("#nameCourse").attr("data-name"));
+    const payload = parentId ? { targetId, reason } : { reason };
+    $.post(`/course/${courseName}/review/${reviewId}/report`, payload, () => {
+      $('#report-modal').hide();
+      alert('Đã gửi báo cáo. Cảm ơn bạn!');
+    });
+  }
+  // Đóng khi click ngoài
+  $('#report-modal').on('click', function(e) {
+    if (e.target === this) $(this).hide();
   });
   </script>
   <script>

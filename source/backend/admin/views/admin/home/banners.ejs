@@ -1,54 +1,348 @@
 <% const activePage = 'banners'; const pageTitle = 'Banner trang chủ'; %>
 <%- include('../common/header', {user, activePage, pageTitle}) %>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+<style>
+.banner-grid { display:flex; flex-direction:column; gap:12px; }
+
+.banner-item {
+  display:grid; grid-template-columns:200px 1fr auto;
+  gap:12px; align-items:center;
+  background:#0f172a; border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:12px;
+}
+.banner-thumb {
+  width:200px; height:75px; border-radius:8px;
+  object-fit:cover; background:#1e293b; display:block;
+  cursor:pointer; transition:opacity 0.15s;
+}
+.banner-thumb:hover { opacity:0.8; }
+.banner-thumb-empty {
+  width:200px; height:75px; border-radius:8px;
+  background:#1e293b; border:2px dashed rgba(255,255,255,0.12);
+  display:flex; align-items:center; justify-content:center;
+  color:#475569; font-size:12px; cursor:pointer;
+  transition:border-color 0.15s;
+}
+.banner-thumb-empty:hover { border-color:#2563eb; color:#93c5fd; }
+.banner-label { font-size:13px; font-weight:600; color:#f1f5f9; }
+.banner-url   { font-size:11px; color:#64748b; margin-top:2px; word-break:break-all; }
+
+/* Crop modal */
+.crop-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.82); z-index:9999;
+  align-items:center; justify-content:center;
+}
+.crop-overlay.open { display:flex; }
+.crop-box {
+  background:#1e293b; border-radius:14px;
+  padding:24px; width:94vw; max-width:860px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.6);
+}
+.crop-img-wrap { width:100%; max-height:500px; overflow:hidden; border-radius:8px; background:#0f172a; }
+.crop-img-wrap img { display:block; max-width:100%; }
+</style>
+
 <div class="adm-page-header">
   <div class="adm-page-title">Banner trang chủ</div>
-  <button class="adm-btn adm-btn-primary" onclick="$('#frmHomeBanners').submit()">
-    <i class="fas fa-save"></i> Lưu banner
-  </button>
+  <div style="display:flex;gap:8px">
+    <button class="adm-btn adm-btn-ghost" onclick="addBanner()">
+      <i class="fas fa-plus"></i> Thêm banner
+    </button>
+    <button class="adm-btn adm-btn-primary" onclick="saveBanners()">
+      <i class="fas fa-save"></i> Lưu tất cả
+    </button>
+  </div>
 </div>
 
-<form action="/admin/home/banners" method="post" id="frmHomeBanners">
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-    <% for (let i = 0; i < 3; i++) { %>
-    <div class="adm-card">
-      <div class="adm-card-header">
-        <span class="adm-card-title">Banner <%= i + 1 %></span>
-      </div>
-      <div class="adm-card-body" style="padding:16px">
-        <img id="banner-preview-<%= i+1 %>" src="<%= data.banners[i] || '' %>"
-          style="width:100%;height:160px;object-fit:cover;border-radius:8px;background:#0f172a;margin-bottom:12px;display:block" />
-        <input type="hidden" name="banner<%= i+1 %>" id="banner-<%= i+1 %>" value="<%= data.banners[i] || '' %>" />
-        <div class="adm-field" style="margin-bottom:10px">
-          <label>Chọn ảnh</label>
-          <input type="file" id="banner-file-<%= i+1 %>" accept="image/*" style="height:auto;padding:8px" />
+<div class="adm-card">
+  <div class="adm-card-body">
+    <div class="banner-grid" id="banner-grid">
+      <% data.banners.forEach((src, i) => { %>
+      <div class="banner-item" id="bi-<%= i %>" data-index="<%= i %>">
+        <% if (src) { %>
+        <img class="banner-thumb" src="<%= src %>" onclick="editBanner(<%= i %>)" title="Nhấp để thay ảnh"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="banner-thumb-empty" style="display:none" onclick="editBanner(<%= i %>)">Ảnh lỗi</div>
+        <% } else { %>
+        <div class="banner-thumb-empty" onclick="editBanner(<%= i %>)">Nhấp để thay ảnh</div>
+        <% } %>
+        <div>
+          <div class="banner-label">Banner <%= i + 1 %></div>
+          <div class="banner-url"><%= src %></div>
         </div>
-        <button type="button" class="adm-btn adm-btn-ghost" style="width:100%" onclick="uploadBanner(<%= i+1 %>)">
-          <i class="fas fa-cloud-upload-alt"></i> Upload ảnh
-        </button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon" onclick="moveBanner(<%= i %>, -1)" title="Lên" <%= i === 0 ? 'disabled' : '' %>>
+            <i class="fas fa-arrow-up"></i>
+          </button>
+          <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon" onclick="moveBanner(<%= i %>, 1)" title="Xuống" <%= i === data.banners.length - 1 ? 'disabled' : '' %>>
+            <i class="fas fa-arrow-down"></i>
+          </button>
+          <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon" onclick="removeBanner(<%= i %>)" title="Xóa">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <input type="hidden" class="banner-url-input" value="<%= src %>" />
+        <input type="file" class="banner-file-input" accept="image/*" style="display:none" onchange="handleFile(this, <%= i %>)" />
       </div>
+      <% }) %>
+    </div>
+
+    <% if (data.banners.length === 0) { %>
+    <div class="adm-empty" id="empty-state">
+      <i class="fas fa-images"></i>
+      <p>Chưa có banner nào. Nhấn "+ Thêm banner" để bắt đầu.</p>
     </div>
     <% } %>
   </div>
-</form>
+</div>
+
+<!-- Crop modal -->
+<div class="crop-overlay" id="crop-modal">
+  <div class="crop-box">
+    <div style="font-size:15px;font-weight:700;color:#f1f5f9;margin:0 0 14px;display:flex;align-items:center;gap:8px">
+      <i class="fas fa-crop-alt" style="color:#2563eb"></i> Crop ảnh banner
+    </div>
+    <div class="crop-img-wrap"><img id="crop-img" src="" alt="crop" /></div>
+    <p style="font-size:11px;color:#64748b;margin:8px 0 14px;text-align:center">Kéo góc để resize · Tỉ lệ 8:3 (1920×720px)</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" class="adm-btn adm-btn-ghost" onclick="closeCrop()">Huỷ</button>
+      <button type="button" class="adm-btn adm-btn-primary" onclick="confirmCrop()">
+        <i class="fas fa-check"></i> Xác nhận & Upload
+      </button>
+    </div>
+  </div>
+</div>
 
 <script>
-function uploadBanner(slot) {
-  const input = document.getElementById('banner-file-' + slot);
-  if (!input.files.length) { admToast('Vui lòng chọn ảnh', 'error'); return; }
-  const fd = new FormData();
-  fd.append('file', input.files[0]);
-  $.ajax({
-    url: '/admin/upload?fileType=image&id=home-banner-' + slot + '&folder=/home-banner/&folder_cloud=webctt2/home-banner',
-    type: 'post', data: fd, contentType: false, processData: false,
-    success: res => {
-      if (res) {
-        $('#banner-preview-' + slot).attr('src', res + '?t=' + Date.now());
-        $('#banner-' + slot).val(res);
-        admToast('Upload thành công', 'success');
-      } else admToast('Upload thất bại', 'error');
-    }
-  });
+const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+
+// ── Linked list bằng Map<id, {url, prev, next}> ──
+let _head = null; // id của node đầu
+let _tail = null; // id của node cuối
+const _nodes = new Map();
+let _idCounter = 0;
+let _cropperInst = null;
+let _cropTargetId = null; // id node đang crop (null = thêm mới)
+let _uploading = 0;
+
+function newId() { return ++_idCounter; }
+
+// Khởi tạo từ mảng banners ban đầu
+(function init() {
+  const initial = <%- JSON.stringify(data.banners) %>;
+  initial.forEach(url => appendNode(url));
+  renderGrid();
+})();
+
+function appendNode(url) {
+  const id = newId();
+  _nodes.set(id, { id, url, prev: _tail, next: null });
+  if (_tail !== null) _nodes.get(_tail).next = id;
+  else _head = id;
+  _tail = id;
+  return id;
+}
+
+function removeNode(id) {
+  const node = _nodes.get(id);
+  if (!node) return;
+  if (node.prev !== null) _nodes.get(node.prev).next = node.next;
+  else _head = node.next;
+  if (node.next !== null) _nodes.get(node.next).prev = node.prev;
+  else _tail = node.prev;
+  _nodes.delete(id);
+}
+
+function swapWithNext(id) {
+  const a = _nodes.get(id);
+  if (!a || a.next === null) return;
+  const b = _nodes.get(a.next);
+
+  // Cập nhật liên kết xung quanh
+  if (a.prev !== null) _nodes.get(a.prev).next = b.id;
+  else _head = b.id;
+  if (b.next !== null) _nodes.get(b.next).prev = a.id;
+  else _tail = a.id;
+
+  a.next = b.next;
+  b.prev = a.prev;
+  a.prev = b.id;
+  b.next = a.id;
+}
+
+// Lấy mảng theo thứ tự linked list
+function toArray() {
+  const arr = [];
+  let cur = _head;
+  while (cur !== null) {
+    arr.push(_nodes.get(cur));
+    cur = _nodes.get(cur).next;
+  }
+  return arr;
+}
+
+// ── Render ──
+function renderGrid() {
+  const grid  = document.getElementById('banner-grid');
+  const empty = document.getElementById('empty-state');
+  const arr   = toArray();
+
+  if (empty) empty.style.display = arr.length === 0 ? '' : 'none';
+
+  grid.innerHTML = arr.map((node, i) => `
+    <div class="banner-item" id="bi-${node.id}">
+      <img class="banner-thumb" src="${node.url}"
+        onclick="editBanner(${node.id})" title="Nhấp để thay ảnh" />
+      <div style="flex:1;min-width:0">
+        <div class="banner-label">Banner ${i + 1}</div>
+        <div style="font-size:11px;color:#64748b;margin-top:2px;word-break:break-all">
+          ${node.url.length > 70 ? node.url.slice(0,70)+'…' : node.url}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon"
+          onclick="moveUp(${node.id})" title="Lên" ${node.prev === null ? 'disabled' : ''}>
+          <i class="fas fa-arrow-up"></i>
+        </button>
+        <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon"
+          onclick="moveDown(${node.id})" title="Xuống" ${node.next === null ? 'disabled' : ''}>
+          <i class="fas fa-arrow-down"></i>
+        </button>
+        <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon"
+          onclick="removeBanner(${node.id})" title="Xóa">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      <input type="file" id="file-${node.id}" accept="image/*" style="display:none"
+        onchange="handleFile(this,${node.id})" />
+    </div>
+  `).join('');
+}
+
+// ── Actions ──
+function addBanner() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = e => { _cropTargetId = null; openCropFromFile(e.target.files[0]); };
+  input.click();
+}
+
+function editBanner(id) {
+  const el = document.getElementById('file-' + id);
+  if (el) { el.click(); return; }
+  const tmp = document.createElement('input');
+  tmp.type = 'file'; tmp.accept = 'image/*';
+  tmp.onchange = e => { _cropTargetId = id; openCropFromFile(e.target.files[0]); };
+  tmp.click();
+}
+
+function handleFile(input, id) {
+  if (!input.files[0]) return;
+  _cropTargetId = id;
+  openCropFromFile(input.files[0]);
+  input.value = '';
+}
+
+function removeBanner(id) {
+  admConfirm('Xóa banner này?', () => {
+    removeNode(id);
+    renderGrid();
+    admToast('Đã xóa banner', 'success');
+  }, '🗑️');
+}
+
+function moveUp(id) {
+  const node = _nodes.get(id);
+  if (!node || node.prev === null) return;
+  swapWithNext(node.prev); // swap node trước với node này
+  renderGrid();
+}
+
+function moveDown(id) {
+  const node = _nodes.get(id);
+  if (!node || node.next === null) return;
+  swapWithNext(id);
+  renderGrid();
+}
+
+// ── Crop ──
+function openCropFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('crop-img');
+    img.src = e.target.result;
+    document.getElementById('crop-modal').classList.add('open');
+    img.onload = () => {
+      if (_cropperInst) { _cropperInst.destroy(); _cropperInst = null; }
+      _cropperInst = new Cropper(img, {
+        aspectRatio: 8 / 3,
+        viewMode: 2, dragMode: 'crop',
+        autoCropArea: 0.9, guides: true, center: true, highlight: false,
+        movable: false, zoomable: false, rotatable: false, scalable: false,
+      });
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCrop() {
+  document.getElementById('crop-modal').classList.remove('open');
+  if (_cropperInst) { _cropperInst.destroy(); _cropperInst = null; }
+}
+
+async function confirmCrop() {
+  if (!_cropperInst) return;
+  const canvas = _cropperInst.getCroppedCanvas({ width: 1920, height: 720 });
+  closeCrop();
+  admToast('Đang tải ảnh lên...', 'success');
+  _uploading++;
+
+  canvas.toBlob(async (blob) => {
+    try {
+      const fd = new FormData();
+      fd.append('image', blob, 'banner.jpg');
+      const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Upload thất bại');
+
+      const url = json.data.url;
+      if (_cropTargetId === null) {
+        appendNode(url); // thêm mới vào cuối
+      } else {
+        _nodes.get(_cropTargetId).url = url; // cập nhật node hiện có
+      }
+      renderGrid();
+      admToast('✓ Ảnh đã tải lên. Nhấn "Lưu tất cả" để áp dụng.', 'success');
+    } catch(e) {
+      admToast('✗ ' + e.message, 'error');
+    } finally { _uploading--; }
+  }, 'image/jpeg', 0.92);
+}
+
+// ── Lưu ──
+async function saveBanners() {
+  if (_uploading > 0) { admToast('Đang tải ảnh, vui lòng chờ...', 'error'); return; }
+
+  const urls = toArray().map(n => n.url);
+  const params = new URLSearchParams();
+  urls.forEach(url => params.append('banners[]', url));
+
+  try {
+    const res  = await fetch('/admin/home/banners', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+    const json = await res.json();
+    if (json.ok) admToast('✓ Đã lưu ' + urls.length + ' banner', 'success');
+    else admToast('✗ ' + (json.msg || 'Lỗi'), 'error');
+  } catch(e) {
+    admToast('✗ Lỗi kết nối', 'error');
+  }
 }
 </script>
 

@@ -334,7 +334,10 @@
             </div>
           </div>
           <div class="lc-item-right">
-            <span class="lc-price">$<%= course.tuition || 10 %></span>
+            <span class="lc-price">
+              <% if (course.priceType === 'contact') { %>📞 Liên hệ
+              <% } else { %><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫<% } %>
+            </span>
             <span class="lc-btn-go"><i class="fas fa-play"></i> Xem</span>
           </div>
         </a>

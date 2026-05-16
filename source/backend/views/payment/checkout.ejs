@@ -1,131 +1,257 @@
 <style>
-    .container-wrap {
-      width: 80%;
-      margin-left: auto;
-      margin-right: auto;
-      padding-top: 48px;
-    }
-  
-    .navbar-collapse {
-      flex-grow: 0;
-    }
-  
-    .navbar-collapse-right {
-      margin-left: 750px;
-    }
-  
-    .footer-container {
-      padding-top: 30px;
-      padding-bottom: 20px;
-      font-size: 12px;
-      text-align: center;
-    }
-  
-    .price-payment {
-      border-bottom: 1px solid #cacbcc;
-      font-size: 16px;
-    }
-  
-    .paypal {
-      padding-left: 20px;
-      width: 20%;
-    }
-  
-    .row {
-      margin-left: 3px;
-      margin-right: 3px;
-      padding-bottom: 8px;
-      margin-bottom: 8px;
-      border-collapse: separate;
-    }
-  
-    .agree-service {
-      font-size: 12px;
-      line-height: 19px;
-      margin-bottom: 8px;
-    }
-  
-    .img-payment {
-      width: 100%;
-    }
-    .bill .bill-label{
-        font-size: 20px;
-        font-weight: 600;
-    }
-    .bill .bill-price{
-        font-size: 20px;
-    }
-    .bill .paypal{
-        float:right;
-        margin-right:72px;
-    }
-    .agree-service{
-        padding-left: 15px;
-        font-size: 15px;
-    }
-    #btnPay{
-        margin-top: 10px;
-        width: 100%;
-    }
-    
-  </style>
-  <div class="container-wrap">
-    <div class="row mt-5">
-      <div class="col-md-6 m-auto">
-        <div class="card card-body">
-          <h1 class="text-center mb-3">
-              <i class="fas fa-file-invoice-dollar"></i> Hóa đơn
-          </h1>
-          <form action="#" method="POST">
-            <div class="row">
-              <div class="col-sm-2">
-                <img src="<%= course.poster %>" alt="" class="img-payment" />
-              </div>
-              <div class="col-sm-10">
-                <strong
-                  ><%= course.name %> 
-                </strong>
-              </div>
-            </div>
-  
-            <div class="row bill">
-              <div class="col-8 bill-label">Giá gốc:</div>
-              <div class="col-4 text-right bill-price ">$1000.0</div>
-            </div>
-            <div class="row price-payment bill">
-              <div class="col-8 bill-label">Giá giảm:</div>
-              <div class="col-4 text-right bill-price">$990.0</div>
-            </div>
-            <div class="row" style="font-size: 20px">
-              <div class="col-8"><strong>Tổng cộng:</strong></div>
-              <div class="col-4 text-right"><strong>$10</strong></div>
-            </div>
-  
-            <div class="row bill" style="padding-bottom: 10px">
-              <div class="bill-label">Thanh toán với:<img
-                  src="https://i.ibb.co/zVY9852q/paypal.jpg"
-                  alt="PayPal Icon"
-                  class="paypal"
-                /></div>
-              
-            </div>
-            <div class="agree-service">
-              <input type="checkbox">
-              Khi hoàn tất giao dịch, bạn đồng ý với các Điều khoản dịch vụ của
-              chúng tôi.
-            </div>
-            <button id="btnPay" type="submit" class="btn btn-danger btn-block">
-              Thanh toán
-            </button>
-          </form>
-        </div>
+.pay-page {
+  min-height: calc(100vh - 120px);
+  background: #f8f7f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.pay-card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(26,31,46,0.10);
+  overflow: hidden;
+}
+.pay-header {
+  background: linear-gradient(90deg, #1a1f2e, #2d3a5e);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pay-poster {
+  width: 72px; height: 48px;
+  border-radius: 8px; object-fit: cover;
+  flex: 0 0 auto;
+}
+.pay-course-name {
+  font-size: 15px; font-weight: 700; color: #f1f5f9;
+  line-height: 1.4;
+}
+.pay-body { padding: 24px 28px; }
+
+.pay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0efe9;
+  font-size: 14px;
+}
+.pay-row:last-of-type { border-bottom: none; }
+.pay-row-label { color: #718096; }
+.pay-row-value { font-weight: 600; color: #1a1f2e; }
+.pay-total { font-size: 18px; font-weight: 700; color: #1a1f2e; }
+.pay-total-label { font-size: 15px; font-weight: 700; color: #1a1f2e; }
+
+.pay-discount-wrap {
+  margin: 16px 0;
+  display: flex;
+  gap: 8px;
+}
+.pay-discount-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid #e8e8e4;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1a1f2e;
+  outline: none;
+  text-transform: uppercase;
+  transition: border-color 0.15s;
+}
+.pay-discount-input:focus { border-color: #3b6fd4; }
+.pay-discount-btn {
+  height: 40px;
+  padding: 0 16px;
+  background: #1a1f2e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.pay-discount-btn:hover { background: #3b6fd4; }
+.pay-discount-msg { font-size: 12px; margin-top: 4px; min-height: 16px; }
+.pay-discount-msg.ok  { color: #16a34a; }
+.pay-discount-msg.err { color: #dc2626; }
+
+.pay-info-box {
+  background: #eff4ff;
+  border: 1px solid rgba(59,111,212,0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: #3b6fd4;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.pay-info-box i { margin-top: 2px; flex: 0 0 auto; }
+
+.pay-submit {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(90deg, #1a1f2e, #3b6fd4);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.pay-submit:hover { opacity: 0.9; }
+
+.pay-terms {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+</style>
+
+<div class="pay-page">
+  <div class="pay-card">
+    <!-- Header -->
+    <div class="pay-header">
+      <img class="pay-poster" src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= course.name %>" />
+      <div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Đăng ký khóa học</div>
+        <div class="pay-course-name"><%= course.name %></div>
       </div>
     </div>
+
+    <!-- Body -->
+    <div class="pay-body">
+      <form action="/payment/<%= encodeURIComponent(course.name) %>/checkout" method="POST" id="payForm">
+
+        <!-- Chi tiết giá -->
+        <div style="margin-bottom:8px">
+          <div class="pay-row">
+            <span class="pay-row-label">Giá gốc</span>
+            <span class="pay-row-value"><%= course.tuition.toLocaleString('vi-VN') %>₫</span>
+          </div>
+          <div class="pay-row" id="discount-row" style="display:none">
+            <span class="pay-row-label">Giảm giá</span>
+            <span class="pay-row-value" style="color:#16a34a" id="discount-amount">-0₫</span>
+          </div>
+          <div class="pay-row">
+            <span class="pay-total-label">Tổng thanh toán</span>
+            <span class="pay-total" id="total-display"><%= course.tuition.toLocaleString('vi-VN') %>₫</span>
+          </div>
+        </div>
+
+        <!-- Mã giảm giá -->
+        <% if (course.discountCodes && course.discountCodes.some(d => d.active)) { %>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Mã giảm giá</div>
+          <div class="pay-discount-wrap">
+            <input type="text" class="pay-discount-input" id="discount-input" name="discountCode" placeholder="Nhập mã..." maxlength="20" oninput="this.value=this.value.toUpperCase()" />
+            <button type="button" class="pay-discount-btn" onclick="applyDiscount()">Áp dụng</button>
+          </div>
+          <div class="pay-discount-msg" id="discount-msg"></div>
+        </div>
+        <% } %>
+
+        <!-- Thông tin chuyển khoản -->
+        <div class="pay-info-box" id="pay-info-box">
+          <i class="fas fa-info-circle"></i>
+          <div id="pay-info-text">
+            Bạn sẽ được chuyển đến trang thanh toán <strong>PayOS</strong> để thực hiện chuyển khoản ngân hàng. Giao dịch được xác minh tự động.
+          </div>
+        </div>
+
+        <button type="submit" class="pay-submit" id="pay-submit-btn">
+          <i class="fas fa-university" id="pay-submit-icon"></i>
+          <span id="pay-submit-text">Thanh toán chuyển khoản</span>
+        </button>
+      </form>
+
+      <p class="pay-terms">
+        Khi thanh toán, bạn đồng ý với <a href="#" style="color:#3b6fd4">Điều khoản dịch vụ</a> của chúng tôi.
+      </p>
+    </div>
   </div>
-  <form id="myForm" action="/payment/<%= course.name %>/checkout" method="POST"></form>
-  <script>
-      $('#btnPay').on('click', ()=>{
-          console.log('HELLO');
-          $('#myForm').submit();
-      });
-  </script>
+</div>
+
+<script>
+const ORIGINAL_PRICE = <%= course.tuition %>;
+const DISCOUNTS = <%- JSON.stringify((course.discountCodes || []).filter(d => d.active).map(d => ({ code: d.code, percent: d.percent, maxUses: d.maxUses, usedCount: d.usedCount, expiresAt: d.expiresAt }))) %>;
+
+function applyDiscount() {
+  const code = document.getElementById('discount-input').value.trim().toUpperCase();
+  const msgEl = document.getElementById('discount-msg');
+  const discountRow = document.getElementById('discount-row');
+  const discountAmountEl = document.getElementById('discount-amount');
+  const totalEl = document.getElementById('total-display');
+
+  if (!code) { msgEl.textContent = 'Vui lòng nhập mã'; msgEl.className = 'pay-discount-msg err'; return; }
+
+  const dc = DISCOUNTS.find(d => d.code === code);
+  if (!dc) {
+    msgEl.textContent = 'Mã không hợp lệ'; msgEl.className = 'pay-discount-msg err';
+    discountRow.style.display='none';
+    totalEl.textContent = ORIGINAL_PRICE.toLocaleString('vi-VN') + '₫';
+    updateSubmitButton(ORIGINAL_PRICE);
+    return;
+  }
+  if (dc.expiresAt && new Date() > new Date(dc.expiresAt)) { msgEl.textContent = 'Mã đã hết hạn'; msgEl.className = 'pay-discount-msg err'; return; }
+  if (dc.maxUses > 0 && dc.usedCount >= dc.maxUses) { msgEl.textContent = 'Mã đã hết lượt sử dụng'; msgEl.className = 'pay-discount-msg err'; return; }
+
+  const discounted = Math.round(ORIGINAL_PRICE * dc.percent / 100);
+  const final = ORIGINAL_PRICE - discounted;
+  discountAmountEl.textContent = '-' + discounted.toLocaleString('vi-VN') + '₫';
+  totalEl.textContent = final.toLocaleString('vi-VN') + '₫';
+  discountRow.style.display = '';
+  msgEl.textContent = `✓ Giảm ${dc.percent}% — tiết kiệm ${discounted.toLocaleString('vi-VN')}₫`;
+  msgEl.className = 'pay-discount-msg ok';
+
+  // Cập nhật nút và box info theo giá cuối
+  updateSubmitButton(final);
+}
+
+function updateSubmitButton(finalPrice) {
+  const btn       = document.getElementById('pay-submit-btn');
+  const text      = document.getElementById('pay-submit-text');
+  const icon      = document.getElementById('pay-submit-icon');
+  const infoBox   = document.getElementById('pay-info-box');
+  const infoText  = document.getElementById('pay-info-text');
+
+  if (finalPrice === 0) {
+    text.textContent = 'Đăng ký miễn phí';
+    icon.className   = 'fas fa-check-circle';
+    btn.style.background = 'linear-gradient(90deg, #16a34a, #22c55e)';
+    infoText.innerHTML = '<strong>Mã giảm 100%</strong> — bạn sẽ được đăng ký khóa học miễn phí, không cần thanh toán.';
+    infoBox.style.background = '#dcfce7';
+    infoBox.style.borderColor = 'rgba(22,163,74,0.25)';
+    infoBox.style.color = '#15803d';
+  } else {
+    text.textContent = 'Thanh toán chuyển khoản';
+    icon.className   = 'fas fa-university';
+    btn.style.background = 'linear-gradient(90deg, #1a1f2e, #3b6fd4)';
+    infoText.innerHTML = 'Bạn sẽ được chuyển đến trang thanh toán <strong>PayOS</strong> để thực hiện chuyển khoản ngân hàng. Giao dịch được xác minh tự động.';
+    infoBox.style.background = '';
+    infoBox.style.borderColor = '';
+    infoBox.style.color = '';
+  }
+}
+
+document.getElementById('discount-input') && document.getElementById('discount-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
+});
+</script>

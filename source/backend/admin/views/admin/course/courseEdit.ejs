@@ -90,9 +90,25 @@
         <div class="adm-card">
           <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-tag" style="color:#16a34a;margin-right:8px"></i>Giá</span></div>
           <div class="adm-card-body">
-            <div class="adm-field">
-              <label>Giá (VNĐ)</label>
-              <input type="number" name="tuition" value="<%= data.course_info.tuition || 500000 %>" min="0" step="1000" />
+            <div style="display:flex;gap:8px;margin-bottom:12px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:#0f172a;transition:all 0.15s;white-space:nowrap" id="edit-lbl-fixed">
+                <input type="radio" name="priceType" value="fixed" <%= (!data.course_info.priceType || data.course_info.priceType === 'fixed') ? 'checked' : '' %> onchange="editTogglePrice(this.value)" style="width:14px;height:14px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">💰 Hiển thị giá</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:#0f172a;transition:all 0.15s;white-space:nowrap" id="edit-lbl-contact">
+                <input type="radio" name="priceType" value="contact" <%= data.course_info.priceType === 'contact' ? 'checked' : '' %> onchange="editTogglePrice(this.value)" style="width:14px;height:14px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">📞 Liên hệ riêng</span>
+              </label>
+            </div>
+            <div id="edit-price-wrap" style="<%= data.course_info.priceType === 'contact' ? 'display:none' : '' %>">
+              <div class="adm-field">
+                <label>Giá (VNĐ)</label>
+                <input type="number" name="tuition" value="<%= data.course_info.tuition || 500000 %>" min="0" step="1000" />
+              </div>
+            </div>
+            <div id="edit-contact-note" style="<%= data.course_info.priceType !== 'contact' ? 'display:none' : '' %>;background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 14px;font-size:13px;color:#94a3b8">
+              <i class="fas fa-info-circle" style="color:#3b6fd4;margin-right:6px"></i>
+              Học viên sẽ thấy nút "Liên hệ" thay vì giá tiền.
             </div>
           </div>
         </div>
@@ -237,7 +253,30 @@ function addDiscount() {
   document.getElementById('discount-list').insertAdjacentHTML('beforeend', html);
 }
 
-// ── Upload poster ──
+// ── Toggle price type (edit) ──
+function editTogglePrice(val) {
+  const wrap    = document.getElementById('edit-price-wrap');
+  const note    = document.getElementById('edit-contact-note');
+  const lblF    = document.getElementById('edit-lbl-fixed');
+  const lblC    = document.getElementById('edit-lbl-contact');
+  if (val === 'contact') {
+    wrap.style.display = 'none'; note.style.display = '';
+    lblC.style.borderColor = '#2563eb'; lblF.style.borderColor = 'rgba(255,255,255,0.10)';
+  } else {
+    wrap.style.display = ''; note.style.display = 'none';
+    lblF.style.borderColor = '#2563eb'; lblC.style.borderColor = 'rgba(255,255,255,0.10)';
+  }
+}
+// Set border màu đúng khi load
+(function() {
+  const isContact = '<%= data.course_info.priceType %>' === 'contact';
+  const lblF = document.getElementById('edit-lbl-fixed');
+  const lblC = document.getElementById('edit-lbl-contact');
+  if (lblF && lblC) {
+    lblF.style.borderColor = isContact ? 'rgba(255,255,255,0.10)' : '#2563eb';
+    lblC.style.borderColor = isContact ? '#2563eb' : 'rgba(255,255,255,0.10)';
+  }
+})();
 $('#poster-file').on('change', function() {
   const fd = new FormData();
   const files = this.files;

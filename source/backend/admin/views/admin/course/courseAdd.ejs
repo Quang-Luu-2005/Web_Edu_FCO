@@ -113,7 +113,7 @@
   </div>
 </div>
 
-<form action="" method="post" id="frmAdd" enctype="multipart/form-data">
+<form action="" method="post" id="frmAdd">
   <input type="hidden" name="lecture_id" value="<%= user._id %>" />
   <input type="hidden" name="image" id="poster-url" value="" />
 
@@ -198,16 +198,43 @@
       <!-- Giá & Mã giảm giá -->
       <div class="adm-card">
         <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-tag" style="color:#16a34a;margin-right:8px"></i>Giá & Mã giảm giá</span></div>
-        <div class="adm-card-body">
-          <div class="adm-field" style="margin-bottom:16px">
-            <label>Giá (VNĐ) <span style="color:#f87171">*</span></label>
-            <input type="number" name="tuition" value="500000" min="0" step="1000" />
+        <div class="adm-card-body" style="display:flex;flex-direction:column;gap:14px">
+
+          <!-- Loại giá -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Loại giá</div>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid #2563eb;background:#0f172a;white-space:nowrap;flex:1;justify-content:center" id="lbl-fixed">
+                <input type="radio" name="priceType" value="fixed" checked onchange="togglePriceType(this.value)" style="width:13px;height:13px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">💰 Hiển thị giá</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:#0f172a;white-space:nowrap;flex:1;justify-content:center" id="lbl-contact">
+                <input type="radio" name="priceType" value="contact" onchange="togglePriceType(this.value)" style="width:13px;height:13px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">📞 Liên hệ riêng</span>
+              </label>
+            </div>
           </div>
-          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px">
-            <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Mã giảm giá</div>
-            <div style="display:grid;grid-template-columns:1fr 60px 60px 24px;gap:6px;margin-bottom:6px">
+
+          <!-- Ô nhập giá -->
+          <div id="price-input-wrap">
+            <div class="adm-field">
+              <label>Giá (VNĐ) <span style="color:#f87171">*</span></label>
+              <input type="number" name="tuition" id="tuition-input" value="500000" min="0" step="1000" />
+            </div>
+          </div>
+
+          <!-- Note liên hệ -->
+          <div id="contact-note" style="display:none;background:#0f172a;border:1px solid rgba(37,99,235,0.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#94a3b8;line-height:1.5">
+            <i class="fas fa-info-circle" style="color:#3b6fd4;margin-right:5px"></i>
+            Học viên sẽ thấy nút "Liên hệ" thay vì giá tiền.
+          </div>
+
+          <!-- Mã giảm giá -->
+          <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:12px">
+            <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Mã giảm giá</div>
+            <div style="display:grid;grid-template-columns:1fr 56px 56px 24px;gap:6px;margin-bottom:6px;padding:0 2px">
               <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Mã code</span>
-              <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Giảm</span>
+              <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">%</span>
               <span style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase">Lượt</span>
               <span></span>
             </div>
@@ -216,6 +243,7 @@
               <i class="fas fa-plus"></i> Thêm mã
             </button>
           </div>
+
         </div>
       </div>
 
@@ -231,7 +259,28 @@
 <script>
 const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
 
-// ── Markdown editor ──
+// ── Toggle price type ──
+function togglePriceType(val) {
+  const priceWrap   = document.getElementById('price-input-wrap');
+  const contactNote = document.getElementById('contact-note');
+  const tuitionInput = document.getElementById('tuition-input');
+  const lblFixed   = document.getElementById('lbl-fixed');
+  const lblContact = document.getElementById('lbl-contact');
+
+  if (val === 'contact') {
+    priceWrap.style.display   = 'none';
+    contactNote.style.display = '';
+    tuitionInput.removeAttribute('required');
+    lblContact.style.borderColor = '#2563eb';
+    lblFixed.style.borderColor   = 'rgba(255,255,255,0.10)';
+  } else {
+    priceWrap.style.display   = '';
+    contactNote.style.display = 'none';
+    tuitionInput.setAttribute('required', '');
+    lblFixed.style.borderColor   = '#2563eb';
+    lblContact.style.borderColor = 'rgba(255,255,255,0.10)';
+  }
+}
 let _mde = null;
 let _descMode = 'plain';
 

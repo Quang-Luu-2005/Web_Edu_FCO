@@ -246,14 +246,22 @@ const addReport = (target, userId, reason) => {
 Router.get('/:nameCourse', async (req, res) => {
     const nameCourse = req.params.nameCourse.toString();
 
-    const course = await Course.findOne({
-            name: nameCourse
-        })
+    const course = await Course.findOne({ name: nameCourse })
         .populate('idLecturer')
         .populate('idCourseTopic');
 
     if (!course) {
         return renderNotFound(res);
+    }
+
+    // Nếu populate idLecturer thất bại (user trong localusers, ref trỏ lecturers)
+    // thì tự tìm lại từ LocalUser
+    if (!course.idLecturer && course.get('idLecturer')) {
+        try {
+            const LocalUser = require('../models/LocalUser.model');
+            const lec = await LocalUser.findById(course.get('idLecturer'));
+            if (lec) course.idLecturer = lec;
+        } catch(e) {}
     }
 
     course.videos = safeArray(course.videos);

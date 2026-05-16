@@ -1,19 +1,26 @@
 <div id="body" class="container-wrap">
-  <div class="row top-section">
-    <div class="col-sm-8">
-      <div class="home-banner home-banner-main">
-        <img src="<%= homeBanners[0] %>" alt="Banner chính" />
+
+  <!-- ── Slideshow banner ── -->
+  <% if (homeBanners && homeBanners.length > 0) { %>
+  <div class="hb-slider" id="hb-slider">
+    <div class="hb-track" id="hb-track">
+      <% homeBanners.forEach((src, i) => { %>
+      <div class="hb-slide <%= i === 0 ? 'active' : '' %>">
+        <img src="<%= src %>" alt="Banner <%= i+1 %>" />
       </div>
+      <% }) %>
     </div>
-    <div class="col-sm-4 home-banner-stack">
-      <div class="home-banner home-banner-sub">
-        <img src="<%= homeBanners[1] %>" alt="Banner phụ 1" />
-      </div>
-      <div class="home-banner home-banner-sub">
-        <img src="<%= homeBanners[2] %>" alt="Banner phụ 2" />
-      </div>
+    <% if (homeBanners.length > 1) { %>
+    <button class="hb-btn hb-prev" onclick="hbPrev()" aria-label="Trước">&#8249;</button>
+    <button class="hb-btn hb-next" onclick="hbNext()" aria-label="Tiếp">&#8250;</button>
+    <div class="hb-dots" id="hb-dots">
+      <% homeBanners.forEach((_, i) => { %>
+      <button class="hb-dot <%= i === 0 ? 'active' : '' %>" onclick="hbGo(<%= i %>)"></button>
+      <% }) %>
     </div>
+    <% } %>
   </div>
+  <% } %>
 
   <div class="section-block">
     <h4 class="section-title">3 khóa học được quan tâm nhất</h4>
@@ -85,6 +92,64 @@
 </div>
 
 <style type="text/css">
+  /* ── Slideshow ── */
+  .hb-slider {
+    position: relative;
+    width: 100%;
+    max-width: 1580px;
+    margin: 20px auto 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e8e8e4;
+    aspect-ratio: 8 / 3;
+    user-select: none;
+  }
+
+  .hb-track { width: 100%; height: 100%; position: relative; }
+
+  .hb-slide {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+  .hb-slide.active { opacity: 1; pointer-events: auto; }
+
+  .hb-slide img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    display: block;
+  }
+
+  /* Nút prev/next */
+  .hb-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    z-index: 10;
+    width: 40px; height: 40px;
+    background: rgba(0,0,0,0.35);
+    border: none; border-radius: 50%;
+    color: #fff; font-size: 22px; line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hb-btn:hover { background: rgba(0,0,0,0.6); }
+  .hb-prev { left: 14px; }
+  .hb-next { right: 14px; }
+
+  /* Dots */
+  .hb-dots {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 10;
+  }
+  .hb-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+    border: none; cursor: pointer; padding: 0;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .hb-dot.active { background: #fff; transform: scale(1.3); }
+
   .section-block {
     margin-top: 34px;
   }
@@ -136,8 +201,9 @@
 
   .home-banner {
     overflow: hidden;
-    background: #f5f5f5;
-    border-radius: 6px;
+    background: #e8e8e4;
+    border-radius: 10px;
+    position: relative;
   }
 
   .home-banner img {
@@ -145,6 +211,7 @@
     height: 100%;
     display: block;
     object-fit: cover;
+    object-position: center;
   }
 
   .home-banner-main {
@@ -155,10 +222,12 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    height: 380px;
   }
 
   .home-banner-sub {
-    height: calc((380px - 16px) / 2);
+    flex: 1;
+    min-height: 0;
   }
 
   .course .image {
@@ -271,6 +340,42 @@
 </style>
 
 <script>
+  // ── Slideshow banner ──
+  (function() {
+    const slides = document.querySelectorAll('.hb-slide');
+    const dots   = document.querySelectorAll('.hb-dot');
+    if (!slides.length) return;
+    let cur = 0, timer = null;
+
+    function go(n) {
+      slides[cur].classList.remove('active');
+      dots[cur] && dots[cur].classList.remove('active');
+      cur = (n + slides.length) % slides.length;
+      slides[cur].classList.add('active');
+      dots[cur] && dots[cur].classList.add('active');
+    }
+
+    function start() { timer = setInterval(() => go(cur + 1), 4000); }
+    function reset()  { clearInterval(timer); start(); }
+
+    window.hbNext = () => { go(cur + 1); reset(); };
+    window.hbPrev = () => { go(cur - 1); reset(); };
+    window.hbGo   = (n) => { go(n); reset(); };
+
+    // Swipe support
+    const slider = document.getElementById('hb-slider');
+    if (slider) {
+      let sx = 0;
+      slider.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+      slider.addEventListener('touchend',   e => {
+        const dx = e.changedTouches[0].clientX - sx;
+        if (Math.abs(dx) > 40) { dx < 0 ? hbNext() : hbPrev(); }
+      });
+    }
+
+    if (slides.length > 1) start();
+  })();
+
   document.querySelectorAll("[data-course-carousel]").forEach((carousel) => {
     const track  = carousel.querySelector(".course-carousel-track");
     const prev   = carousel.querySelector("[data-course-carousel-prev]");

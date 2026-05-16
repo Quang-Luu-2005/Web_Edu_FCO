@@ -121,7 +121,12 @@ const CourseSchema = mongoose.Schema({
     },
     tuition: {
         type: Number,
-        default: 10 //USD
+        default: 500000
+    },
+    priceType: {
+        type: String,
+        enum: ['fixed', 'contact'],
+        default: 'fixed'
     },
     idCourseTopic: {
         type: mongoose.Schema.ObjectId,

@@ -226,7 +226,13 @@
       <article class="course-node">
         <div class="course-node-media">
           <img src="<%= course.poster %>" alt="<%= course.name %>">
-          <span class="course-node-price">$<%= course.tuition || 10 %></span>
+          <span class="course-node-price">
+            <% if (course.priceType === 'contact') { %>
+              📞 Liên hệ
+            <% } else { %>
+              <%= (course.tuition || 0).toLocaleString('vi-VN') %>₫
+            <% } %>
+          </span>
         </div>
         <div class="course-node-body">
           <div class="course-node-provider">

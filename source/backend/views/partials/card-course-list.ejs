@@ -68,6 +68,9 @@
       </h4>
       <p class="meta"><%= course.idLecturer && course.idLecturer.name ? course.idLecturer.name : '' %></p>
     </div>
-    <strong class="price">$<%= course.tuition || 10 %></strong>
+    <strong class="price">
+      <% if (course.priceType === 'contact') { %>📞 Liên hệ
+      <% } else { %><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫<% } %>
+    </strong>
   </a>
 </div>

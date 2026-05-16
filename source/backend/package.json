@@ -9,6 +9,7 @@
   "author": "Võ Thế Minh",
   "license": "ISC",
   "dependencies": {
+    "@payos/node": "^2.0.5",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.23.0",
     "connect-flash": "^0.1.1",
