@@ -1,0 +1,58 @@
+<% const activePage = 'classes'; const pageTitle = data.isNew ? 'Tạo lớp mới' : 'Chỉnh sửa lớp'; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
+
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title"><%= data.isNew ? 'Tạo lớp mới' : 'Chỉnh sửa lớp' %></div>
+    <div class="adm-page-subtitle"><a href="/admin/classes" style="color:#2563eb">← Quay lại danh sách</a></div>
+  </div>
+</div>
+
+<form action="/admin/classes/new" method="post">
+  <div class="adm-card" style="max-width:600px">
+    <div class="adm-card-header">
+      <span class="adm-card-title"><i class="fas fa-chalkboard" style="color:#2563eb;margin-right:8px"></i>Thông tin lớp học</span>
+    </div>
+    <div class="adm-card-body">
+      <div class="adm-form-grid">
+        <div class="adm-field adm-field-full">
+          <label>Tên lớp <span style="color:#f87171">*</span></label>
+          <input type="text" name="name" placeholder="VD: Lớp A — Tháng 6/2026" required />
+        </div>
+        <div class="adm-field adm-field-full">
+          <label>Khóa học <span style="color:#f87171">*</span></label>
+          <div style="position:relative">
+            <select name="idCourse" required style="width:100%;height:42px;padding:0 32px 0 14px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;box-sizing:border-box">
+              <% data.courses.forEach(c => { %>
+                <option value="<%= c._id %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+          </div>
+        </div>
+        <div class="adm-field">
+          <label>Số học viên tối đa</label>
+          <input type="number" name="maxStudents" value="10" min="1" max="100" />
+        </div>
+        <div class="adm-field">
+          <label>Trạng thái</label>
+          <div style="position:relative">
+            <select name="status" style="width:100%;height:42px;padding:0 32px 0 14px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;box-sizing:border-box">
+              <option value="open">Mở đăng ký</option>
+              <option value="ongoing">Đang học</option>
+              <option value="completed">Hoàn thành</option>
+              <option value="cancelled">Đã hủy</option>
+            </select>
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07)">
+        <button type="button" class="adm-btn adm-btn-ghost" onclick="location.href='/admin/classes'">Huỷ</button>
+        <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Tạo lớp</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<%- include('../common/footer') %>

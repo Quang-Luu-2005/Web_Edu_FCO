@@ -1,14 +1,10 @@
-const index = require('../routers/index.route');
-
-const users = require('../routers/users.route');
-
-const course = require('../routers/course.route');
-
+const index   = require('../routers/index.route');
+const users   = require('../routers/users.route');
+const course  = require('../routers/course.route');
 const payment = require('../routers/payment.route');
-
 const courses = require('../routers/courses.route');
-
-const admin = require('../admin/routers/admin');
+const classes = require('../routers/classes.route');
+const admin   = require('../admin/routers/admin');
 
 module.exports = function(app) {
     app.use('/', index);
@@ -16,6 +12,7 @@ module.exports = function(app) {
     app.use('/course', course);
     app.use('/payment', payment);
     app.use('/courses', courses);
+    app.use('/classes', classes);
     app.use('/admin', (req, res, next) => {
         res.locals.layout = false;
         next();

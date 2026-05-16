@@ -9,6 +9,7 @@ module.exports = function(app) {
     require('../models/Lecturer.model');   // register collection 'lecturers' cho Course.populate
     require('../admin/models/Admin.model');
     require('../models/Course.model');
+    require('../models/CourseClass.model');
 
     const options = {
         useNewUrlParser:    true,

@@ -1,0 +1,100 @@
+<style>
+.cd-page { min-height:calc(100vh - 120px); background:#f8f7f4; padding:40px 0 64px; }
+.cd-wrap { width:85%; max-width:900px; margin:0 auto; }
+.cd-header { margin-bottom:24px; }
+.cd-title { font-size:24px; font-weight:700; color:#1a1f2e; margin-bottom:4px; }
+.cd-sub { font-size:14px; color:#9ca3af; }
+.cd-sub a { color:#3b6fd4; }
+
+.session-item {
+  background:#fff; border:1px solid #e8e8e4; border-radius:12px;
+  padding:16px 20px; margin-bottom:10px;
+  display:flex; align-items:flex-start; gap:16px;
+}
+.session-num {
+  width:36px; height:36px; border-radius:50%; background:#eff4ff;
+  color:#3b6fd4; font-size:13px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+}
+.session-num.done { background:#dcfce7; color:#15803d; }
+.session-num.cancelled { background:#fef2f2; color:#dc2626; }
+.session-body { flex:1; min-width:0; }
+.session-title { font-size:15px; font-weight:700; color:#1a1f2e; margin-bottom:6px; }
+.session-meta { font-size:13px; color:#718096; display:flex; flex-wrap:wrap; gap:12px; }
+.session-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; transition:opacity 0.15s; }
+.session-link:hover { opacity:0.8; }
+.link-meet   { background:#eff4ff; color:#3b6fd4; }
+.link-record { background:#dcfce7; color:#15803d; }
+</style>
+
+<div class="cd-page">
+  <div class="cd-wrap">
+    <div class="cd-header">
+      <h1 class="cd-title"><%= cls.name %></h1>
+      <div class="cd-sub">
+        <a href="/classes/my-classes">← Lớp học của tôi</a>
+        &nbsp;·&nbsp;
+        <%= cls.idCourse ? cls.idCourse.name : '' %>
+        &nbsp;·&nbsp;
+        Giảng viên: <strong style="color:#1a1f2e"><%= cls.idLecturer ? cls.idLecturer.name : '—' %></strong>
+      </div>
+    </div>
+
+    <!-- Thống kê nhanh -->
+    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+      <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
+        <strong style="font-size:18px;color:#1a1f2e;display:block"><%= cls.sessions.length %></strong> Tổng buổi học
+      </div>
+      <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
+        <strong style="font-size:18px;color:#15803d;display:block"><%= cls.sessions.filter(s=>s.status==='done').length %></strong> Đã học xong
+      </div>
+      <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
+        <strong style="font-size:18px;color:#3b6fd4;display:block"><%= cls.sessions.filter(s=>s.status==='scheduled').length %></strong> Sắp diễn ra
+      </div>
+      <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
+        <strong style="font-size:18px;color:#1a1f2e;display:block"><%= cls.students.length %></strong> Học viên
+      </div>
+    </div>
+
+    <!-- Danh sách buổi học -->
+    <h2 style="font-size:18px;font-weight:700;color:#1a1f2e;margin-bottom:16px">Lịch buổi học</h2>
+
+    <% if (cls.sessions.length === 0) { %>
+    <div style="background:#fff;border:1px solid #e8e8e4;border-radius:12px;text-align:center;padding:40px;color:#9ca3af">
+      <i class="fas fa-calendar-alt" style="font-size:32px;margin-bottom:12px;display:block"></i>
+      Chưa có buổi học nào được lên lịch.
+    </div>
+    <% } else { %>
+      <% cls.sessions.forEach((s, i) => { %>
+      <div class="session-item">
+        <div class="session-num <%= s.status %>">
+          <% if (s.status === 'done') { %><i class="fas fa-check"></i>
+          <% } else if (s.status === 'cancelled') { %><i class="fas fa-times"></i>
+          <% } else { %><%= i+1 %><% } %>
+        </div>
+        <div class="session-body">
+          <div class="session-title"><%= s.title || 'Buổi ' + (i+1) %></div>
+          <div class="session-meta">
+            <% if (s.date) { %>
+            <span><i class="fas fa-clock"></i> <%= new Date(s.date).toLocaleString('vi-VN', {weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></span>
+            <% } %>
+            <% if (s.note) { %><span style="font-style:italic"><%= s.note %></span><% } %>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <% if (s.meetLink && s.status !== 'done') { %>
+            <a href="<%= s.meetLink %>" target="_blank" class="session-link link-meet">
+              <i class="fas fa-video"></i> Tham gia buổi học
+            </a>
+            <% } %>
+            <% if (s.recordLink) { %>
+            <a href="<%= s.recordLink %>" target="_blank" class="session-link link-record">
+              <i class="fas fa-play-circle"></i> Xem lại bài giảng
+            </a>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    <% } %>
+  </div>
+</div>

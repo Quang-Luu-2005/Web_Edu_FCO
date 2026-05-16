@@ -1,0 +1,83 @@
+<style>
+.ne-page {
+  min-height: calc(100vh - 120px);
+  background: #f8f7f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.ne-card {
+  background: #fff;
+  border: 1px solid #e8e8e4;
+  border-radius: 16px;
+  padding: 48px 40px;
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(26,31,46,0.07);
+}
+.ne-icon { font-size: 52px; margin-bottom: 20px; }
+.ne-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1f2e;
+  margin-bottom: 10px;
+}
+.ne-desc {
+  font-size: 14px;
+  color: #718096;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+.ne-course {
+  display: inline-block;
+  background: #eff4ff;
+  color: #3b6fd4;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.ne-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #1a1f2e;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s;
+  margin: 4px;
+}
+.ne-btn:hover { background: #3b6fd4; color: #fff; text-decoration: none; }
+.ne-btn-ghost {
+  background: transparent;
+  color: #3b6fd4;
+  border: 1.5px solid #3b6fd4;
+}
+.ne-btn-ghost:hover { background: #eff4ff; color: #3b6fd4; }
+</style>
+
+<div class="ne-page">
+  <div class="ne-card">
+    <div class="ne-icon">🔒</div>
+    <h1 class="ne-title">Bạn chưa đăng ký khóa học này</h1>
+    <div class="ne-course">📚 <%= courseName %></div>
+    <p class="ne-desc">
+      Bạn cần được giảng viên thêm vào lớp học hoặc đăng ký khóa học trước khi truy cập nội dung này.
+    </p>
+    <div>
+      <a href="/courses" class="ne-btn">
+        <i class="fas fa-search"></i> Khám phá khóa học
+      </a>
+      <a href="/classes/my-classes" class="ne-btn ne-btn-ghost">
+        <i class="fas fa-arrow-left"></i> Lớp học của tôi
+      </a>
+    </div>
+  </div>
+</div>
