@@ -243,10 +243,10 @@
             </button>
           </form>
         <% } else if (enrolled && payStatus === 'paid') { %>
-          <span class="s-status s-status-paid">✓ Đã thanh toán</span>
+          <span class="s-status s-status-paid"><i class="fas fa-check-circle"></i> Đã duyệt</span>
           <% if (s.meetLink) { %><a href="<%= s.meetLink %>" target="_blank" class="s-btn-meet"><i class="fas fa-video"></i> Tham gia</a><% } %>
         <% } else if (enrolled && payStatus === 'free') { %>
-          <span class="s-status s-status-free"><i class="fas fa-crown"></i> 2M miễn phí</span>
+          <span class="s-status s-status-paid"><i class="fas fa-check-circle"></i> Đã duyệt</span>
           <% if (s.meetLink) { %><a href="<%= s.meetLink %>" target="_blank" class="s-btn-meet"><i class="fas fa-video"></i> Tham gia</a><% } %>
         <% } else if (enrolled && payStatus === 'pending') { %>
           <span class="s-status s-status-pending">Đang xử lý</span>

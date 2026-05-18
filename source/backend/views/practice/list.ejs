@@ -22,6 +22,14 @@
 
 .pl-empty { background:#fff; border:1px solid #e8e8e4; border-radius:14px; text-align:center; padding:64px 24px; }
 .pl-empty i { font-size:48px; color:#cbd5e1; margin-bottom:14px; display:block; }
+
+.pl-card { position:relative; }
+.pl-mine-badge { position:absolute; top:10px; right:10px; background:rgba(34,197,94,0.95); color:#fff; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:inline-flex; align-items:center; gap:4px; backdrop-filter:blur(4px); }
+.pl-follow-badge { position:absolute; top:10px; right:10px; background:rgba(59,111,212,0.95); color:#fff; padding:4px 10px; border-radius:14px; font-size:11px; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:inline-flex; align-items:center; gap:4px; backdrop-filter:blur(4px); }
+.pl-stat-row { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.pl-stat-tag { font-size:11px; padding:3px 9px; border-radius:10px; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
+.pl-stat-ok { background:#dcfce7; color:#15803d; }
+.pl-stat-pending { background:#fef3c7; color:#92400e; }
 </style>
 
 <div class="pl-page">
@@ -71,8 +79,15 @@
           const totalSessions = cls.sessions.length;
           const upcoming = cls.sessions.filter(s => s.status === 'scheduled' && (!s.date || new Date(s.date) >= new Date())).length;
           const followerCount = (cls.followers || []).length;
+          const activity = (typeof userActivity !== 'undefined' && userActivity[cls._id.toString()]) || null;
+          const hasActivity = activity && (activity.selected > 0 || activity.pending > 0);
         %>
         <a class="pl-card" href="/practice/<%= cls._id %>" style="text-decoration:none;color:inherit;display:block">
+          <% if (hasActivity) { %>
+            <span class="pl-mine-badge"><i class="fas fa-user-check"></i> Đang tham gia</span>
+          <% } else if (activity && activity.following) { %>
+            <span class="pl-follow-badge"><i class="fas fa-bell"></i> Đang theo dõi</span>
+          <% } %>
           <img class="pl-poster" src="<%= cls.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= cls.name %>" />
           <div class="pl-body">
             <div class="pl-name"><%= cls.name %></div>
@@ -87,6 +102,16 @@
               <span><i class="fas fa-calendar"></i> <%= upcoming %> buổi sắp tới</span>
               <span><i class="fas fa-user-friends"></i> <%= followerCount %> theo dõi</span>
             </div>
+            <% if (hasActivity) { %>
+            <div class="pl-stat-row">
+              <% if (activity.selected > 0) { %>
+              <span class="pl-stat-tag pl-stat-ok"><i class="fas fa-check"></i> <%= activity.selected %> được chọn</span>
+              <% } %>
+              <% if (activity.pending > 0) { %>
+              <span class="pl-stat-tag pl-stat-pending"><i class="fas fa-hourglass-half"></i> <%= activity.pending %> chờ duyệt</span>
+              <% } %>
+            </div>
+            <% } %>
           </div>
         </a>
         <% }) %>

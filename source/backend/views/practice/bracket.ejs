@@ -1,0 +1,167 @@
+<style>
+.br-page { min-height:calc(100vh - 120px); background:#f8f7f4; padding:40px 0 64px; }
+.br-wrap { width:85%; max-width:1000px; margin:0 auto; }
+
+.br-back { display:inline-flex; align-items:center; gap:6px; color:#718096; text-decoration:none; font-size:13px; margin-bottom:16px; }
+.br-back:hover { color:#3b6fd4; }
+
+.br-hero { background:linear-gradient(135deg,#7c3aed 0%,#5b21b6 100%); color:#fff; border-radius:18px; padding:28px 32px; margin-bottom:22px; }
+.br-hero h1 { font-size:22px; font-weight:800; margin:0 0 6px; }
+.br-hero .br-cls { font-size:13px; opacity:0.9; }
+.br-hero .br-when { font-size:13px; opacity:0.9; margin-top:6px; display:flex; gap:14px; flex-wrap:wrap; }
+
+.br-status { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; font-size:14px; font-weight:700; margin-bottom:18px; }
+.br-status-yes { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+.br-status-no  { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+.br-status-wait { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+
+.br-zalo { background:#eff6ff; border:1px solid #bfdbfe; border-left:4px solid #3b6fd4; border-radius:10px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px; }
+.br-zalo i { color:#3b6fd4; font-size:20px; }
+.br-zalo a { color:#1e40af; font-weight:700; text-decoration:none; word-break:break-all; }
+.br-zalo a:hover { text-decoration:underline; }
+.br-zalo-label { font-size:12px; color:#475569; margin-bottom:2px; }
+
+.br-section-title { font-size:18px; font-weight:700; color:#1a1f2e; margin:18px 0 14px; display:flex; align-items:center; gap:8px; }
+.br-section-title i { color:#7c3aed; }
+
+.br-empty { background:#fff; border:1px dashed #cbd5e1; border-radius:12px; padding:36px; text-align:center; color:#9ca3af; font-size:14px; }
+.br-empty i { font-size:32px; color:#cbd5e1; margin-bottom:8px; display:block; }
+
+.br-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:14px; }
+.br-pair { background:#fff; border:1px solid #e8e8e4; border-radius:14px; padding:14px; box-shadow:0 2px 8px rgba(26,31,46,0.05); }
+.br-pair-num { font-size:11px; font-weight:700; color:#7c3aed; letter-spacing:0.5px; margin-bottom:10px; text-transform:uppercase; }
+.br-pair-row { display:flex; align-items:center; gap:8px; }
+.br-player { flex:1; min-width:0; padding:10px; background:#fafaf8; border-radius:10px; display:flex; align-items:center; gap:10px; }
+.br-player.is-me { background:#fef3c7; border:1px solid #fde68a; }
+.br-player-empty { color:#cbd5e1; font-style:italic; font-size:13px; padding:10px; flex:1; text-align:center; background:#fafaf8; border-radius:10px; }
+.br-avatar { width:36px; height:36px; border-radius:50%; object-fit:cover; flex:0 0 auto; }
+.br-pinfo { flex:1; min-width:0; }
+.br-pname { font-size:13px; font-weight:700; color:#1a1f2e; line-height:1.2; }
+.br-pmeta { font-size:11.5px; color:#718096; margin-top:2px; display:flex; gap:8px; flex-wrap:wrap; }
+.br-pmeta .br-rank { color:#7c3aed; font-weight:600; }
+.br-pmeta .br-ingame { font-style:italic; }
+.br-vs { font-size:11px; font-weight:800; color:#7c3aed; padding:0 4px; }
+
+.br-info-box { background:#fffbeb; border:1px solid #fde68a; border-left:4px solid #f59e0b; border-radius:10px; padding:14px 18px; margin-top:18px; font-size:13px; color:#78350f; }
+.br-info-box i { margin-right:6px; color:#d97706; }
+</style>
+
+<%
+const ps = myEnrollment.paymentStatus;
+const sStatus = session.status;
+
+let statusEl = '';
+if (sStatus === 'cancelled') {
+  statusEl = `<div class="br-status br-status-no"><i class="fas fa-ban"></i> Buổi này đã bị hủy</div>`;
+} else if (['paid','free','approved'].includes(ps)) {
+  statusEl = `<div class="br-status br-status-yes"><i class="fas fa-check-circle"></i> Bạn đã được chọn vào buổi này</div>`;
+} else if (ps === 'rejected') {
+  statusEl = `<div class="br-status br-status-no"><i class="fas fa-times-circle"></i> Bạn không được chọn vào buổi này</div>`;
+} else if (ps === 'requested') {
+  statusEl = `<div class="br-status br-status-wait"><i class="fas fa-hourglass-half"></i> Đang chờ admin duyệt</div>`;
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  const dd = String(dt.getDate()).padStart(2, '0');
+  const mm = String(dt.getMonth() + 1).padStart(2, '0');
+  const yyyy = dt.getFullYear();
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const mi = String(dt.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+}
+
+const myUserId = user._id.toString();
+function isMe(p) {
+  return p && p._id && p._id.toString() === myUserId;
+}
+
+function renderPlayer(p) {
+  if (!p) {
+    return '<div class="br-player-empty">— Chưa có —</div>';
+  }
+  const meCls = isMe(p) ? ' is-me' : '';
+  const avatar = p.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png';
+  const nameSafe = (p.name || p.username || 'Người chơi').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const ingame = p.inGameName ? `<span class="br-ingame"><i class="fas fa-gamepad"></i> ${p.inGameName.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</span>` : '';
+  const rankLabel = p.rank ? getRankLabel(p.rank) : '';
+  const rank = rankLabel ? `<span class="br-rank"><i class="fas fa-trophy"></i> ${rankLabel}</span>` : '';
+  const meTag = isMe(p) ? '<span style="color:#92400e;font-weight:700;font-size:10.5px;background:#fde68a;padding:1px 6px;border-radius:6px;margin-left:6px">BẠN</span>' : '';
+  return `
+    <div class="br-player${meCls}">
+      <img class="br-avatar" src="${avatar}" alt="" />
+      <div class="br-pinfo">
+        <div class="br-pname">${nameSafe}${meTag}</div>
+        <div class="br-pmeta">${ingame}${rank}</div>
+      </div>
+    </div>`;
+}
+%>
+
+<div class="br-page">
+  <div class="br-wrap">
+    <a class="br-back" href="/practice/my"><i class="fas fa-arrow-left"></i> Quay lại buổi của tôi</a>
+
+    <div class="br-hero">
+      <h1><i class="fas fa-sitemap"></i> Nhánh đấu</h1>
+      <div class="br-cls"><%= cls.name %></div>
+      <div class="br-when">
+        <% if (session.title) { %><span><i class="fas fa-tag"></i> <%= session.title %></span><% } %>
+        <% if (session.date) { %><span><i class="fas fa-clock"></i> <%= fmtDate(session.date) %><% if (session.endTime) { %> – <%= session.endTime %><% } %></span><% } %>
+        <% if (session.location) { %><span><i class="fas fa-map-marker-alt"></i> <%= session.location %></span><% } %>
+      </div>
+    </div>
+
+    <%- statusEl %>
+
+    <% if (canSeeZalo && session.zaloGroupLink) { %>
+    <div class="br-zalo">
+      <i class="fab fa-facebook-messenger"></i>
+      <div style="flex:1;min-width:0">
+        <div class="br-zalo-label">Group Zalo của buổi</div>
+        <a href="<%= session.zaloGroupLink %>" target="_blank" rel="noopener"><%= session.zaloGroupLink %></a>
+      </div>
+    </div>
+    <% } else if (canSeeZalo && !session.zaloGroupLink) { %>
+    <div class="br-zalo" style="background:#f1f5f9;border-color:#e2e8f0;border-left-color:#94a3b8">
+      <i class="fas fa-info-circle" style="color:#64748b"></i>
+      <div style="font-size:13px;color:#475569">Admin chưa gán link group Zalo cho buổi này.</div>
+    </div>
+    <% } %>
+
+    <h2 class="br-section-title"><i class="fas fa-trophy"></i> Cặp đấu</h2>
+
+    <% if (!session.bracket || session.bracket.length === 0) { %>
+      <div class="br-empty">
+        <i class="fas fa-sitemap"></i>
+        <div style="font-weight:600;color:#4a5568;margin-bottom:4px">Admin chưa ghép cặp</div>
+        <div>Nhánh đấu sẽ được công bố trước buổi học.</div>
+      </div>
+    <% } else { %>
+      <div class="br-grid">
+        <% session.bracket.forEach((pair, idx) => { %>
+        <div class="br-pair">
+          <div class="br-pair-num">Cặp #<%= idx + 1 %></div>
+          <div class="br-pair-row">
+            <%- renderPlayer(pair.player1) %>
+            <span class="br-vs">VS</span>
+            <%- renderPlayer(pair.player2) %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (['requested','rejected'].includes(ps)) { %>
+    <div class="br-info-box">
+      <i class="fas fa-info-circle"></i>
+      <% if (ps === 'requested') { %>
+        Yêu cầu đăng ký của bạn đang chờ admin duyệt. Sau khi được chọn, bạn sẽ thấy link group Zalo và có thể tham gia buổi đấu.
+      <% } else { %>
+        Bạn không được chọn vào buổi này. Có thể do số lượng đăng ký vượt quá chỗ. Bạn vẫn có thể đăng ký các buổi khác của lớp.
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+</div>

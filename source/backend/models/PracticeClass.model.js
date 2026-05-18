@@ -9,6 +9,7 @@ const EnrollmentSchema = new mongoose.Schema({
   enrolledAt:    { type: Date, default: Date.now },
   reviewedAt:    { type: Date, default: null },
   adminNote:     { type: String, default: '' },
+  notifSeen:     { type: Boolean, default: false },
   // Snapshot profile tại thời điểm request — lưu để admin xem dù sau này user đổi
   snapshotZaloPhone:  { type: String, default: '' },
   snapshotInGameName: { type: String, default: '' },
@@ -16,15 +17,22 @@ const EnrollmentSchema = new mongoose.Schema({
   attended:      { type: Boolean, default: false }
 }, { _id: false });
 
+const BracketPairSchema = new mongoose.Schema({
+  player1: { type: mongoose.Schema.ObjectId, ref: 'localusers', default: null },
+  player2: { type: mongoose.Schema.ObjectId, ref: 'localusers', default: null }
+}, { _id: false });
+
 const PracticeSessionSchema = new mongoose.Schema({
-  title:      { type: String, default: '' },
-  date:       { type: Date,   default: null },
-  endTime:    { type: String, default: '' }, // HH:MM
-  meetLink:   { type: String, default: '' },
-  location:   { type: String, default: '' },
-  note:       { type: String, default: '' },
-  status:     { type: String, enum: ['scheduled', 'done', 'cancelled'], default: 'scheduled' },
-  enrollments:{ type: [EnrollmentSchema], default: [] }
+  title:         { type: String, default: '' },
+  date:          { type: Date,   default: null },
+  endTime:       { type: String, default: '' }, // HH:MM
+  meetLink:      { type: String, default: '' },
+  zaloGroupLink: { type: String, default: '' },
+  location:      { type: String, default: '' },
+  note:          { type: String, default: '' },
+  status:        { type: String, enum: ['scheduled', 'done', 'cancelled'], default: 'scheduled' },
+  enrollments:   { type: [EnrollmentSchema], default: [] },
+  bracket:       { type: [BracketPairSchema], default: [] }
 });
 
 const PracticeClassSchema = new mongoose.Schema({

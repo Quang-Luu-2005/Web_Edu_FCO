@@ -57,15 +57,31 @@ Router.get('/', async (req, res) => {
     .sort({ createdAt: -1 });
 
   let userIs2M = false;
+  let userActivity = {}; // { classId: { selected, pending, following } }
   if (req.isAuthenticated() && req.user) {
     userIs2M = await is2MStudent(req.user);
+    const uid = req.user._id.toString();
+    classes.forEach(cls => {
+      let selected = 0, pending = 0;
+      (cls.sessions || []).forEach(s => {
+        const en = (s.enrollments || []).find(e => e.idUser && e.idUser.toString() === uid);
+        if (!en) return;
+        if (['paid','free','approved'].includes(en.paymentStatus)) selected++;
+        else if (en.paymentStatus === 'requested') pending++;
+      });
+      const following = (cls.followers || []).some(f => f && f.toString() === uid);
+      if (selected || pending || following) {
+        userActivity[cls._id.toString()] = { selected, pending, following };
+      }
+    });
   }
 
   return res.render('./practice/list', {
     isAuthenticated: req.isAuthenticated(),
     user: req.user,
     classes,
-    userIs2M
+    userIs2M,
+    userActivity
   });
 });
 
@@ -109,6 +125,96 @@ Router.get('/my', ensureAuthenticated, async (req, res) => {
     user: req.user,
     items,
     userIs2M,
+    getRankLabel
+  });
+});
+
+// ── Notifications: list unread ──
+Router.get('/notifications', ensureAuthenticated, async (req, res) => {
+  const userId = req.user._id.toString();
+  const classes = await PracticeClass.find({ 'sessions.enrollments.idUser': req.user._id });
+
+  const notifs = [];
+  classes.forEach(cls => {
+    cls.sessions.forEach(s => {
+      const en = (s.enrollments || []).find(e => e.idUser && e.idUser.toString() === userId);
+      if (!en) return;
+      // Notify khi admin đã review (approved/rejected/free) và user chưa thấy
+      if (!en.notifSeen && en.reviewedAt && ['free','approved','rejected'].includes(en.paymentStatus)) {
+        notifs.push({
+          classId:   cls._id.toString(),
+          className: cls.name,
+          sessionId: s._id.toString(),
+          sessionTitle: s.title || 'Buổi thực hành',
+          sessionDate:  s.date,
+          status:    en.paymentStatus,
+          adminNote: en.adminNote || '',
+          reviewedAt: en.reviewedAt
+        });
+      }
+    });
+  });
+
+  notifs.sort((a, b) => new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime());
+  return res.json({ ok: true, notifications: notifs, unreadCount: notifs.length });
+});
+
+// ── Notifications: mark all as seen ──
+Router.post('/notifications/seen', ensureAuthenticated, express.json(), async (req, res) => {
+  const userId = req.user._id.toString();
+  const classes = await PracticeClass.find({ 'sessions.enrollments.idUser': req.user._id });
+
+  let updated = 0;
+  for (const cls of classes) {
+    let dirty = false;
+    cls.sessions.forEach(s => {
+      (s.enrollments || []).forEach(en => {
+        if (en.idUser && en.idUser.toString() === userId && !en.notifSeen && en.reviewedAt) {
+          en.notifSeen = true;
+          dirty = true;
+          updated++;
+        }
+      });
+    });
+    if (dirty) await cls.save();
+  }
+  return res.json({ ok: true, updated });
+});
+
+// ── Bracket view (chỉ user đã đăng ký buổi này — mọi trạng thái) ──
+Router.get('/:id/sessions/:sid/bracket', ensureAuthenticated, async (req, res) => {
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) return renderNotFound(res);
+
+  const cls = await PracticeClass.findById(req.params.id)
+    .populate('idLecturer', 'name avatar')
+    .populate('sessions.enrollments.idUser', 'name username avatar inGameName rank')
+    .populate('sessions.bracket.player1', 'name username avatar inGameName rank')
+    .populate('sessions.bracket.player2', 'name username avatar inGameName rank');
+  if (!cls) return renderNotFound(res);
+
+  const s = cls.sessions.id(req.params.sid);
+  if (!s) return renderNotFound(res);
+
+  const userIdStr = req.user._id.toString();
+  const myEn = (s.enrollments || []).find(e => e.idUser && e.idUser._id && e.idUser._id.toString() === userIdStr);
+  if (!myEn) {
+    req.flash && req.flash('error_msg', 'Bạn chưa đăng ký buổi này');
+    return res.redirect('/practice/' + cls._id);
+  }
+
+  // Quyền xem zalo: chỉ user đã được duyệt (paid/free/approved)
+  const canSeeZalo = ['paid', 'free', 'approved'].includes(myEn.paymentStatus);
+  const isApproved = canSeeZalo;
+
+  return res.render('./practice/bracket', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
+    cls,
+    session: s,
+    myEnrollment: myEn,
+    canSeeZalo,
+    isApproved,
     getRankLabel
   });
 });

@@ -181,16 +181,49 @@ router.post('/:id/sessions/:sid/update', ensureAuthenticated, express.json(), as
   const s = cls.sessions.id(req.params.sid);
   if (!s) return res.json({ ok: false });
 
-  const { title, date, endTime, meetLink, location, note, status } = req.body;
-  if (title    !== undefined) s.title    = title;
-  if (date     !== undefined) s.date     = date ? new Date(date) : null;
-  if (endTime  !== undefined) s.endTime  = endTime;
-  if (meetLink !== undefined) s.meetLink = meetLink;
-  if (location !== undefined) s.location = location;
-  if (note     !== undefined) s.note     = note;
-  if (status   !== undefined) s.status   = status;
+  const { title, date, endTime, meetLink, zaloGroupLink, location, note, status } = req.body;
+  if (title         !== undefined) s.title         = title;
+  if (date          !== undefined) s.date          = date ? new Date(date) : null;
+  if (endTime       !== undefined) s.endTime       = endTime;
+  if (meetLink      !== undefined) s.meetLink      = meetLink;
+  if (zaloGroupLink !== undefined) s.zaloGroupLink = (zaloGroupLink || '').trim();
+  if (location      !== undefined) s.location      = location;
+  if (note          !== undefined) s.note          = note;
+  if (status        !== undefined) s.status        = status;
   await cls.save();
   return res.json({ ok: true, session: s });
+});
+
+// ── Cập nhật bracket cho buổi ──
+router.post('/:id/sessions/:sid/bracket', ensureAuthenticated, express.json(), async (req, res) => {
+  const { pairs } = req.body;
+  if (!Array.isArray(pairs)) return res.json({ ok: false, msg: 'Dữ liệu không hợp lệ' });
+
+  const cls = await PracticeClass.findById(req.params.id);
+  if (!cls) return res.json({ ok: false });
+  const s = cls.sessions.id(req.params.sid);
+  if (!s) return res.json({ ok: false });
+
+  // Chỉ chấp nhận user đã được duyệt (paid/free/approved)
+  const allowedIds = new Set(
+    s.enrollments
+      .filter(e => ['paid', 'free', 'approved'].includes(e.paymentStatus))
+      .map(e => e.idUser && e.idUser.toString())
+      .filter(Boolean)
+  );
+
+  const cleaned = [];
+  for (const p of pairs) {
+    const p1 = p && p.player1 ? String(p.player1) : null;
+    const p2 = p && p.player2 ? String(p.player2) : null;
+    if (p1 && !allowedIds.has(p1)) return res.json({ ok: false, msg: 'Có học viên chưa được duyệt trong nhánh đấu' });
+    if (p2 && !allowedIds.has(p2)) return res.json({ ok: false, msg: 'Có học viên chưa được duyệt trong nhánh đấu' });
+    if (p1 || p2) cleaned.push({ player1: p1 || null, player2: p2 || null });
+  }
+
+  s.bracket = cleaned;
+  await cls.save();
+  return res.json({ ok: true, bracket: s.bracket });
 });
 
 // ── Xóa buổi học ──
