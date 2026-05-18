@@ -69,7 +69,8 @@
       <div class="pl-grid">
         <% classes.forEach(cls => {
           const totalSessions = cls.sessions.length;
-          const upcoming = cls.sessions.filter(s => s.status === 'scheduled').length;
+          const upcoming = cls.sessions.filter(s => s.status === 'scheduled' && (!s.date || new Date(s.date) >= new Date())).length;
+          const followerCount = (cls.followers || []).length;
         %>
         <a class="pl-card" href="/practice/<%= cls._id %>" style="text-decoration:none;color:inherit;display:block">
           <img class="pl-poster" src="<%= cls.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= cls.name %>" />
@@ -84,6 +85,7 @@
               </span>
               <% } %>
               <span><i class="fas fa-calendar"></i> <%= upcoming %> buổi sắp tới</span>
+              <span><i class="fas fa-user-friends"></i> <%= followerCount %> theo dõi</span>
             </div>
           </div>
         </a>

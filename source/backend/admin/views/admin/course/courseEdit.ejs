@@ -75,16 +75,29 @@
         <div class="adm-card">
           <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-image" style="color:#d97706;margin-right:8px"></i>Poster</span></div>
           <div class="adm-card-body">
-            <img id="poster-img" src="<%= data.course_info.poster || '' %>"
-              style="width:100%;border-radius:8px;object-fit:cover;max-height:160px;background:#0f172a;cursor:pointer;margin-bottom:10px"
-              onclick="$('#poster-file').click()" title="Nhấp để đổi ảnh" />
+            <div id="poster-zone" style="position:relative;border-radius:8px;overflow:hidden;cursor:pointer;background:#0f172a;margin-bottom:10px" onclick="document.getElementById('poster-file').click()">
+              <img id="poster-img" src="<%= data.course_info.poster || '' %>" style="width:100%;display:block;object-fit:cover;max-height:160px;background:#0f172a" />
+              <div class="poster-overlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);color:#fff;font-size:13px;font-weight:600;gap:6px;opacity:0;transition:opacity 0.2s">
+                <i class="fas fa-camera"></i> Đổi poster
+              </div>
+              <div class="poster-spinner" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,0.78);color:#93c5fd;font-size:13px;font-weight:600;gap:8px">
+                <i class="fas fa-circle-notch fa-spin"></i> Đang tải lên...
+              </div>
+            </div>
             <input type="file" id="poster-file" style="display:none" accept="image/*" />
             <input type="hidden" name="image" id="poster-url" value="<%= data.course_info.poster || '' %>" />
-            <button type="button" class="adm-btn adm-btn-ghost" style="width:100%;height:34px;font-size:12px" onclick="$('#poster-file').click()">
+            <button type="button" class="adm-btn adm-btn-ghost" style="width:100%;height:34px;font-size:12px" onclick="document.getElementById('poster-file').click()">
               <i class="fas fa-upload"></i> Đổi poster
             </button>
+            <div id="poster-error" style="font-size:12px;color:#f87171;margin-top:6px;min-height:14px"></div>
           </div>
         </div>
+
+        <style>
+        #poster-zone:hover .poster-overlay { opacity:1; }
+        #poster-zone.uploading .poster-spinner { display:flex !important; }
+        #poster-zone.uploading { pointer-events:none; }
+        </style>
 
         <!-- Giá -->
         <div class="adm-card">
@@ -313,23 +326,67 @@ function editTogglePrice(val) {
     lblC.style.borderColor = isContact ? '#2563eb' : 'rgba(255,255,255,0.10)';
   }
 })();
-$('#poster-file').on('change', function() {
+// ── Upload poster → ImgBB ──
+const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+let _posterUploading = false;
+
+document.getElementById('poster-file').addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  const errEl = document.getElementById('poster-error');
+  const zone  = document.getElementById('poster-zone');
+  errEl.textContent = '';
+
+  if (!file.type.startsWith('image/')) {
+    errEl.textContent = '✗ File phải là ảnh';
+    this.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    errEl.textContent = '✗ Ảnh quá lớn (>10MB)';
+    this.value = '';
+    return;
+  }
+
+  // Preview ngay
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('poster-img').src = e.target.result; };
+  reader.readAsDataURL(file);
+
+  // Upload ImgBB
+  zone.classList.add('uploading');
+  _posterUploading = true;
+
   const fd = new FormData();
-  const files = this.files;
-  const id = $("input[name='id']").val();
-  if (!files.length) return;
-  fd.append('file', files[0]);
-  $.ajax({
-    url: '/admin/upload?fileType=image&id=' + id + '&folder=/poster/&folder_cloud=webctt2/course_image',
-    type: 'post', data: fd, contentType: false, processData: false,
-    success: res => {
-      if (res) {
-        $('#poster-img').attr('src', res + '?t=' + Date.now());
-        $('#poster-url').val(res);
-        admToast('Poster đã cập nhật', 'success');
-      }
+  fd.append('image', file);
+  try {
+    const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
+    const json = await res.json();
+    if (json.success && json.data && json.data.url) {
+      document.getElementById('poster-img').src = json.data.url;
+      document.getElementById('poster-url').value = json.data.url;
+      if (typeof admToast === 'function') admToast('Poster đã cập nhật', 'success');
+    } else {
+      errEl.textContent = '✗ Upload thất bại: ' + (json.error?.message || 'không rõ lỗi');
     }
-  });
+  } catch(e) {
+    errEl.textContent = '✗ Lỗi kết nối ImgBB';
+    console.error('poster upload error', e);
+  } finally {
+    zone.classList.remove('uploading');
+    _posterUploading = false;
+    this.value = '';
+  }
+});
+
+// Chặn submit khi đang upload
+document.getElementById('frmEdit').addEventListener('submit', (ev) => {
+  if (_posterUploading) {
+    ev.preventDefault();
+    document.getElementById('poster-error').textContent = '⏳ Ảnh đang tải lên, vui lòng chờ...';
+    return false;
+  }
 });
 </script>
 

@@ -36,6 +36,7 @@ const PracticeClassSchema = new mongoose.Schema({
   idLecturer:            { type: mongoose.Schema.ObjectId, ref: 'localusers', default: null },
   status:                { type: String, enum: ['active', 'closed'], default: 'active' },
   sessions:              { type: [PracticeSessionSchema], default: [] },
+  followers:             { type: [{ type: mongoose.Schema.ObjectId, ref: 'localusers' }], default: [] },
   createdAt:             { type: Date, default: Date.now }
 });
 

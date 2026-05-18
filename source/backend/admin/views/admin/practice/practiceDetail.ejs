@@ -262,7 +262,7 @@
 
 <!-- ── Tab: Thông tin lớp ── -->
 <div class="cls-pane" id="tab-info">
-  <form action="/admin/practice/<%= data.cls._id %>/update" method="post">
+  <form action="/admin/practice/<%= data.cls._id %>/update" method="post" id="frm-cls-update">
     <div class="adm-card" style="max-width:680px">
       <div class="adm-card-header"><span class="adm-card-title">Thông tin lớp thực hành</span></div>
       <div class="adm-card-body">
@@ -599,11 +599,24 @@ async function toggleAttendance(sid, userId, attended) {
 
 // ── Poster upload (ImgBB) ──
 const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+let _posterUploading = false;
+
 document.getElementById('poster-file').addEventListener('change', async function() {
   const file = this.files[0];
   if (!file) return;
   const errEl = document.getElementById('poster-error');
   errEl.textContent = '';
+
+  if (!file.type.startsWith('image/')) {
+    errEl.textContent = '✗ File phải là ảnh';
+    this.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    errEl.textContent = '✗ Ảnh quá lớn (>10MB)';
+    this.value = '';
+    return;
+  }
 
   // Preview ngay
   const reader = new FileReader();
@@ -620,13 +633,14 @@ document.getElementById('poster-file').addEventListener('change', async function
   // Upload ImgBB
   const zone = document.getElementById('poster-zone');
   zone.classList.add('uploading');
+  _posterUploading = true;
 
   const fd = new FormData();
   fd.append('image', file);
   try {
     const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
     const json = await res.json();
-    if (json.success) {
+    if (json.success && json.data && json.data.url) {
       document.getElementById('poster-url').value = json.data.url;
     } else {
       errEl.textContent = '✗ Upload thất bại: ' + (json.error?.message || 'Không rõ lỗi');
@@ -636,8 +650,21 @@ document.getElementById('poster-file').addEventListener('change', async function
     console.error('poster upload error', e);
   } finally {
     zone.classList.remove('uploading');
+    _posterUploading = false;
   }
 });
+
+// Chặn submit khi đang upload
+const frmClsUpdate = document.getElementById('frm-cls-update');
+if (frmClsUpdate) {
+  frmClsUpdate.addEventListener('submit', (ev) => {
+    if (_posterUploading) {
+      ev.preventDefault();
+      document.getElementById('poster-error').textContent = '⏳ Ảnh đang tải lên, vui lòng chờ...';
+      return false;
+    }
+  });
+}
 </script>
 
 <%- include('../common/footer') %>

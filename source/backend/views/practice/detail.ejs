@@ -4,9 +4,11 @@
 .pd-back { display:inline-block; color:#3b6fd4; font-size:13px; margin-bottom:14px; text-decoration:none; }
 .pd-back:hover { text-decoration:underline; }
 
-.pd-header { background:#fff; border:1px solid #e8e8e4; border-radius:14px; overflow:hidden; margin-bottom:24px; }
+.pd-header { background:#fff; border:1px solid #e8e8e4; border-radius:14px; overflow:hidden; margin-bottom:18px; }
 .pd-poster { width:100%; aspect-ratio:21/8; object-fit:cover; background:#e8e8e4; }
 .pd-info { padding:22px 26px; }
+.pd-info-top { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+.pd-info-main { flex:1; min-width:240px; }
 .pd-title { font-size:24px; font-weight:800; color:#1a1f2e; margin:0 0 8px; }
 .pd-desc { font-size:14px; color:#4a5568; line-height:1.55; margin:0 0 14px; }
 .pd-lecturer { display:flex; align-items:center; gap:10px; padding-top:12px; border-top:1px solid #f1f5f9; }
@@ -14,64 +16,88 @@
 .pd-lec-name { font-size:14px; font-weight:600; color:#1a1f2e; }
 .pd-lec-sub { font-size:12px; color:#9ca3af; }
 
-.pd-banner { padding:14px 18px; border-radius:10px; margin-bottom:18px; font-size:14px; display:flex; align-items:center; gap:10px; }
+/* Follow button */
+.pd-follow-box { flex:0 0 auto; min-width:200px; text-align:right; }
+.pd-follow-count { font-size:12px; color:#9ca3af; margin-bottom:8px; }
+.pd-follow-count strong { color:#1a1f2e; font-size:15px; }
+.pd-follow-btn { background:#3b6fd4; color:#fff; border:none; padding:10px 22px; border-radius:24px; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:7px; font-family:inherit; }
+.pd-follow-btn:hover { background:#2c54a8; }
+.pd-follow-btn.following { background:#fff; color:#3b6fd4; border:1.5px solid #3b6fd4; }
+.pd-follow-btn.following:hover { background:#fef2f2; color:#dc2626; border-color:#dc2626; }
+.pd-follow-btn.following:hover .follow-text::before { content:"Bỏ theo dõi"; }
+.pd-follow-btn.following:hover .follow-text-default { display:none; }
+
+/* Banner */
+.pd-banner { padding:14px 18px; border-radius:10px; margin-bottom:14px; font-size:14px; display:flex; align-items:center; gap:10px; }
 .pd-banner-2m    { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
 .pd-banner-paid  { background:#eff4ff; color:#1e40af; border:1px solid #c7d7f5; }
 .pd-banner-guest { background:#f3f4f6; color:#4a5568; border:1px solid #e5e7eb; }
 .pd-banner-warn  { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
 .pd-banner a { font-weight:700; text-decoration:underline; }
 
-.week-card { background:#fff; border:1px solid #e8e8e4; border-radius:14px; padding:18px 22px; margin-bottom:14px; }
-.week-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #f1f5f9; }
-.week-title { font-size:15px; font-weight:700; color:#1a1f2e; }
-.week-sub { font-size:12px; color:#9ca3af; margin-top:2px; }
+.pd-section { display:flex; align-items:center; justify-content:space-between; margin:24px 0 14px; }
+.pd-section-title { font-size:18px; font-weight:700; color:#1a1f2e; margin:0; }
+.pd-section-sub { font-size:12px; color:#9ca3af; }
 
-.day-option { display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center; padding:14px 16px; background:#fafaf8; border:2px solid #ececec; border-radius:10px; margin-bottom:10px; transition:all 0.15s; cursor:pointer; user-select:none; }
-.day-option:has(input:checked) { background:#eff4ff; border-color:#3b6fd4; }
-.day-option.disabled { background:#f5f5f5; border-color:#e5e7eb; cursor:not-allowed; opacity:0.7; }
+/* Session card — dạng list rõ ràng */
+.s-card { background:#fff; border:1px solid #e8e8e4; border-radius:12px; padding:18px 20px; margin-bottom:12px; display:flex; gap:18px; align-items:center; flex-wrap:wrap; transition:border-color 0.15s, box-shadow 0.15s; }
+.s-card:hover { border-color:#cbd5e1; box-shadow:0 2px 8px rgba(26,31,46,0.04); }
+.s-card.enrolled { border-color:#bfdbfe; background:#fafcff; }
+.s-date-block { flex:0 0 auto; text-align:center; min-width:64px; padding-right:18px; border-right:1px solid #f1f5f9; }
+.s-date-day { font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; }
+.s-date-num { font-size:30px; font-weight:800; color:#1a1f2e; line-height:1; margin:4px 0 2px; }
+.s-date-month { font-size:11px; color:#6b7280; }
+.s-info { flex:1; min-width:200px; }
+.s-title { font-size:15px; font-weight:700; color:#1a1f2e; margin:0 0 6px; }
+.s-meta { font-size:12.5px; color:#6b7280; display:flex; gap:14px; flex-wrap:wrap; }
+.s-meta i { color:#9ca3af; }
+.s-meta-line { display:flex; align-items:center; gap:5px; }
 
-.day-checkbox { width:22px; height:22px; accent-color:#3b6fd4; cursor:pointer; flex:0 0 auto; }
-.day-info { min-width:0; }
-.day-name { font-size:14px; font-weight:700; color:#1a1f2e; margin-bottom:2px; }
-.day-time { font-size:12.5px; color:#6b7280; }
-.day-location { font-size:12px; color:#9ca3af; margin-top:2px; }
-.day-note { font-size:12px; color:#9ca3af; font-style:italic; margin-top:4px; }
-.day-status { font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:14px; white-space:nowrap; }
+.s-action { flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.s-btn-register { background:#3b6fd4; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:background 0.15s; white-space:nowrap; }
+.s-btn-register:hover { background:#2c54a8; }
+.s-btn-register:disabled { background:#cbd5e1; cursor:not-allowed; }
+.s-btn-meet { background:#16a34a; color:#fff; padding:9px 18px; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+.s-btn-meet:hover { background:#15803d; color:#fff; }
+.s-status { font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:14px; white-space:nowrap; display:inline-flex; align-items:center; gap:5px; }
+.s-status-requested { background:#fef3c7; color:#92400e; }
+.s-status-approved  { background:#dbeafe; color:#1e40af; }
+.s-status-paid      { background:#dcfce7; color:#15803d; }
+.s-status-free      { background:#fde68a; color:#92400e; }
+.s-status-rejected  { background:#fef2f2; color:#dc2626; }
+.s-status-pending   { background:#e2e8f0; color:#475569; }
+.s-status-full      { background:#e2e8f0; color:#9ca3af; }
 
-.status-requested { background:#fef3c7; color:#92400e; }
-.status-approved  { background:#dbeafe; color:#1e40af; }
-.status-paid      { background:#dcfce7; color:#15803d; }
-.status-free      { background:#fde68a; color:#92400e; }
-.status-rejected  { background:#fef2f2; color:#dc2626; }
-.status-pending   { background:#e2e8f0; color:#475569; }
-.status-full      { background:#e2e8f0; color:#9ca3af; }
-
-.week-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9; }
-
-.btn-primary { background:#3b6fd4; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; }
-.btn-primary:hover { background:#2c54a8; }
-.btn-primary:disabled { background:#cbd5e1; cursor:not-allowed; }
-.btn-ghost { background:transparent; color:#64748b; border:1px solid #e5e7eb; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; }
-
-/* Confirm modal */
-.cf-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
-.cf-overlay.open { display:flex; }
-.cf-box { background:#fff; border-radius:16px; padding:28px; width:100%; max-width:520px; max-height:85vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.3); }
-.cf-title { font-size:18px; font-weight:800; color:#1a1f2e; margin:0 0 6px; }
-.cf-sub { font-size:13px; color:#6b7280; margin-bottom:20px; }
-.cf-section { background:#fafaf8; border:1px solid #ececec; border-radius:10px; padding:14px 16px; margin-bottom:14px; }
-.cf-section-title { font-size:11px; font-weight:700; color:#9ca3af; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:10px; }
-.cf-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; }
-.cf-row .label { color:#6b7280; }
-.cf-row .val { color:#1a1f2e; font-weight:600; }
-.cf-day { display:flex; align-items:center; gap:10px; padding:8px 0; font-size:13px; color:#1a1f2e; border-bottom:1px solid #f1f5f9; }
-.cf-day:last-child { border-bottom:none; }
-.cf-day i { color:#3b6fd4; }
-.cf-warn { background:#fef3c7; color:#92400e; padding:10px 14px; border-radius:8px; font-size:12.5px; margin-bottom:14px; line-height:1.5; }
-.cf-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+.s-reject-msg { width:100%; font-size:12px; color:#dc2626; margin-top:8px; padding:6px 10px; background:#fef2f2; border-radius:6px; }
 
 .empty-state { background:#fff; border:1px solid #e8e8e4; border-radius:12px; padding:40px; text-align:center; color:#9ca3af; }
 .empty-state i { font-size:32px; display:block; margin-bottom:10px; }
+.empty-state .em-title { font-size:14px; font-weight:600; color:#4a5568; margin-bottom:4px; }
+
+/* Modal xác nhận */
+.cf-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.cf-overlay.open { display:flex; }
+.cf-box { background:#fff; border-radius:16px; padding:26px; width:100%; max-width:480px; max-height:85vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,0.3); }
+.cf-title { font-size:18px; font-weight:800; color:#1a1f2e; margin:0 0 6px; }
+.cf-sub { font-size:13px; color:#6b7280; margin-bottom:18px; }
+.cf-section { background:#fafaf8; border:1px solid #ececec; border-radius:10px; padding:14px 16px; margin-bottom:12px; }
+.cf-section-title { font-size:11px; font-weight:700; color:#9ca3af; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; }
+.cf-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
+.cf-row .label { color:#6b7280; }
+.cf-row .val { color:#1a1f2e; font-weight:600; max-width:60%; text-align:right; word-break:break-word; }
+.cf-warn { background:#fef3c7; color:#92400e; padding:10px 14px; border-radius:8px; font-size:12.5px; margin-bottom:12px; line-height:1.5; }
+.cf-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+.btn-primary { background:#3b6fd4; color:#fff; border:none; padding:10px 22px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; }
+.btn-primary:hover { background:#2c54a8; }
+.btn-primary:disabled { background:#cbd5e1; cursor:not-allowed; }
+.btn-ghost { background:transparent; color:#64748b; border:1px solid #e5e7eb; padding:9px 16px; border-radius:8px; font-size:13px; cursor:pointer; font-family:inherit; }
+
+@media (max-width:640px) {
+  .s-card { padding:14px; }
+  .s-date-block { padding-right:12px; min-width:54px; }
+  .s-action { width:100%; align-items:stretch; }
+  .s-btn-register, .s-btn-meet { width:100%; text-align:center; justify-content:center; }
+}
 </style>
 
 <div class="pd-page">
@@ -81,29 +107,47 @@
     <div class="pd-header">
       <img class="pd-poster" src="<%= cls.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= cls.name %>" />
       <div class="pd-info">
-        <h1 class="pd-title"><%= cls.name %></h1>
-        <% if (cls.description) { %><p class="pd-desc"><%= cls.description %></p><% } %>
-        <% if (cls.idLecturer) { %>
-        <div class="pd-lecturer">
-          <img src="<%= cls.idLecturer.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" />
-          <div>
-            <div class="pd-lec-name"><%= cls.idLecturer.name %></div>
-            <div class="pd-lec-sub">Huấn luyện viên</div>
+        <div class="pd-info-top">
+          <div class="pd-info-main">
+            <h1 class="pd-title"><%= cls.name %></h1>
+            <% if (cls.description) { %><p class="pd-desc"><%= cls.description %></p><% } %>
+            <% if (cls.idLecturer) { %>
+            <div class="pd-lecturer">
+              <img src="<%= cls.idLecturer.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" />
+              <div>
+                <div class="pd-lec-name"><%= cls.idLecturer.name %></div>
+                <div class="pd-lec-sub">Huấn luyện viên</div>
+              </div>
+            </div>
+            <% } %>
+          </div>
+
+          <div class="pd-follow-box">
+            <div class="pd-follow-count"><strong id="follower-count"><%= followerCount %></strong> người theo dõi</div>
+            <% if (isAuthenticated) { %>
+              <button class="pd-follow-btn <%= isFollowing ? 'following' : '' %>" id="follow-btn" onclick="toggleFollow()">
+                <i class="fas <%= isFollowing ? 'fa-check' : 'fa-plus' %>" id="follow-icon"></i>
+                <span class="follow-text">
+                  <span class="follow-text-default" id="follow-label"><%= isFollowing ? 'Đang theo dõi' : 'Theo dõi lớp' %></span>
+                </span>
+              </button>
+            <% } else { %>
+              <a href="/users/login" class="pd-follow-btn"><i class="fas fa-sign-in-alt"></i> Đăng nhập để theo dõi</a>
+            <% } %>
           </div>
         </div>
-        <% } %>
       </div>
     </div>
 
     <% if (!isAuthenticated) { %>
       <div class="pd-banner pd-banner-guest">
         <i class="fas fa-info-circle"></i>
-        <span><a href="/users/login" style="color:#3b6fd4">Đăng nhập</a> để đăng ký buổi thực hành.</span>
+        <span><a href="/users/login" style="color:#3b6fd4">Đăng nhập</a> để theo dõi lớp và đăng ký buổi thực hành.</span>
       </div>
     <% } else if (userIs2M) { %>
       <div class="pd-banner pd-banner-2m">
         <i class="fas fa-crown"></i>
-        <span>Bạn là <strong>học viên khóa 2M</strong> — học miễn phí. Yêu cầu đăng ký sẽ được admin xem xét và xếp lịch.</span>
+        <span>Bạn là <strong>học viên khóa 2M</strong> — học miễn phí. Yêu cầu đăng ký sẽ được admin xem xét và sắp xếp.</span>
       </div>
     <% } else { %>
       <div class="pd-banner pd-banner-paid">
@@ -115,135 +159,137 @@
     <% if (isAuthenticated && !profileComplete) { %>
       <div class="pd-banner pd-banner-warn">
         <i class="fas fa-exclamation-triangle"></i>
-        <span>Bạn cần điền đầy đủ <strong>SĐT Zalo, tên trong game và mức rank</strong> trước khi đăng ký. <a href="/users/account">Cập nhật ngay →</a></span>
+        <span>Bạn cần điền đầy đủ <strong>SĐT Zalo, tên trong game và mức rank</strong> trước khi đăng ký buổi. <a href="/users/account">Cập nhật ngay →</a></span>
       </div>
     <% } %>
 
-    <h2 style="font-size:18px;font-weight:700;color:#1a1f2e;margin:0 0 14px">
-      <i class="fas fa-calendar-week"></i> Lịch thực hành theo tuần
-      <span style="font-size:13px;color:#9ca3af;font-weight:500">(Thứ 5 và Thứ 6 hằng tuần)</span>
-    </h2>
+    <div class="pd-section">
+      <h2 class="pd-section-title"><i class="fas fa-calendar-alt" style="color:#3b6fd4"></i> Các buổi sắp tới</h2>
+      <span class="pd-section-sub"><%= upcomingSessions.length %> buổi</span>
+    </div>
 
-    <% if (upcomingWeeks.length === 0) { %>
+    <% if (upcomingSessions.length === 0) { %>
       <div class="empty-state">
-        <i class="fas fa-calendar-alt"></i>
-        Chưa có buổi nào được lên lịch.
+        <i class="fas fa-calendar-plus"></i>
+        <div class="em-title">Chưa có buổi nào được lên lịch</div>
+        <div style="font-size:12.5px;color:#9ca3af">
+          <% if (isAuthenticated && !isFollowing) { %>
+            Hãy theo dõi lớp để được cập nhật khi có buổi mới.
+          <% } else if (isFollowing) { %>
+            Bạn sẽ thấy ngay khi admin tạo buổi mới.
+          <% } else { %>
+            Quay lại sau nhé.
+          <% } %>
+        </div>
       </div>
     <% } %>
 
-    <% upcomingWeeks.forEach(week => {
-      const ws = new Date(week.weekStart);
-      const we = new Date(ws); we.setDate(we.getDate() + 6);
-      const wsStr = ws.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const weStr = we.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    <% upcomingSessions.forEach(s => {
+      const state = userId ? userSessionState[s._id.toString()] : null;
+      const enrolled = state && state.enrolled;
+      const enType = state && state.type;
+      const payStatus = state && state.paymentStatus;
+      const adminNote = state && state.adminNote;
+
+      const selectedCount  = (s.enrollments || []).filter(e => ['paid','free','approved'].includes(e.paymentStatus)).length;
+      const requestedCount = (s.enrollments || []).filter(e => e.paymentStatus === 'requested').length;
+      const isFull = selectedCount >= cls.maxStudentsPerSession;
+
+      const d = s.date ? new Date(s.date) : null;
+      const dayName  = d ? d.toLocaleDateString('vi-VN', { weekday: 'short' }) : '—';
+      const dayNum   = d ? d.getDate() : '?';
+      const monthStr = d ? `Th${d.getMonth() + 1}` : '';
+      const timeStr  = d ? d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) : '';
+      const fullDate = d ? d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
+
+      const canRegister = !enrolled && profileComplete && isAuthenticated && s.status === 'scheduled';
     %>
-    <div class="week-card" data-week="<%= week.weekStart.toISOString().slice(0,10) %>">
-      <div class="week-head">
-        <div>
-          <div class="week-title">Tuần <%= wsStr %> – <%= weStr %></div>
-          <div class="week-sub">Chọn 1 hoặc cả 2 ngày bạn có thể tham gia</div>
-        </div>
+    <div class="s-card <%= enrolled && ['paid','free','approved','requested'].includes(payStatus) ? 'enrolled' : '' %>" data-sid="<%= s._id %>">
+      <div class="s-date-block">
+        <div class="s-date-day"><%= dayName %></div>
+        <div class="s-date-num"><%= dayNum %></div>
+        <div class="s-date-month"><%= monthStr %></div>
       </div>
-
-      <% week.sessions.forEach(s => {
-        const state = userId ? userSessionState[s._id.toString()] : null;
-        const enrolled = state && state.enrolled;
-        const enType = state && state.type;
-        const payStatus = state && state.paymentStatus;
-        const adminNote = state && state.adminNote;
-
-        const selectedCount  = (s.enrollments || []).filter(e => ['paid','free','approved'].includes(e.paymentStatus)).length;
-        const requestedCount = (s.enrollments || []).filter(e => e.paymentStatus === 'requested').length;
-        const isFull = selectedCount >= cls.maxStudentsPerSession;
-
-        const dayName = s.date ? new Date(s.date).toLocaleDateString('vi-VN', { weekday: 'long' }) : 'Chưa rõ';
-        const dayCapital = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-        const timeStr = s.date ? new Date(s.date).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-
-        // Cho phép đăng ký không giới hạn — chỉ chặn nếu đã đăng ký, hết hạn, hoặc thiếu hồ sơ
-        const canSelect = !enrolled && s.status === 'scheduled' && profileComplete && isAuthenticated;
-      %>
-      <label class="day-option <%= canSelect ? '' : 'disabled' %>">
-        <input type="checkbox" class="day-checkbox session-pick" data-sid="<%= s._id %>" data-week="<%= week.weekStart.toISOString().slice(0,10) %>" data-title="<%= dayCapital %>" data-time="<%= timeStr %>" <%= canSelect ? '' : 'disabled' %> />
-        <div class="day-info">
-          <div class="day-name"><%= dayCapital %> — <%= s.title || 'Buổi thực hành' %></div>
-          <div class="day-time">
-            <i class="fas fa-clock" style="color:#9ca3af"></i> <%= timeStr %>
-            <% if (s.endTime) { %> – <%= s.endTime %><% } %>
-            <span style="margin-left:10px"><i class="fas fa-user-check" style="color:#16a34a"></i> <%= selectedCount %>/<%= cls.maxStudentsPerSession %> được chọn</span>
-            <% if (requestedCount > 0) { %>
-              <span style="margin-left:10px;color:#f59e0b"><i class="fas fa-hourglass-half"></i> <%= requestedCount %> chờ duyệt</span>
-            <% } %>
-          </div>
-          <% if (s.location) { %><div class="day-location"><i class="fas fa-map-marker-alt"></i> <%= s.location %></div><% } %>
-          <% if (s.note) { %><div class="day-note"><%= s.note %></div><% } %>
-          <% if (enrolled && payStatus === 'rejected' && adminNote) { %>
-          <div style="font-size:12px;color:#dc2626;margin-top:6px;padding:6px 10px;background:#fef2f2;border-radius:6px">
-            <i class="fas fa-times-circle"></i> Lý do từ chối: <%= adminNote %>
-          </div>
+      <div class="s-info">
+        <div class="s-title"><%= s.title || 'Buổi thực hành' %></div>
+        <div class="s-meta">
+          <% if (timeStr) { %>
+          <span class="s-meta-line"><i class="fas fa-clock"></i> <%= timeStr %><% if (s.endTime) { %> – <%= s.endTime %><% } %> · <%= fullDate %></span>
+          <% } %>
+          <% if (s.location) { %>
+          <span class="s-meta-line"><i class="fas fa-map-marker-alt"></i> <%= s.location %></span>
+          <% } %>
+          <span class="s-meta-line"><i class="fas fa-user-check"></i> <%= selectedCount %>/<%= cls.maxStudentsPerSession %> được chọn</span>
+          <% if (requestedCount > 0) { %>
+          <span class="s-meta-line" style="color:#d97706"><i class="fas fa-hourglass-half"></i> <%= requestedCount %> chờ duyệt</span>
           <% } %>
         </div>
-        <div>
-          <% if (s.status === 'cancelled') { %>
-            <span class="day-status status-pending">Đã hủy</span>
-          <% } else if (s.status === 'done') { %>
-            <span class="day-status status-pending">Đã kết thúc</span>
-          <% } else if (enrolled && payStatus === 'requested') { %>
-            <span class="day-status status-requested"><i class="fas fa-hourglass-half"></i> Chờ duyệt</span>
-          <% } else if (enrolled && payStatus === 'approved') { %>
-            <span class="day-status status-approved">✓ Đã duyệt</span>
-          <% } else if (enrolled && payStatus === 'paid') { %>
-            <span class="day-status status-paid">✓ Đã thanh toán</span>
-          <% } else if (enrolled && payStatus === 'free') { %>
-            <span class="day-status status-free"><i class="fas fa-crown"></i> 2M miễn phí</span>
-          <% } else if (enrolled && payStatus === 'pending') { %>
-            <span class="day-status status-pending">Đang xử lý</span>
-          <% } else if (enrolled && payStatus === 'rejected') { %>
-            <span class="day-status status-rejected">✗ Đã từ chối</span>
-          <% } else if (isFull) { %>
-            <span class="day-status status-full" title="Đã đủ học viên được chọn nhưng vẫn có thể đăng ký vào danh sách chờ">Đã đủ chỗ</span>
-          <% } %>
-        </div>
-      </label>
-      <% }); %>
-
-      <% if (isAuthenticated && profileComplete) { %>
-      <div class="week-actions">
-        <button class="btn-primary" data-week-submit="<%= week.weekStart.toISOString().slice(0,10) %>" disabled onclick="openConfirmModal('<%= week.weekStart.toISOString().slice(0,10) %>')">
-          Đăng ký các buổi đã chọn
-        </button>
+        <% if (s.note) { %><div style="font-size:12px;color:#9ca3af;margin-top:6px;font-style:italic"><%= s.note %></div><% } %>
+        <% if (enrolled && payStatus === 'rejected' && adminNote) { %>
+        <div class="s-reject-msg"><i class="fas fa-times-circle"></i> Lý do từ chối: <%= adminNote %></div>
+        <% } %>
       </div>
-      <% } %>
+      <div class="s-action">
+        <% if (s.status === 'cancelled') { %>
+          <span class="s-status s-status-pending">Đã hủy</span>
+        <% } else if (enrolled && payStatus === 'requested') { %>
+          <span class="s-status s-status-requested"><i class="fas fa-hourglass-half"></i> Chờ duyệt</span>
+        <% } else if (enrolled && payStatus === 'approved' && enType === '2M') { %>
+          <span class="s-status s-status-approved">✓ Đã duyệt</span>
+        <% } else if (enrolled && payStatus === 'approved') { %>
+          <form action="/practice/<%= cls._id %>/sessions/<%= s._id %>/pay" method="POST" style="margin:0">
+            <button type="submit" style="background:#16a34a;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer">
+              <i class="fas fa-credit-card"></i> Thanh toán <%= cls.pricePerSession.toLocaleString('vi-VN') %>đ
+            </button>
+          </form>
+        <% } else if (enrolled && payStatus === 'paid') { %>
+          <span class="s-status s-status-paid">✓ Đã thanh toán</span>
+          <% if (s.meetLink) { %><a href="<%= s.meetLink %>" target="_blank" class="s-btn-meet"><i class="fas fa-video"></i> Tham gia</a><% } %>
+        <% } else if (enrolled && payStatus === 'free') { %>
+          <span class="s-status s-status-free"><i class="fas fa-crown"></i> 2M miễn phí</span>
+          <% if (s.meetLink) { %><a href="<%= s.meetLink %>" target="_blank" class="s-btn-meet"><i class="fas fa-video"></i> Tham gia</a><% } %>
+        <% } else if (enrolled && payStatus === 'pending') { %>
+          <span class="s-status s-status-pending">Đang xử lý</span>
+        <% } else if (enrolled && payStatus === 'rejected') { %>
+          <button class="s-btn-register" onclick='openConfirmModal(<%- JSON.stringify({ sid: s._id.toString(), title: s.title || "Buổi thực hành", time: timeStr, fullDate }) %>)'>Đăng ký lại</button>
+        <% } else if (canRegister) { %>
+          <button class="s-btn-register" onclick='openConfirmModal(<%- JSON.stringify({ sid: s._id.toString(), title: s.title || "Buổi thực hành", time: timeStr, fullDate }) %>)'>
+            <i class="fas fa-paper-plane"></i> Đăng ký buổi này
+          </button>
+          <% if (isFull) { %><span style="font-size:11px;color:#9ca3af">Đã đủ chỗ — bạn vẫn có thể vào danh sách chờ</span><% } %>
+        <% } else if (!isAuthenticated) { %>
+          <a href="/users/login" class="s-btn-register" style="text-decoration:none;display:inline-block">Đăng nhập để đăng ký</a>
+        <% } else if (!profileComplete) { %>
+          <a href="/users/account" class="s-btn-register" style="background:#d97706;text-decoration:none;display:inline-block">Cập nhật hồ sơ</a>
+        <% } %>
+      </div>
     </div>
     <% }); %>
 
-    <% if (pastWeeks.length > 0) { %>
+    <% if (pastSessions.length > 0) { %>
     <details style="margin-top:18px">
-      <summary style="cursor:pointer;color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">📜 Xem các tuần đã qua (<%= pastWeeks.length %>)</summary>
-      <% pastWeeks.forEach(week => {
-        const pws = new Date(week.weekStart);
-        const pwe = new Date(pws); pwe.setDate(pwe.getDate() + 6);
-        const pwsStr = pws.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
-        const pweStr = pwe.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+      <summary style="cursor:pointer;color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">📜 Xem các buổi đã qua (<%= pastSessions.length %>)</summary>
+      <% pastSessions.forEach(s => {
+        const d = s.date ? new Date(s.date) : null;
+        const fullDate = d ? d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
+        const timeStr  = d ? d.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) : '';
+        const dayName  = d ? d.toLocaleDateString('vi-VN', { weekday: 'short' }) : '—';
       %>
-      <div class="week-card" style="opacity:0.6">
-        <div class="week-head">
-          <div class="week-title">Tuần <%= pwsStr %> – <%= pweStr %></div>
+      <div class="s-card" style="opacity:0.55;margin-top:10px">
+        <div class="s-date-block">
+          <div class="s-date-day"><%= dayName %></div>
+          <div class="s-date-num"><%= d ? d.getDate() : '?' %></div>
+          <div class="s-date-month"><%= d ? 'Th' + (d.getMonth() + 1) : '' %></div>
         </div>
-        <% week.sessions.forEach(s => {
-          const pDayName = s.date ? new Date(s.date).toLocaleDateString('vi-VN', { weekday: 'long' }) : '';
-          const pDayCap  = pDayName.charAt(0).toUpperCase() + pDayName.slice(1);
-          const pTimeStr = s.date ? new Date(s.date).toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-        %>
-          <div class="day-option disabled">
-            <span style="width:22px"></span>
-            <div class="day-info">
-              <div class="day-name"><%= pDayCap %> — <%= s.title %></div>
-              <div class="day-time"><%= pTimeStr %></div>
-            </div>
-            <span class="day-status status-pending">Đã qua</span>
-          </div>
-        <% }); %>
+        <div class="s-info">
+          <div class="s-title"><%= s.title || 'Buổi thực hành' %></div>
+          <div class="s-meta"><span><i class="fas fa-clock"></i> <%= timeStr %> · <%= fullDate %></span></div>
+        </div>
+        <div class="s-action">
+          <span class="s-status s-status-pending">
+            <%= s.status === 'cancelled' ? 'Đã hủy' : 'Đã qua' %>
+          </span>
+        </div>
       </div>
       <% }); %>
     </details>
@@ -251,11 +297,17 @@
   </div>
 </div>
 
-<!-- ── Modal xác nhận ── -->
+<!-- Modal xác nhận đăng ký 1 buổi -->
 <div class="cf-overlay" id="cf-overlay">
   <div class="cf-box">
-    <h2 class="cf-title">Xác nhận thông tin đăng ký</h2>
-    <p class="cf-sub">Vui lòng kiểm tra kỹ thông tin trước khi gửi yêu cầu cho admin.</p>
+    <h2 class="cf-title">Xác nhận đăng ký buổi</h2>
+    <p class="cf-sub">Vui lòng kiểm tra thông tin trước khi gửi yêu cầu cho admin.</p>
+
+    <div class="cf-section">
+      <div class="cf-section-title">Buổi đã chọn</div>
+      <div class="cf-row"><span class="label">Tiêu đề</span><span class="val" id="cf-session-title">—</span></div>
+      <div class="cf-row"><span class="label">Thời gian</span><span class="val" id="cf-session-time">—</span></div>
+    </div>
 
     <div class="cf-section">
       <div class="cf-section-title">Hồ sơ của bạn</div>
@@ -264,27 +316,22 @@
       <div class="cf-row"><span class="label">Mức rank</span><span class="val"><%= isAuthenticated && user.rank ? getRankLabel(user.rank) : '—' %></span></div>
     </div>
 
-    <div class="cf-section">
-      <div class="cf-section-title">Buổi đã chọn</div>
-      <div id="cf-days-list"></div>
-    </div>
-
     <% if (!userIs2M) { %>
     <div class="cf-warn">
-      <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Yêu cầu sẽ được admin xem xét. Sau khi duyệt, bạn sẽ thanh toán <strong><%= cls.pricePerSession.toLocaleString('vi-VN') %>đ/buổi</strong> để hoàn tất đăng ký.
+      <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Sau khi admin duyệt, bạn sẽ thanh toán <strong><%= cls.pricePerSession.toLocaleString('vi-VN') %>đ</strong> để hoàn tất đăng ký.
     </div>
     <% } else { %>
     <div class="cf-warn" style="background:#fef3c7">
-      <i class="fas fa-crown"></i> <strong>Học viên 2M:</strong> Sau khi admin duyệt, bạn sẽ được tham gia miễn phí.
+      <i class="fas fa-crown"></i> <strong>Học viên 2M:</strong> Sau khi admin duyệt, bạn được tham gia miễn phí.
     </div>
     <% } %>
 
-    <p style="font-size:12.5px;color:#6b7280;margin:14px 0 0">
-      Nếu thông tin hồ sơ chưa đúng, hãy <a href="/users/account" style="color:#3b6fd4;font-weight:700">cập nhật tại đây</a> rồi quay lại đăng ký.
+    <p style="font-size:12px;color:#6b7280;margin:10px 0 0">
+      Hồ sơ chưa đúng? <a href="/users/account" style="color:#3b6fd4;font-weight:700">Cập nhật tại đây</a>.
     </p>
 
     <div class="cf-actions">
-      <button class="btn-ghost" onclick="closeConfirmModal()">Quay lại sửa</button>
+      <button class="btn-ghost" onclick="closeConfirmModal()">Quay lại</button>
       <button class="btn-primary" id="cf-submit-btn" onclick="submitRegister()">
         <i class="fas fa-paper-plane"></i> Gửi yêu cầu
       </button>
@@ -294,55 +341,28 @@
 
 <script>
 const CLS_ID = '<%= cls._id %>';
-let _selectedWeekKey = null;
-let _selectedSessionIds = [];
+let _selectedSid = null;
 
-// Bật/tắt nút đăng ký theo selection
-document.querySelectorAll('.session-pick').forEach(cb => {
-  cb.addEventListener('change', () => {
-    const wk = cb.dataset.week;
-    const anyChecked = document.querySelectorAll('.session-pick[data-week="' + wk + '"]:checked').length > 0;
-    const btn = document.querySelector('button[data-week-submit="' + wk + '"]');
-    if (btn) btn.disabled = !anyChecked;
-  });
-});
-
-function openConfirmModal(weekKey) {
-  _selectedWeekKey = weekKey;
-  const checked = Array.from(document.querySelectorAll('.session-pick[data-week="' + weekKey + '"]:checked'));
-  if (checked.length === 0) return;
-
-  _selectedSessionIds = checked.map(cb => cb.dataset.sid);
-
-  const list = document.getElementById('cf-days-list');
-  list.innerHTML = checked.map(cb => `
-    <div class="cf-day">
-      <i class="fas fa-calendar-day"></i>
-      <div style="flex:1">
-        <div style="font-weight:700">${cb.dataset.title}</div>
-        <div style="font-size:11.5px;color:#6b7280">${cb.dataset.time}</div>
-      </div>
-    </div>
-  `).join('');
-
+function openConfirmModal(data) {
+  _selectedSid = data.sid;
+  document.getElementById('cf-session-title').textContent = data.title;
+  document.getElementById('cf-session-time').textContent  = data.time + ' · ' + data.fullDate;
   document.getElementById('cf-overlay').classList.add('open');
 }
 
 function closeConfirmModal() {
   document.getElementById('cf-overlay').classList.remove('open');
-  _selectedWeekKey = null;
-  _selectedSessionIds = [];
+  _selectedSid = null;
 }
 
 async function submitRegister() {
-  if (!_selectedSessionIds.length) return;
+  if (!_selectedSid) return;
   const btn = document.getElementById('cf-submit-btn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
   try {
-    const res = await fetch('/practice/' + CLS_ID + '/request', {
+    const res = await fetch('/practice/' + CLS_ID + '/sessions/' + _selectedSid + '/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionIds: _selectedSessionIds })
+      headers: { 'Content-Type': 'application/json' }
     });
     const json = await res.json();
     if (json.ok) {
@@ -362,4 +382,34 @@ async function submitRegister() {
 document.getElementById('cf-overlay').addEventListener('click', (e) => {
   if (e.target.id === 'cf-overlay') closeConfirmModal();
 });
+
+// ── Toggle follow ──
+async function toggleFollow() {
+  const btn = document.getElementById('follow-btn');
+  btn.disabled = true;
+  try {
+    const res = await fetch('/practice/' + CLS_ID + '/follow', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await res.json();
+    if (json.ok) {
+      document.getElementById('follower-count').textContent = json.followerCount;
+      const icon = document.getElementById('follow-icon');
+      const label = document.getElementById('follow-label');
+      if (json.following) {
+        btn.classList.add('following');
+        icon.className = 'fas fa-check';
+        label.textContent = 'Đang theo dõi';
+      } else {
+        btn.classList.remove('following');
+        icon.className = 'fas fa-plus';
+        label.textContent = 'Theo dõi lớp';
+      }
+    }
+  } catch(e) {
+    alert('Lỗi kết nối, thử lại sau.');
+  } finally {
+    btn.disabled = false;
+  }
+}
 </script>

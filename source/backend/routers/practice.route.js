@@ -113,7 +113,7 @@ Router.get('/my', ensureAuthenticated, async (req, res) => {
   });
 });
 
-// ── Chi tiết 1 lớp thực hành — nhóm sessions theo tuần ──
+// ── Chi tiết 1 lớp thực hành — danh sách buổi flat + follow ──
 Router.get('/:id', async (req, res) => {
   const mongoose = require('mongoose');
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -127,39 +127,38 @@ Router.get('/:id', async (req, res) => {
   let userIs2M = false;
   let userId = null;
   let profileComplete = false;
+  let isFollowing = false;
   if (req.isAuthenticated() && req.user) {
     userIs2M = await is2MStudent(req.user);
     userId = req.user._id.toString();
     profileComplete = isProfileCompleteForPractice(req.user);
+    isFollowing = (cls.followers || []).some(f => f && f.toString() === userId);
   }
 
+  const followerCount = (cls.followers || []).length;
+
   // Sort sessions theo ngày
-  const sessions = cls.sessions.slice().sort((a, b) => {
+  const sessionsAll = cls.sessions.slice().sort((a, b) => {
     const da = a.date ? new Date(a.date).getTime() : Infinity;
     const db = b.date ? new Date(b.date).getTime() : Infinity;
     return da - db;
   });
 
-  // Nhóm theo tuần (Mon-Sun)
-  const weekMap = {};
-  sessions.forEach(s => {
-    if (!s.date) return;
-    const key = weekKeyOf(s.date);
-    if (!weekMap[key]) weekMap[key] = { weekKey: key, weekStart: parseWeekKey(key), sessions: [] };
-    weekMap[key].sessions.push(s);
+  // Tách upcoming vs past — flat, không group theo tuần
+  const now = new Date();
+  const upcomingSessions = [];
+  const pastSessions     = [];
+  sessionsAll.forEach(s => {
+    const isPast = s.status === 'cancelled' || s.status === 'done' ||
+                   (s.date && new Date(s.date) < now);
+    if (isPast) pastSessions.push(s);
+    else upcomingSessions.push(s);
   });
-
-  const weeks = Object.keys(weekMap).sort().map(k => weekMap[k]);
-
-  // Lọc tuần hiện tại + tương lai (so sánh key string trực tiếp)
-  const todayKey = weekKeyOf(new Date());
-  const upcomingWeeks = weeks.filter(w => w.weekKey >= todayKey);
-  const pastWeeks     = weeks.filter(w => w.weekKey <  todayKey);
 
   // Map sessionId → trạng thái user
   const userSessionState = {};
   if (userId) {
-    sessions.forEach(s => {
+    sessionsAll.forEach(s => {
       const en = (s.enrollments || []).find(e => e.idUser && e.idUser.toString() === userId);
       userSessionState[s._id.toString()] = en
         ? {
@@ -176,25 +175,99 @@ Router.get('/:id', async (req, res) => {
     isAuthenticated: req.isAuthenticated(),
     user: req.user,
     cls,
-    upcomingWeeks,
-    pastWeeks,
+    upcomingSessions,
+    pastSessions,
     userIs2M,
     userId,
     userSessionState,
     profileComplete,
+    isFollowing,
+    followerCount,
     rankLevels: RANK_LEVELS,
     getRankLabel
   });
 });
 
-// ── User gửi yêu cầu đăng ký nhiều buổi (1 hoặc cả 2 ngày) ──
+// ── Toggle follow lớp ──
+Router.post('/:id/follow', ensureAuthenticated, express.json(), async (req, res) => {
+  const cls = await PracticeClass.findById(req.params.id);
+  if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
+
+  const userIdStr = req.user._id.toString();
+  const idx = (cls.followers || []).findIndex(f => f && f.toString() === userIdStr);
+  if (idx === -1) {
+    cls.followers.push(req.user._id);
+    await cls.save();
+    return res.json({ ok: true, following: true, followerCount: cls.followers.length });
+  } else {
+    cls.followers.splice(idx, 1);
+    await cls.save();
+    return res.json({ ok: true, following: false, followerCount: cls.followers.length });
+  }
+});
+
+// ── User đăng ký 1 buổi cụ thể ──
+Router.post('/:id/sessions/:sid/register', ensureAuthenticated, express.json(), async (req, res) => {
+  if (!isProfileCompleteForPractice(req.user)) {
+    return res.json({ ok: false, msg: 'Vui lòng cập nhật đầy đủ SĐT Zalo, tên trong game và mức rank trước khi đăng ký', code: 'PROFILE_INCOMPLETE' });
+  }
+
+  const cls = await PracticeClass.findById(req.params.id);
+  if (!cls || cls.status !== 'active') {
+    return res.json({ ok: false, msg: 'Lớp thực hành không tồn tại hoặc đã đóng' });
+  }
+
+  const s = cls.sessions.id(req.params.sid);
+  if (!s) return res.json({ ok: false, msg: 'Không tìm thấy buổi học' });
+  if (s.status === 'cancelled' || s.status === 'done') {
+    return res.json({ ok: false, msg: 'Buổi học đã kết thúc hoặc bị hủy' });
+  }
+  if (s.date && new Date(s.date) < new Date()) {
+    return res.json({ ok: false, msg: 'Buổi học đã qua' });
+  }
+
+  const userIs2M = await is2MStudent(req.user);
+  const userId = req.user._id;
+  const userIdStr = userId.toString();
+
+  const existing = s.enrollments.find(e => e.idUser && e.idUser.toString() === userIdStr);
+  if (existing && ['requested', 'approved', 'paid', 'free'].includes(existing.paymentStatus)) {
+    return res.json({ ok: false, msg: 'Bạn đã đăng ký buổi này rồi' });
+  }
+
+  const enrollment = {
+    idUser:        userId,
+    type:          userIs2M ? '2M' : 'paid',
+    paymentStatus: 'requested',
+    orderCode:     null,
+    amount:        userIs2M ? 0 : (cls.pricePerSession || 50000),
+    enrolledAt:    new Date(),
+    snapshotZaloPhone:  req.user.zaloPhone || '',
+    snapshotInGameName: req.user.inGameName || '',
+    snapshotRank:       req.user.rank || ''
+  };
+
+  if (existing) {
+    Object.assign(existing, enrollment);
+  } else {
+    s.enrollments.push(enrollment);
+  }
+
+  // Auto-follow lớp khi đăng ký buổi đầu tiên
+  if (!(cls.followers || []).some(f => f && f.toString() === userIdStr)) {
+    cls.followers.push(userId);
+  }
+
+  await cls.save();
+  return res.json({ ok: true, msg: 'Đã gửi yêu cầu, admin sẽ xem xét và phản hồi.' });
+});
+
+// ── Backwards-compat: /request vẫn hoạt động (đăng ký nhiều buổi 1 lúc) ──
 Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res) => {
   const { sessionIds } = req.body;
   if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
     return res.json({ ok: false, msg: 'Vui lòng chọn ít nhất 1 buổi' });
   }
-
-  // Validate profile
   if (!isProfileCompleteForPractice(req.user)) {
     return res.json({ ok: false, msg: 'Vui lòng cập nhật đầy đủ SĐT Zalo, tên trong game và mức rank trước khi đăng ký', code: 'PROFILE_INCOMPLETE' });
   }
@@ -207,19 +280,14 @@ Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res
   const userIs2M = await is2MStudent(req.user);
   const userId = req.user._id;
   const userIdStr = userId.toString();
-
   const created = [];
   const skipped = [];
 
   for (const sid of sessionIds) {
     const s = cls.sessions.id(sid);
     if (!s) { skipped.push({ sid, reason: 'không tồn tại' }); continue; }
-    if (s.status === 'cancelled' || s.status === 'done') {
-      skipped.push({ sid, reason: 'đã kết thúc/hủy' }); continue;
-    }
-    if (s.date && new Date(s.date) < new Date()) {
-      skipped.push({ sid, reason: 'đã qua' }); continue;
-    }
+    if (s.status === 'cancelled' || s.status === 'done') { skipped.push({ sid, reason: 'đã kết thúc/hủy' }); continue; }
+    if (s.date && new Date(s.date) < new Date()) { skipped.push({ sid, reason: 'đã qua' }); continue; }
 
     const existing = s.enrollments.find(e => e.idUser && e.idUser.toString() === userIdStr);
     if (existing && ['requested', 'approved', 'paid', 'free'].includes(existing.paymentStatus)) {
@@ -227,32 +295,29 @@ Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res
     }
 
     const enrollment = {
-      idUser:        userId,
-      type:          userIs2M ? '2M' : 'paid',
+      idUser: userId,
+      type: userIs2M ? '2M' : 'paid',
       paymentStatus: 'requested',
-      orderCode:     null,
-      amount:        userIs2M ? 0 : (cls.pricePerSession || 50000),
-      enrolledAt:    new Date(),
-      snapshotZaloPhone:  req.user.zaloPhone || '',
+      orderCode: null,
+      amount: userIs2M ? 0 : (cls.pricePerSession || 50000),
+      enrolledAt: new Date(),
+      snapshotZaloPhone: req.user.zaloPhone || '',
       snapshotInGameName: req.user.inGameName || '',
-      snapshotRank:       req.user.rank || ''
+      snapshotRank: req.user.rank || ''
     };
-
-    if (existing) {
-      // Reset từ rejected/cancelled → requested mới
-      Object.assign(existing, enrollment);
-    } else {
-      s.enrollments.push(enrollment);
-    }
+    if (existing) Object.assign(existing, enrollment);
+    else s.enrollments.push(enrollment);
     created.push(sid);
   }
 
-  if (created.length === 0) {
-    return res.json({ ok: false, msg: 'Không có buổi nào được đăng ký', skipped });
+  if (created.length === 0) return res.json({ ok: false, msg: 'Không có buổi nào được đăng ký', skipped });
+
+  if (!(cls.followers || []).some(f => f && f.toString() === userIdStr)) {
+    cls.followers.push(userId);
   }
 
   await cls.save();
-  return res.json({ ok: true, created, skipped, msg: `Đã gửi yêu cầu cho ${created.length} buổi. Admin sẽ xem xét và phản hồi.` });
+  return res.json({ ok: true, created, skipped, msg: `Đã gửi yêu cầu cho ${created.length} buổi.` });
 });
 
 // ── User thanh toán cho buổi đã được approved (chỉ paid type) ──

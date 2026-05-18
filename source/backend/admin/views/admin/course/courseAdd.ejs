@@ -62,6 +62,16 @@
   color:#fff; font-size:13px; font-weight:600; gap:6px;
 }
 .poster-zone:hover .poster-overlay { opacity:1; }
+.poster-zone.uploading { opacity:0.85; pointer-events:none; }
+.poster-spinner {
+  position:absolute; inset:0;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(15,23,42,0.75);
+  color:#93c5fd; font-size:13px; font-weight:600; gap:8px;
+}
+.poster-zone.uploading .poster-spinner { display:flex; }
+.poster-spinner i { animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
 /* Desc mode toggle */
 .desc-toggle {
@@ -190,8 +200,10 @@
               <span style="font-size:11px;color:#64748b">PNG, JPG — tỉ lệ 16:9</span>
             </div>
             <div class="poster-overlay"><i class="fas fa-camera"></i> Đổi ảnh</div>
+            <div class="poster-spinner"><i class="fas fa-circle-notch"></i> Đang tải lên...</div>
           </div>
           <input type="file" id="poster-file" accept="image/*" style="display:none" />
+          <div id="poster-error" style="font-size:12px;color:#f87171;margin-top:6px;min-height:16px"></div>
         </div>
       </div>
 
@@ -373,9 +385,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Upload poster → ImgBB ──
+let _posterUploading = false;
+
 document.getElementById('poster-file').addEventListener('change', async function() {
   const file = this.files[0];
   if (!file) return;
+
+  const errEl = document.getElementById('poster-error');
+  errEl.textContent = '';
+
+  // Validate
+  if (!file.type.startsWith('image/')) {
+    errEl.textContent = '✗ File phải là ảnh (PNG/JPG/WebP)';
+    this.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    errEl.textContent = '✗ Ảnh quá lớn (>10MB)';
+    this.value = '';
+    return;
+  }
 
   // Preview ngay
   const reader = new FileReader();
@@ -390,15 +419,38 @@ document.getElementById('poster-file').addEventListener('change', async function
   reader.readAsDataURL(file);
 
   // Upload ImgBB
+  const zone = document.getElementById('poster-zone');
+  zone.classList.add('uploading');
+  _posterUploading = true;
+
   const fd = new FormData();
   fd.append('image', file);
   try {
     const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
     const json = await res.json();
-    if (json.success) {
+    if (json.success && json.data && json.data.url) {
       document.getElementById('poster-url').value = json.data.url;
+    } else {
+      errEl.textContent = '✗ Upload thất bại: ' + (json.error?.message || 'không rõ lỗi');
+      document.getElementById('poster-url').value = '';
     }
-  } catch(e) { console.error('poster upload error', e); }
+  } catch(e) {
+    errEl.textContent = '✗ Lỗi kết nối ImgBB. Kiểm tra mạng và thử lại.';
+    document.getElementById('poster-url').value = '';
+    console.error('poster upload error', e);
+  } finally {
+    zone.classList.remove('uploading');
+    _posterUploading = false;
+  }
+});
+
+// Chặn submit khi ảnh đang upload
+document.getElementById('frmAdd').addEventListener('submit', (ev) => {
+  if (_posterUploading) {
+    ev.preventDefault();
+    document.getElementById('poster-error').textContent = '⏳ Ảnh đang tải lên, vui lòng chờ...';
+    return false;
+  }
 });
 
 // ── Mã giảm giá ──
