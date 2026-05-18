@@ -113,6 +113,18 @@ Router.get("/my-wish-list", ensureAuthenticated, async (req, res) => {
 //Trang danh sách khóa học của tôi
 Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
   const purchasedCourses = safeArray(req.user.purchasedCourses);
+  const CourseClass = require('../models/CourseClass.model');
+
+  // Lấy tất cả lớp mà user là thành viên
+  const myClasses = await CourseClass.find({
+    'students.idUser': req.user._id
+  }).select('idCourse name sessions status');
+
+  // Map từ courseId → class user thuộc về
+  const classByCourseId = {};
+  myClasses.forEach(cls => {
+    if (cls.idCourse) classByCourseId[cls.idCourse.toString()] = cls;
+  });
 
   // Build danh sách kèm meta
   const items = [];
@@ -122,17 +134,38 @@ Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
       .populate("idCourseTopic");
     if (!course) continue;
 
-    const totalVideos   = (course.videos || []).length || course.numberOfVideo || 0;
-    const learnedVideos = safeArray(pc.learnedVideos);
-    const progress      = totalVideos > 0 ? Math.round((learnedVideos.length / totalVideos) * 100) : 0;
-    const isDone        = totalVideos > 0 && learnedVideos.length >= totalVideos;
+    const myClass = classByCourseId[course._id.toString()];
+
+    // Tổng buổi: ưu tiên course.totalSessions, fallback theo sessions của lớp
+    const totalSessions = course.totalSessions
+      || (myClass ? myClass.sessions.length : 0)
+      || 0;
+
+    // Số buổi đã hoàn thành (status === 'done') trong lớp của user
+    const learnedCount = myClass
+      ? myClass.sessions.filter(s => s.status === 'done').length
+      : 0;
+
+    const progress = totalSessions > 0 ? Math.round((learnedCount / totalSessions) * 100) : 0;
+    const isDone   = totalSessions > 0 && learnedCount >= totalSessions;
+
+    // Auto chuyển trạng thái lớp khi đủ số buổi
+    if (myClass) {
+      const newStatus = isDone ? 'completed' : (learnedCount > 0 ? 'ongoing' : 'open');
+      if (myClass.status !== newStatus) {
+        await CourseClass.updateOne({ _id: myClass._id }, { $set: { status: newStatus } });
+        myClass.status = newStatus;
+      }
+    }
 
     items.push({
       course,
-      learnedCount:   learnedVideos.length,
-      totalVideos,
+      learnedCount,
+      totalVideos:    totalSessions,
       progress,
       isDone,
+      classId:        myClass ? myClass._id.toString() : null,
+      className:      myClass ? myClass.name : null,
       enrolledAt:     pc.enrolledAt    || null,
       lastLearnedAt:  pc.lastLearnedAt || null,
     });

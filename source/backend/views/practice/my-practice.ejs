@@ -1,0 +1,220 @@
+<style>
+.mp-page { min-height:calc(100vh - 120px); background:#f8f7f4; padding:40px 0 64px; }
+.mp-wrap { width:85%; max-width:1000px; margin:0 auto; }
+.mp-title { font-size:24px; font-weight:700; color:#1a1f2e; margin-bottom:6px; }
+.mp-sub { font-size:14px; color:#9ca3af; margin-bottom:24px; }
+
+.mp-tabs { display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid #e8e8e4; flex-wrap:wrap; }
+.mp-tab { padding:10px 18px; font-size:13px; font-weight:600; color:#9ca3af; cursor:pointer; border-bottom:2px solid transparent; background:none; border-left:none; border-right:none; border-top:none; font-family:inherit; }
+.mp-tab.active { color:#3b6fd4; border-bottom-color:#3b6fd4; }
+.mp-tab .count { background:#f1f5f9; color:#475569; padding:1px 7px; border-radius:10px; font-size:11px; margin-left:4px; }
+.mp-tab.active .count { background:#dbeafe; color:#1e40af; }
+
+.mp-card { background:#fff; border:1px solid #e8e8e4; border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(26,31,46,0.05); margin-bottom:14px; }
+.mp-card-inner { display:flex; gap:0; align-items:stretch; }
+.mp-poster { width:140px; min-height:120px; object-fit:cover; flex:0 0 140px; background:#e8e8e4; }
+.mp-body { flex:1; padding:14px 20px; min-width:0; }
+.mp-name { font-size:15px; font-weight:700; color:#1a1f2e; margin-bottom:3px; }
+.mp-class { font-size:12.5px; color:#9ca3af; margin-bottom:8px; }
+.mp-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:#718096; margin-bottom:8px; }
+.mp-meta i { color:#9ca3af; }
+
+.mp-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:14px; font-size:11.5px; font-weight:700; }
+.mp-badge-requested { background:#fef3c7; color:#92400e; }
+.mp-badge-approved  { background:#dbeafe; color:#1e40af; }
+.mp-badge-paid      { background:#dcfce7; color:#15803d; }
+.mp-badge-free      { background:#fde68a; color:#92400e; }
+.mp-badge-rejected  { background:#fef2f2; color:#dc2626; }
+.mp-badge-pending   { background:#e2e8f0; color:#475569; }
+.mp-badge-done      { background:#e2e8f0; color:#475569; }
+.mp-badge-cancelled { background:#fef2f2; color:#dc2626; }
+
+.mp-cta { padding:14px 18px; flex:0 0 auto; border-left:1px solid #f1f5f9; display:flex; flex-direction:column; gap:6px; justify-content:center; }
+.mp-meet-btn { background:#3b6fd4; color:#fff; padding:9px 16px; border-radius:8px; font-size:12.5px; font-weight:700; text-decoration:none; white-space:nowrap; text-align:center; border:none; cursor:pointer; font-family:inherit; }
+.mp-meet-btn:hover { background:#2c54a8; color:#fff; }
+.mp-pay-btn { background:#16a34a; color:#fff; padding:9px 16px; border-radius:8px; font-size:12.5px; font-weight:700; white-space:nowrap; text-align:center; border:none; cursor:pointer; font-family:inherit; }
+.mp-pay-btn:hover { background:#15803d; }
+.mp-cancel-btn { background:transparent; color:#dc2626; padding:6px 14px; border-radius:8px; font-size:11.5px; font-weight:600; white-space:nowrap; text-align:center; border:1px solid #fecaca; cursor:pointer; font-family:inherit; }
+.mp-cancel-btn:hover { background:#fef2f2; }
+
+.mp-snapshot { font-size:11px; color:#6b7280; padding:8px 12px; background:#fafaf8; border-radius:8px; margin-top:8px; display:flex; gap:14px; flex-wrap:wrap; }
+.mp-snapshot strong { color:#1a1f2e; }
+
+.mp-empty { background:#fff; border:1px solid #e8e8e4; border-radius:14px; text-align:center; padding:48px 24px; color:#9ca3af; }
+.mp-empty-big { padding:64px 24px; }
+
+.mp-reject-msg { font-size:12px; color:#dc2626; padding:8px 12px; background:#fef2f2; border-radius:8px; margin-top:8px; border-left:3px solid #dc2626; }
+</style>
+
+<%
+function renderItem(it) {
+  const s = it.session;
+  const en = it.enrollment;
+  const ps = en.paymentStatus;
+  const isPast = s.date && new Date(s.date) < new Date();
+  const dateStr = s.date ? new Date(s.date).toLocaleString('vi-VN', {weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+
+  let badge = '';
+  if (s.status === 'cancelled') badge = '<span class="mp-badge mp-badge-cancelled">Đã hủy</span>';
+  else if (s.status === 'done') badge = '<span class="mp-badge mp-badge-done">✓ Đã kết thúc</span>';
+  else if (ps === 'requested') badge = '<span class="mp-badge mp-badge-requested"><i class="fas fa-hourglass-half"></i> Chờ admin duyệt</span>';
+  else if (ps === 'approved' && en.type === '2M') badge = '<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt</span>';
+  else if (ps === 'approved') badge = `<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt — cần thanh toán ${en.amount.toLocaleString('vi-VN')}đ</span>`;
+  else if (ps === 'pending') badge = '<span class="mp-badge mp-badge-pending"><i class="fas fa-spinner"></i> Đang xử lý thanh toán</span>';
+  else if (en.type === '2M') badge = '<span class="mp-badge mp-badge-free"><i class="fas fa-crown"></i> 2M miễn phí</span>';
+  else if (ps === 'paid') badge = `<span class="mp-badge mp-badge-paid">✓ Đã thanh toán ${en.amount.toLocaleString('vi-VN')}đ</span>`;
+  else if (ps === 'rejected') badge = '<span class="mp-badge mp-badge-rejected">✗ Bị từ chối</span>';
+
+  const snap = (en.snapshotZaloPhone || en.snapshotInGameName || en.snapshotRank) ? `
+    <div class="mp-snapshot">
+      <span><i class="fas fa-phone"></i> Zalo: <strong>${en.snapshotZaloPhone || '—'}</strong></span>
+      <span><i class="fas fa-user"></i> Tên game: <strong>${en.snapshotInGameName || '—'}</strong></span>
+      <span><i class="fas fa-trophy"></i> Rank: <strong>${en.snapshotRank ? getRankLabel(en.snapshotRank) : '—'}</strong></span>
+    </div>` : '';
+
+  const rejectMsg = (ps === 'rejected' && en.adminNote)
+    ? `<div class="mp-reject-msg"><i class="fas fa-exclamation-circle"></i> Lý do: ${en.adminNote}</div>` : '';
+
+  let cta = '';
+  if (s.meetLink && (ps === 'paid' || ps === 'free') && s.status === 'scheduled' && !isPast) {
+    cta += `<a href="${s.meetLink}" target="_blank" class="mp-meet-btn"><i class="fas fa-video"></i> Tham gia</a>`;
+  }
+  if (ps === 'approved' && en.type === 'paid') {
+    cta += `<form action="/practice/${it.classId}/sessions/${s._id}/pay" method="POST" style="margin:0">
+      <button type="submit" class="mp-pay-btn"><i class="fas fa-credit-card"></i> Thanh toán ${en.amount.toLocaleString('vi-VN')}đ</button>
+    </form>`;
+  }
+  if (['requested','approved','rejected'].includes(ps) && !isPast) {
+    cta += `<button class="mp-cancel-btn" onclick="withdraw('${it.classId}','${s._id}')">Hủy yêu cầu</button>`;
+  }
+
+  return `
+    <div class="mp-card">
+      <div class="mp-card-inner">
+        <img class="mp-poster" src="${it.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png'}" alt="${it.className}" />
+        <div class="mp-body">
+          <div class="mp-name">${s.title || 'Buổi thực hành'}</div>
+          <div class="mp-class">${it.className}</div>
+          <div class="mp-meta">
+            ${s.date ? `<span><i class="fas fa-clock"></i> ${dateStr}${s.endTime ? ' – ' + s.endTime : ''}</span>` : ''}
+            ${s.location ? `<span><i class="fas fa-map-marker-alt"></i> ${s.location}</span>` : ''}
+            ${it.lecturer ? `<span><i class="fas fa-chalkboard-teacher"></i> ${it.lecturer.name}</span>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${badge}</div>
+          ${snap}
+          ${rejectMsg}
+        </div>
+        ${cta ? `<div class="mp-cta">${cta}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+const grouped = { requested: [], approved: [], paid: [], rejected: [], past: [] };
+items.forEach(it => {
+  const ps = it.enrollment.paymentStatus;
+  const isPast = it.session.status === 'done' || it.session.status === 'cancelled' ||
+                 (it.session.date && new Date(it.session.date) < new Date());
+  if (isPast) grouped.past.push(it);
+  else if (ps === 'requested') grouped.requested.push(it);
+  else if (ps === 'approved' || ps === 'pending') grouped.approved.push(it);
+  else if (ps === 'paid' || ps === 'free') grouped.paid.push(it);
+  else if (ps === 'rejected') grouped.rejected.push(it);
+});
+%>
+
+<div class="mp-page">
+  <div class="mp-wrap">
+    <h1 class="mp-title">Buổi thực hành của tôi</h1>
+    <% if (userIs2M) { %>
+      <div class="mp-sub">
+        <i class="fas fa-crown" style="color:#f59e0b"></i>
+        Bạn là học viên khóa 2M — học miễn phí, lịch do admin sắp xếp.
+      </div>
+    <% } else { %>
+      <div class="mp-sub">Tổng số yêu cầu/đăng ký: <strong style="color:#1a1f2e"><%= items.length %></strong></div>
+    <% } %>
+
+    <% if (items.length === 0) { %>
+      <div class="mp-empty mp-empty-big">
+        <div style="font-size:48px;margin-bottom:14px">🥅</div>
+        <div style="font-size:16px;font-weight:600;color:#4a5568;margin-bottom:6px">Bạn chưa đăng ký buổi thực hành nào</div>
+        <a href="/practice" style="color:#3b6fd4;font-size:13px;text-decoration:none">→ Xem các lớp thực hành đang mở</a>
+      </div>
+    <% } else { %>
+      <div class="mp-tabs">
+        <button class="mp-tab active" data-tab="approved" onclick="switchTab('approved',this)">
+          Đã duyệt / chờ thanh toán <span class="count"><%= grouped.approved.length %></span>
+        </button>
+        <button class="mp-tab" data-tab="paid" onclick="switchTab('paid',this)">
+          Đã đăng ký <span class="count"><%= grouped.paid.length %></span>
+        </button>
+        <button class="mp-tab" data-tab="requested" onclick="switchTab('requested',this)">
+          Chờ duyệt <span class="count"><%= grouped.requested.length %></span>
+        </button>
+        <% if (grouped.rejected.length > 0) { %>
+        <button class="mp-tab" data-tab="rejected" onclick="switchTab('rejected',this)">
+          Bị từ chối <span class="count"><%= grouped.rejected.length %></span>
+        </button>
+        <% } %>
+        <% if (grouped.past.length > 0) { %>
+        <button class="mp-tab" data-tab="past" onclick="switchTab('past',this)">
+          Đã qua <span class="count"><%= grouped.past.length %></span>
+        </button>
+        <% } %>
+      </div>
+
+      <div class="mp-pane" id="pane-approved">
+        <% if (grouped.approved.length === 0) { %>
+          <div class="mp-empty">Không có buổi nào đã duyệt</div>
+        <% } %>
+        <% grouped.approved.forEach(it => { %><%- renderItem(it) %><% }) %>
+      </div>
+
+      <div class="mp-pane" id="pane-paid" style="display:none">
+        <% if (grouped.paid.length === 0) { %>
+          <div class="mp-empty">Chưa có buổi nào đã đăng ký</div>
+        <% } %>
+        <% grouped.paid.forEach(it => { %><%- renderItem(it) %><% }) %>
+      </div>
+
+      <div class="mp-pane" id="pane-requested" style="display:none">
+        <% if (grouped.requested.length === 0) { %>
+          <div class="mp-empty">Không có yêu cầu nào đang chờ</div>
+        <% } %>
+        <% grouped.requested.forEach(it => { %><%- renderItem(it) %><% }) %>
+      </div>
+
+      <div class="mp-pane" id="pane-rejected" style="display:none">
+        <% grouped.rejected.forEach(it => { %><%- renderItem(it) %><% }) %>
+      </div>
+
+      <div class="mp-pane" id="pane-past" style="display:none">
+        <% grouped.past.forEach(it => { %><%- renderItem(it) %><% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.mp-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.mp-pane').forEach(p => p.style.display = 'none');
+  const pane = document.getElementById('pane-' + tab);
+  if (pane) pane.style.display = 'block';
+}
+
+async function withdraw(classId, sessionId) {
+  if (!confirm('Hủy yêu cầu đăng ký buổi này?')) return;
+  try {
+    const res = await fetch('/practice/' + classId + '/sessions/' + sessionId + '/withdraw', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await res.json();
+    if (json.ok) location.reload();
+    else alert(json.msg || 'Không thể hủy yêu cầu');
+  } catch(e) {
+    alert('Lỗi kết nối');
+  }
+}
+</script>

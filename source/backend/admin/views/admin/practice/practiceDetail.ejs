@@ -1,0 +1,643 @@
+<% const activePage = 'practice'; const pageTitle = data.cls.name; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
+
+<style>
+.cls-tabs { display:flex; gap:4px; margin-bottom:16px; }
+.cls-tab { padding:8px 18px; border:1px solid rgba(255,255,255,0.10); border-radius:8px; background:transparent; color:#64748b; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+.cls-tab.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+.cls-tab .badge-count { background:rgba(245,158,11,0.25); color:#fbbf24; padding:1px 7px; border-radius:9px; font-size:11px; margin-left:5px; }
+.cls-pane { display:none; }
+.cls-pane.active { display:block; }
+
+.session-card { background:#0f172a; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px 18px; margin-bottom:16px; }
+.session-status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
+.dot-scheduled { background:#3b6fd4; }
+.dot-done { background:#16a34a; }
+.dot-cancelled { background:#dc2626; }
+
+.enroll-section { margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); }
+.enroll-section-title { font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+
+.req-row { background:#1e293b; border:1px solid rgba(245,158,11,0.20); border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+.req-row-head { display:flex; align-items:center; gap:10px; }
+.req-row img { width:34px; height:34px; border-radius:50%; object-fit:cover; }
+.req-name { flex:1; min-width:0; }
+.req-name-line { font-size:13px; font-weight:600; color:#f1f5f9; }
+.req-email { font-size:11px; color:#94a3b8; }
+.req-actions { display:flex; gap:5px; }
+.req-profile { display:flex; gap:14px; flex-wrap:wrap; padding:8px 0 0; margin-top:8px; border-top:1px dashed rgba(255,255,255,0.08); font-size:11.5px; color:#94a3b8; }
+.req-profile strong { color:#e2e8f0; }
+.req-type-2m { background:rgba(245,158,11,0.16); color:#fbbf24; padding:2px 8px; border-radius:9px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+.req-type-paid { background:rgba(59,130,246,0.16); color:#93c5fd; padding:2px 8px; border-radius:9px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+
+.btn-approve { background:#16a34a; color:#fff; border:none; padding:5px 11px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer; }
+.btn-approve:hover { background:#15803d; }
+.btn-reject { background:transparent; color:#f87171; border:1px solid rgba(248,113,113,0.4); padding:4px 10px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer; }
+.btn-reject:hover { background:rgba(248,113,113,0.10); }
+
+.enroll-row { display:flex; align-items:center; gap:10px; padding:8px 12px; background:#1e293b; border-radius:8px; margin-bottom:5px; }
+.enroll-row img { width:30px; height:30px; border-radius:50%; object-fit:cover; }
+.enroll-name { flex:1; font-size:13px; color:#f1f5f9; }
+.enroll-type-2m { background:rgba(245,158,11,0.16); color:#fbbf24; padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; }
+.enroll-type-paid { background:rgba(22,163,74,0.16); color:#86efac; padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; }
+.enroll-type-pending { background:rgba(100,116,139,0.16); color:#94a3b8; padding:3px 9px; border-radius:10px; font-size:11px; font-weight:700; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+.modal-box { background:#1e293b; border:1px solid rgba(255,255,255,0.10); border-radius:16px; padding:28px; width:100%; max-width:520px; box-shadow:0 24px 60px rgba(0,0,0,0.5); position:relative; max-height:85vh; overflow-y:auto; }
+.modal-title { font-size:16px; font-weight:700; color:#f1f5f9; margin:0 0 20px; display:flex; align-items:center; gap:8px; }
+.modal-close { position:absolute; top:14px; right:14px; background:none; border:none; color:#64748b; font-size:20px; cursor:pointer; }
+.modal-submit { height:38px; padding:0 22px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+.modal-error { font-size:12px; color:#f87171; margin-top:8px; min-height:16px; }
+
+.poster-zone { border:2px dashed rgba(255,255,255,0.12); border-radius:10px; background:#0f172a; cursor:pointer; transition:border-color 0.15s, background 0.15s; overflow:hidden; position:relative; }
+.poster-zone:hover { border-color:#2563eb; background:rgba(37,99,235,0.05); }
+.poster-zone.has-img { border-style:solid; border-color:rgba(255,255,255,0.12); }
+.poster-zone.uploading { opacity:0.6; pointer-events:none; }
+.poster-preview { width:100%; height:160px; object-fit:cover; display:block; }
+.poster-placeholder { height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:#475569; }
+.poster-placeholder i { font-size:28px; }
+.poster-placeholder span { font-size:13px; font-weight:500; }
+.poster-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; color:#fff; font-size:13px; font-weight:600; gap:6px; }
+.poster-zone:hover .poster-overlay { opacity:1; }
+.poster-spinner { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,0.7); color:#93c5fd; font-size:14px; gap:8px; }
+.poster-zone.uploading .poster-spinner { display:flex; }
+.poster-spinner i { animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title"><%= data.cls.name %></div>
+    <div class="adm-page-subtitle">
+      <a href="/admin/practice" style="color:#2563eb">← Danh sách lớp thực hành</a>
+      &nbsp;·&nbsp;
+      <%= data.cls.pricePerSession.toLocaleString('vi-VN') %>đ / buổi
+      &nbsp;·&nbsp;
+      <%= data.cls.maxStudentsPerSession %> học viên/buổi
+      <% if (data.pendingCount > 0) { %>
+        &nbsp;·&nbsp;<span style="color:#fbbf24;font-weight:700"><i class="fas fa-bell"></i> <%= data.pendingCount %> yêu cầu chờ duyệt</span>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="cls-tabs">
+  <button class="cls-tab active" data-tab="sessions" onclick="switchTab('sessions',this)">
+    <i class="fas fa-calendar-alt"></i> Buổi học (<%= data.cls.sessions.length %>)
+    <% if (data.pendingCount > 0) { %><span class="badge-count"><%= data.pendingCount %></span><% } %>
+  </button>
+  <button class="cls-tab" data-tab="info" onclick="switchTab('info',this)">
+    <i class="fas fa-info-circle"></i> Thông tin lớp
+  </button>
+</div>
+
+<!-- ── Tab: Buổi học ── -->
+<div class="cls-pane active" id="tab-sessions">
+  <div class="adm-card">
+    <div class="adm-card-header">
+      <span class="adm-card-title">Lịch buổi thực hành</span>
+      <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openAddSession()">
+        <i class="fas fa-plus"></i> Thêm buổi
+      </button>
+    </div>
+    <div class="adm-card-body">
+      <% if (data.cls.sessions.length === 0) { %>
+        <div class="adm-empty"><i class="fas fa-calendar-alt"></i><p>Chưa có buổi thực hành nào</p></div>
+      <% } %>
+      <% data.cls.sessions.forEach((s, i) => {
+        const requests = (s.enrollments || []).filter(e => e.paymentStatus === 'requested');
+        const activeEn = (s.enrollments || []).filter(e => ['paid', 'free', 'approved'].includes(e.paymentStatus));
+        const en2M = activeEn.filter(e => e.type === '2M');
+        const enPaid = activeEn.filter(e => e.type === 'paid');
+        const dayName = s.date ? new Date(s.date).toLocaleDateString('vi-VN', { weekday: 'long' }) : '';
+      %>
+      <div class="session-card" id="sc-<%= s._id %>">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+              <span class="session-status-dot dot-<%= s.status %>"></span>
+              <span style="font-size:14px;font-weight:700;color:#f1f5f9"><%= s.title || 'Buổi ' + (i+1) %></span>
+              <% if (dayName) { %>
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.16);color:#93c5fd;text-transform:capitalize"><%= dayName %></span>
+              <% } %>
+              <% if (requests.length > 0) { %>
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,0.20);color:#fbbf24;font-weight:700">
+                <i class="fas fa-bell"></i> <%= requests.length %> yêu cầu mới
+              </span>
+              <% } %>
+            </div>
+            <% if (s.date) { %>
+            <div style="font-size:12px;color:#64748b;margin-bottom:4px">
+              <i class="fas fa-calendar"></i> <%= new Date(s.date).toLocaleString('vi-VN') %>
+              <% if (s.endTime) { %> — <%= s.endTime %><% } %>
+            </div>
+            <% } %>
+            <% if (s.location) { %>
+            <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">
+              <i class="fas fa-map-marker-alt"></i> <%= s.location %>
+            </div>
+            <% } %>
+            <% if (s.meetLink) { %>
+            <div style="font-size:12px;margin-bottom:4px">
+              <i class="fas fa-video" style="color:#3b6fd4"></i>
+              <a href="<%= s.meetLink %>" target="_blank" style="color:#93c5fd;margin-left:4px">Link tham gia</a>
+            </div>
+            <% } %>
+            <% if (s.note) { %>
+            <div style="font-size:12px;color:#94a3b8;font-style:italic"><%= s.note %></div>
+            <% } %>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+              <span style="background:rgba(22,163,74,0.16);color:#86efac;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                <%= activeEn.length %>/<%= data.cls.maxStudentsPerSession %> đã xếp lịch
+              </span>
+              <% if (en2M.length > 0) { %>
+              <span style="background:rgba(245,158,11,0.16);color:#fbbf24;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                <i class="fas fa-crown"></i> <%= en2M.length %> 2M
+              </span>
+              <% } %>
+              <% if (enPaid.length > 0) { %>
+              <span style="background:rgba(59,130,246,0.16);color:#93c5fd;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700">
+                <i class="fas fa-credit-card"></i> <%= enPaid.length %> trả phí
+              </span>
+              <% } %>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="adm-btn adm-btn-ghost adm-btn-sm" onclick='openEditSession(<%- JSON.stringify({ id: s._id.toString(), title: s.title, date: s.date ? new Date(s.date).toISOString().slice(0,16) : "", endTime: s.endTime || "", meetLink: s.meetLink || "", location: s.location || "", note: s.note || "", status: s.status }) %>)' title="Chỉnh sửa">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon" onclick="deleteSession('<%= s._id %>')" title="Xóa">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Yêu cầu chờ duyệt -->
+        <% if (requests.length > 0) { %>
+        <div class="enroll-section">
+          <div class="enroll-section-title" style="color:#fbbf24">
+            <i class="fas fa-bell"></i> Yêu cầu chờ duyệt (<%= requests.length %>)
+          </div>
+          <% requests.forEach(req => { %>
+          <div class="req-row" id="req-<%= s._id %>-<%= req.idUser ? req.idUser._id : '' %>">
+            <div class="req-row-head">
+              <img src="<%= req.idUser && req.idUser.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" />
+              <div class="req-name">
+                <div class="req-name-line">
+                  <%= req.idUser ? (req.idUser.name || req.idUser.username) : '—' %>
+                  <% if (req.type === '2M') { %><span class="req-type-2m" style="margin-left:6px"><i class="fas fa-crown"></i> 2M</span>
+                  <% } else { %><span class="req-type-paid" style="margin-left:6px">Trả phí <%= req.amount.toLocaleString('vi-VN') %>đ</span><% } %>
+                </div>
+                <div class="req-email"><%= req.idUser ? req.idUser.email : '' %></div>
+              </div>
+              <div class="req-actions">
+                <button class="btn-approve" onclick="approveRequest('<%= s._id %>','<%= req.idUser ? req.idUser._id : '' %>')">
+                  <i class="fas fa-check"></i> Duyệt
+                </button>
+                <button class="btn-reject" onclick="openRejectModal('<%= s._id %>','<%= req.idUser ? req.idUser._id : '' %>')">
+                  <i class="fas fa-times"></i> Từ chối
+                </button>
+              </div>
+            </div>
+            <div class="req-profile">
+              <span><i class="fas fa-phone" style="color:#64748b"></i> Zalo: <strong><%= req.snapshotZaloPhone || '—' %></strong></span>
+              <span><i class="fas fa-user" style="color:#64748b"></i> Tên game: <strong><%= req.snapshotInGameName || '—' %></strong></span>
+              <span><i class="fas fa-trophy" style="color:#64748b"></i> Rank: <strong><%= req.snapshotRank ? data.getRankLabel(req.snapshotRank) : '—' %></strong></span>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% } %>
+
+        <!-- Đã xếp lịch -->
+        <div class="enroll-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span class="enroll-section-title" style="color:#94a3b8;margin:0">
+              <i class="fas fa-users"></i> Đã xếp lịch (<%= activeEn.length %>)
+            </span>
+            <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="openAdd2MModal('<%= s._id %>')">
+              <i class="fas fa-user-plus"></i> Thêm trực tiếp 2M
+            </button>
+          </div>
+          <% if (activeEn.length === 0) { %>
+            <div style="font-size:12px;color:#64748b;font-style:italic;padding:6px 0">Chưa có học viên nào được xếp lịch</div>
+          <% } %>
+          <% activeEn.forEach(en => { %>
+          <div class="enroll-row">
+            <img src="<%= en.idUser && en.idUser.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" />
+            <div class="enroll-name">
+              <%= en.idUser ? (en.idUser.name || en.idUser.username) : '—' %>
+              <div style="font-size:11px;color:#64748b">
+                <%= en.idUser ? en.idUser.email : '' %>
+                <% if (en.snapshotInGameName || en.snapshotRank) { %>
+                  · <%= en.snapshotInGameName %>
+                  <% if (en.snapshotRank) { %>· <%= data.getRankLabel(en.snapshotRank) %><% } %>
+                <% } %>
+              </div>
+            </div>
+            <% if (en.type === '2M') { %>
+              <span class="enroll-type-2m"><i class="fas fa-crown"></i> 2M</span>
+            <% } else if (en.paymentStatus === 'paid') { %>
+              <span class="enroll-type-paid"><i class="fas fa-check-circle"></i> Đã trả <%= en.amount.toLocaleString('vi-VN') %>đ</span>
+            <% } else if (en.paymentStatus === 'approved') { %>
+              <span class="enroll-type-pending"><i class="fas fa-hourglass-half"></i> Chờ thanh toán</span>
+            <% } %>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;cursor:pointer">
+              <input type="checkbox" <%= en.attended ? 'checked' : '' %> onchange="toggleAttendance('<%= s._id %>','<%= en.idUser ? en.idUser._id : '' %>',this.checked)" />
+              Có mặt
+            </label>
+            <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon" onclick="unenrollUser('<%= s._id %>','<%= en.idUser ? en.idUser._id : '' %>')" title="Xóa khỏi buổi">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tab: Thông tin lớp ── -->
+<div class="cls-pane" id="tab-info">
+  <form action="/admin/practice/<%= data.cls._id %>/update" method="post">
+    <div class="adm-card" style="max-width:680px">
+      <div class="adm-card-header"><span class="adm-card-title">Thông tin lớp thực hành</span></div>
+      <div class="adm-card-body">
+        <div class="adm-form-grid">
+          <div class="adm-field adm-field-full">
+            <label>Tên lớp</label>
+            <input type="text" name="name" value="<%= data.cls.name %>" required />
+          </div>
+          <div class="adm-field adm-field-full">
+            <label>Mô tả</label>
+            <textarea name="description" rows="3" style="width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;background:#0f172a;color:#e2e8f0;font-family:inherit;font-size:13px;resize:vertical"><%= data.cls.description || '' %></textarea>
+          </div>
+          <div class="adm-field adm-field-full">
+            <label>Ảnh poster</label>
+            <input type="hidden" name="poster" id="poster-url" value="<%= data.cls.poster || '' %>" />
+            <div class="poster-zone <%= data.cls.poster ? 'has-img' : '' %>" id="poster-zone" onclick="document.getElementById('poster-file').click()">
+              <img id="poster-preview" class="poster-preview" src="<%= data.cls.poster || '' %>" alt="" style="<%= data.cls.poster ? '' : 'display:none' %>" />
+              <div class="poster-placeholder" id="poster-placeholder" style="<%= data.cls.poster ? 'display:none' : '' %>">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Nhấp để chọn ảnh</span>
+                <span style="font-size:11px;color:#64748b">PNG, JPG — tỉ lệ 16:9</span>
+              </div>
+              <div class="poster-overlay"><i class="fas fa-camera"></i> Đổi ảnh</div>
+              <div class="poster-spinner"><i class="fas fa-circle-notch"></i> Đang tải lên...</div>
+            </div>
+            <input type="file" id="poster-file" accept="image/*" style="display:none" />
+            <div id="poster-error" style="font-size:12px;color:#f87171;margin-top:6px;min-height:16px"></div>
+          </div>
+          <div class="adm-field">
+            <label>Phí mỗi buổi (VNĐ)</label>
+            <input type="number" name="pricePerSession" value="<%= data.cls.pricePerSession %>" min="0" step="1000" required />
+          </div>
+          <div class="adm-field">
+            <label>Sức chứa mỗi buổi</label>
+            <input type="number" name="maxStudentsPerSession" value="<%= data.cls.maxStudentsPerSession %>" min="1" max="100" />
+          </div>
+          <div class="adm-field adm-field-full">
+            <label>Giảng viên phụ trách</label>
+            <div style="position:relative">
+              <select name="idLecturer" style="width:100%;height:42px;padding:0 32px 0 14px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;box-sizing:border-box">
+                <option value="">-- Chưa phân công --</option>
+                <% (data.lecturers || []).forEach(lec => { %>
+                  <option value="<%= lec._id %>" <%= data.cls.idLecturer && data.cls.idLecturer._id.toString() === lec._id.toString() ? 'selected' : '' %>><%= lec.name %> (<%= lec.email %>)</option>
+                <% }) %>
+              </select>
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+            </div>
+          </div>
+          <div class="adm-field adm-field-full">
+            <label>Trạng thái</label>
+            <div style="position:relative">
+              <select name="status" style="width:100%;height:42px;padding:0 32px 0 14px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:10px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;box-sizing:border-box">
+                <option value="active" <%= data.cls.status === 'active' ? 'selected' : '' %>>Đang mở</option>
+                <option value="closed" <%= data.cls.status === 'closed' ? 'selected' : '' %>>Đã đóng</option>
+              </select>
+              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07)">
+          <button type="submit" class="adm-btn adm-btn-primary"><i class="fas fa-save"></i> Lưu thay đổi</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal session -->
+<div class="modal-overlay" id="session-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeSessionModal()">&times;</button>
+    <h2 class="modal-title" id="session-modal-title"><i class="fas fa-calendar-plus" style="color:#2563eb"></i> Thêm buổi học</h2>
+    <div class="adm-form-grid single">
+      <div class="adm-field"><label>Tiêu đề buổi</label><input type="text" id="s-title" placeholder="VD: Buổi 1 — Khởi động & dribble cơ bản" /></div>
+      <div class="adm-field"><label>Ngày & giờ bắt đầu</label><input type="datetime-local" id="s-date" /></div>
+      <div class="adm-field"><label>Giờ kết thúc (HH:MM)</label><input type="time" id="s-endTime" /></div>
+      <div class="adm-field"><label>Địa điểm</label><input type="text" id="s-location" placeholder="VD: Sân bóng XYZ, Quận 1" /></div>
+      <div class="adm-field"><label>Link tham gia (Meet/Zoom — nếu có)</label><input type="url" id="s-meet" placeholder="https://..." /></div>
+      <div class="adm-field"><label>Ghi chú</label><input type="text" id="s-note" placeholder="Yêu cầu chuẩn bị, lưu ý..." /></div>
+      <div class="adm-field" id="s-status-field" style="display:none">
+        <label>Trạng thái</label>
+        <div style="position:relative">
+          <select id="s-status" style="width:100%;height:40px;padding:0 28px 0 12px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:8px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none">
+            <option value="scheduled">Đã lên lịch</option>
+            <option value="done">Đã kết thúc</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+          <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-error" id="session-error"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button class="modal-submit" id="session-save-btn" onclick="saveSession()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thêm 2M trực tiếp -->
+<div class="modal-overlay" id="add2m-modal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="close2MModal()">&times;</button>
+    <h2 class="modal-title"><i class="fas fa-crown" style="color:#fbbf24"></i> Thêm học viên 2M</h2>
+    <div style="font-size:12.5px;color:#94a3b8;margin-bottom:14px">
+      Thêm trực tiếp không qua duyệt yêu cầu. Chỉ học viên đã mua khóa 2 triệu mới hợp lệ.
+    </div>
+    <div style="position:relative">
+      <input type="text" id="add2m-input" placeholder="Tìm theo email / username / tên..." autocomplete="off"
+        style="width:100%;height:38px;padding:0 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box"
+        oninput="onSuggest2M(this.value)" />
+    </div>
+    <div id="suggest-2m-list" style="margin-top:10px;max-height:340px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- Modal từ chối -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal-box" style="max-width:440px">
+    <button class="modal-close" onclick="closeRejectModal()">&times;</button>
+    <h2 class="modal-title"><i class="fas fa-times-circle" style="color:#f87171"></i> Từ chối yêu cầu</h2>
+    <div class="adm-form-grid single">
+      <div class="adm-field">
+        <label>Lý do (sẽ hiển thị cho học viên)</label>
+        <textarea id="reject-note" rows="3" placeholder="VD: Buổi này đã đầy, hãy đăng ký buổi khác..."
+          style="width:100%;padding:10px 12px;background:#0f172a;border:1.5px solid rgba(255,255,255,0.10);border-radius:8px;color:#f1f5f9;font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-error" id="reject-error"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="adm-btn adm-btn-ghost" onclick="closeRejectModal()">Huỷ</button>
+      <button class="adm-btn adm-btn-danger" onclick="confirmReject()">Từ chối</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CLS_ID = '<%= data.cls._id %>';
+let _editSessionId = null;
+let _add2MSessionId = null;
+let _rejectCtx = null; // { sessionId, userId }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.cls-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.cls-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Approve/Reject ──
+async function approveRequest(sessionId, userId) {
+  if (!userId) return;
+  const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + sessionId + '/approve', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId })
+  });
+  const json = await res.json();
+  if (json.ok) { admToast('Đã duyệt yêu cầu', 'success'); setTimeout(() => location.reload(), 600); }
+  else admToast(json.msg || 'Lỗi', 'error');
+}
+
+function openRejectModal(sessionId, userId) {
+  _rejectCtx = { sessionId, userId };
+  document.getElementById('reject-note').value = '';
+  document.getElementById('reject-error').textContent = '';
+  document.getElementById('reject-modal').classList.add('open');
+}
+function closeRejectModal() {
+  document.getElementById('reject-modal').classList.remove('open');
+  _rejectCtx = null;
+}
+async function confirmReject() {
+  if (!_rejectCtx) return;
+  const adminNote = document.getElementById('reject-note').value.trim();
+  const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + _rejectCtx.sessionId + '/reject', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId: _rejectCtx.userId, adminNote })
+  });
+  const json = await res.json();
+  if (json.ok) { admToast('Đã từ chối', 'success'); setTimeout(() => location.reload(), 600); }
+  else document.getElementById('reject-error').textContent = json.msg || 'Lỗi';
+}
+
+// ── Session modal ──
+function openAddSession() {
+  _editSessionId = null;
+  document.getElementById('session-modal-title').innerHTML = '<i class="fas fa-calendar-plus" style="color:#2563eb"></i> Thêm buổi học';
+  ['s-title','s-date','s-endTime','s-meet','s-location','s-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('s-status-field').style.display = 'none';
+  document.getElementById('session-error').textContent = '';
+  document.getElementById('session-modal').classList.add('open');
+}
+function openEditSession(data) {
+  _editSessionId = data.id;
+  document.getElementById('session-modal-title').innerHTML = '<i class="fas fa-pen" style="color:#2563eb"></i> Chỉnh sửa buổi học';
+  document.getElementById('s-title').value    = data.title    || '';
+  document.getElementById('s-date').value     = data.date     || '';
+  document.getElementById('s-endTime').value  = data.endTime  || '';
+  document.getElementById('s-meet').value     = data.meetLink || '';
+  document.getElementById('s-location').value = data.location || '';
+  document.getElementById('s-note').value     = data.note     || '';
+  document.getElementById('s-status').value   = data.status   || 'scheduled';
+  document.getElementById('s-status-field').style.display = '';
+  document.getElementById('session-error').textContent = '';
+  document.getElementById('session-modal').classList.add('open');
+}
+function closeSessionModal() { document.getElementById('session-modal').classList.remove('open'); }
+
+async function saveSession() {
+  const btn = document.getElementById('session-save-btn');
+  const err = document.getElementById('session-error');
+  const payload = {
+    title:    document.getElementById('s-title').value.trim(),
+    date:     document.getElementById('s-date').value.trim(),
+    endTime:  document.getElementById('s-endTime').value.trim(),
+    meetLink: document.getElementById('s-meet').value.trim(),
+    location: document.getElementById('s-location').value.trim(),
+    note:     document.getElementById('s-note').value.trim(),
+    status:   document.getElementById('s-status').value
+  };
+  btn.disabled = true; btn.textContent = 'Đang lưu...';
+  try {
+    const url = _editSessionId
+      ? '/admin/practice/' + CLS_ID + '/sessions/' + _editSessionId + '/update'
+      : '/admin/practice/' + CLS_ID + '/sessions/add';
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.ok) {
+      admToast('Đã lưu buổi học', 'success');
+      closeSessionModal();
+      setTimeout(() => location.reload(), 600);
+    } else { err.textContent = json.msg || 'Có lỗi xảy ra'; }
+  } catch(e) { err.textContent = 'Lỗi kết nối'; }
+  finally { btn.disabled = false; btn.textContent = 'Lưu'; }
+}
+
+async function deleteSession(sid) {
+  admConfirm('Xóa buổi học này?', async () => {
+    const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + sid + '/delete', { method:'POST' });
+    const json = await res.json();
+    if (json.ok) { admToast('Đã xóa buổi học', 'success'); setTimeout(() => location.reload(), 600); }
+  }, '🗑️');
+}
+
+// ── Modal thêm 2M ──
+function openAdd2MModal(sid) {
+  _add2MSessionId = sid;
+  document.getElementById('add2m-input').value = '';
+  document.getElementById('suggest-2m-list').innerHTML = '';
+  document.getElementById('add2m-modal').classList.add('open');
+  setTimeout(() => document.getElementById('add2m-input').focus(), 100);
+}
+function close2MModal() { document.getElementById('add2m-modal').classList.remove('open'); }
+
+let _suggest2MTimer = null;
+function onSuggest2M(val) {
+  clearTimeout(_suggest2MTimer);
+  const q = val.trim();
+  const list = document.getElementById('suggest-2m-list');
+  if (!q) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div style="padding:14px;color:#64748b;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Đang tìm...</div>';
+  _suggest2MTimer = setTimeout(async () => {
+    try {
+      const res = await fetch('/admin/practice/users/suggest-2m?q=' + encodeURIComponent(q));
+      const arr = await res.json();
+      renderSuggest2M(arr);
+    } catch(e) {
+      list.innerHTML = '<div style="padding:14px;color:#f87171;font-size:13px">Lỗi kết nối</div>';
+    }
+  }, 220);
+}
+
+function renderSuggest2M(arr) {
+  const list = document.getElementById('suggest-2m-list');
+  if (!arr.length) {
+    list.innerHTML = '<div style="padding:18px;text-align:center;color:#64748b;font-size:13px">Không tìm thấy người dùng nào</div>';
+    return;
+  }
+  list.innerHTML = arr.map(u => {
+    const courses = (u.courses2MNames || []).join(', ');
+    const badge = u.is2M
+      ? `<span style="background:rgba(245,158,11,0.18);color:#fbbf24;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700"><i class="fas fa-crown"></i> 2M</span>`
+      : `<span style="background:rgba(100,116,139,0.18);color:#94a3b8;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700">Không phải 2M</span>`;
+    const handler = u.is2M ? `onclick="add2M('${u._id}')"` : '';
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;background:#1e293b;border-radius:8px;margin-bottom:5px;cursor:${u.is2M?'pointer':'not-allowed'};opacity:${u.is2M?'1':'0.55'};transition:background 0.1s" ${handler} ${u.is2M?'onmouseover="this.style.background=\'#293548\'" onmouseout="this.style.background=\'#1e293b\'"':''}>
+        <img src="${u.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png'}" style="width:32px;height:32px;border-radius:50%;object-fit:cover" />
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#f1f5f9">${u.name || u.username || '—'}</div>
+          <div style="font-size:11px;color:#94a3b8">${u.email || ''}</div>
+          ${courses ? `<div style="font-size:10.5px;color:#fbbf24;margin-top:2px">📘 ${courses}</div>` : ''}
+        </div>
+        ${badge}
+      </div>
+    `;
+  }).join('');
+}
+
+async function add2M(userId) {
+  const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + _add2MSessionId + '/enroll-2m', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId })
+  });
+  const json = await res.json();
+  if (json.ok) {
+    admToast('Đã thêm ' + (json.student.name || json.student.username), 'success');
+    close2MModal();
+    setTimeout(() => location.reload(), 600);
+  } else {
+    admToast(json.msg || 'Lỗi', 'error');
+  }
+}
+
+async function unenrollUser(sid, userId) {
+  if (!userId) return;
+  admConfirm('Xóa học viên khỏi buổi này?', async () => {
+    const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + sid + '/unenroll', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ userId })
+    });
+    const json = await res.json();
+    if (json.ok) { admToast('Đã xóa', 'success'); setTimeout(() => location.reload(), 600); }
+  }, '👤');
+}
+
+async function toggleAttendance(sid, userId, attended) {
+  if (!userId) return;
+  const res = await fetch('/admin/practice/' + CLS_ID + '/sessions/' + sid + '/attendance', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId, attended })
+  });
+  const json = await res.json();
+  if (json.ok) admToast(attended ? '✓ Đã có mặt' : 'Đã bỏ điểm danh', 'success');
+}
+
+// ── Poster upload (ImgBB) ──
+const IMGBB_KEY = '<%= process.env.IMGBB_API_KEY %>';
+document.getElementById('poster-file').addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  const errEl = document.getElementById('poster-error');
+  errEl.textContent = '';
+
+  // Preview ngay
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('poster-preview');
+    const ph  = document.getElementById('poster-placeholder');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    document.getElementById('poster-zone').classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+
+  // Upload ImgBB
+  const zone = document.getElementById('poster-zone');
+  zone.classList.add('uploading');
+
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const res  = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method:'POST', body:fd });
+    const json = await res.json();
+    if (json.success) {
+      document.getElementById('poster-url').value = json.data.url;
+    } else {
+      errEl.textContent = '✗ Upload thất bại: ' + (json.error?.message || 'Không rõ lỗi');
+    }
+  } catch(e) {
+    errEl.textContent = '✗ Lỗi kết nối khi upload ảnh';
+    console.error('poster upload error', e);
+  } finally {
+    zone.classList.remove('uploading');
+  }
+});
+</script>
+
+<%- include('../common/footer') %>

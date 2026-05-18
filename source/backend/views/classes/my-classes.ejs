@@ -10,17 +10,27 @@
 }
 .cls-card:hover { box-shadow:0 6px 20px rgba(26,31,46,0.10); transform:translateY(-2px); }
 .cls-card-inner { display:flex; align-items:center; gap:0; text-decoration:none; color:inherit; }
-.cls-poster { width:160px; height:100px; object-fit:cover; flex:0 0 160px; background:#e8e8e4; }
+.cls-poster { width:160px; height:120px; object-fit:cover; flex:0 0 160px; background:#e8e8e4; }
 .cls-body { flex:1; padding:16px 20px; min-width:0; }
 .cls-name { font-size:16px; font-weight:700; color:#1a1f2e; margin-bottom:4px; }
 .cls-course { font-size:13px; color:#9ca3af; margin-bottom:8px; }
-.cls-meta { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:#718096; }
+.cls-meta { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:#718096; margin-bottom:10px; }
 .cls-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
 .cls-badge-open      { background:#eff4ff; color:#3b6fd4; }
-.cls-badge-ongoing   { background:#dcfce7; color:#15803d; }
-.cls-badge-completed { background:#fef9ec; color:#b45309; }
+.cls-badge-ongoing   { background:#eff4ff; color:#3b6fd4; }
+.cls-badge-completed { background:#dcfce7; color:#15803d; }
 .cls-badge-cancelled { background:#fef2f2; color:#dc2626; }
 .cls-arrow { flex:0 0 auto; padding:16px 20px; color:#9ca3af; font-size:18px; }
+
+/* Progress bar */
+.cls-progress-row { display:flex; align-items:center; gap:10px; }
+.cls-progress-bar { flex:1; height:6px; background:#e8e8e4; border-radius:999px; overflow:hidden; }
+.cls-progress-fill {
+  height:100%; border-radius:999px;
+  background:linear-gradient(90deg, #3b6fd4, #16a34a);
+  transition:width 0.4s ease;
+}
+.cls-progress-text { font-size:12px; color:#4a5568; font-weight:600; white-space:nowrap; }
 </style>
 
 <div class="mc-page">
@@ -35,21 +45,32 @@
     </div>
     <% } else { %>
       <% classes.forEach(cls => {
-        const badgeClass = { open:'cls-badge-open', ongoing:'cls-badge-ongoing', completed:'cls-badge-completed', cancelled:'cls-badge-cancelled' }[cls.status] || 'cls-badge-open';
-        const statusLabel = { open:'Mở đăng ký', ongoing:'Đang học', completed:'Hoàn thành', cancelled:'Đã hủy' }[cls.status] || cls.status;
         const doneSessions = cls.sessions.filter(s => s.status === 'done').length;
+        const totalReq     = (cls.idCourse && cls.idCourse.totalSessions) || cls.sessions.length || 0;
+        const progress     = totalReq > 0 ? Math.round((doneSessions / totalReq) * 100) : 0;
+        const isCompleted  = totalReq > 0 && doneSessions >= totalReq;
+        const badgeClass   = isCompleted ? 'cls-badge-completed' : 'cls-badge-ongoing';
+        const statusLabel  = isCompleted ? '✓ Hoàn thành'        : '▶ Đang theo học';
       %>
       <div class="cls-card">
         <a class="cls-card-inner" href="/classes/my-classes/<%= cls._id %>">
           <img class="cls-poster" src="<%= cls.idCourse && cls.idCourse.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= cls.name %>" />
           <div class="cls-body">
-            <div class="cls-name"><%= cls.name %></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+              <div class="cls-name" style="margin:0"><%= cls.name %></div>
+              <span class="cls-badge <%= badgeClass %>"><%= statusLabel %></span>
+            </div>
             <div class="cls-course"><%= cls.idCourse ? cls.idCourse.name : '' %></div>
             <div class="cls-meta">
               <span><i class="fas fa-chalkboard-teacher"></i> <%= cls.idLecturer ? cls.idLecturer.name : '—' %></span>
-              <span><i class="fas fa-calendar-alt"></i> <%= cls.sessions.length %> buổi (<%= doneSessions %> đã học)</span>
               <span><i class="fas fa-users"></i> <%= cls.students.length %> học viên</span>
-              <span class="cls-badge <%= badgeClass %>"><%= statusLabel %></span>
+            </div>
+            <!-- Progress -->
+            <div class="cls-progress-row">
+              <div class="cls-progress-bar">
+                <div class="cls-progress-fill" style="width:<%= progress %>%"></div>
+              </div>
+              <div class="cls-progress-text"><%= doneSessions %>/<%= totalReq %> buổi · <%= progress %>%</div>
             </div>
           </div>
           <div class="cls-arrow"><i class="fas fa-chevron-right"></i></div>

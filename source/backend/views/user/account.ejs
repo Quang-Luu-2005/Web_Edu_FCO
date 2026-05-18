@@ -361,6 +361,126 @@
   padding: 18px 32px 22px;
   background: linear-gradient(90deg, rgba(37,99,235,0.08) 0%, rgba(22,163,74,0.06) 100%);
 }
+
+/* ── Practice section ── */
+.practice-section {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 22px;
+  padding-bottom: 26px;
+}
+.practice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.practice-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.practice-title i { color: #fbbf24; }
+.practice-sub {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.practice-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.practice-badge.ok   { background: rgba(22,163,74,0.16); color: #86efac; }
+.practice-badge.warn { background: rgba(245,158,11,0.16); color: #fbbf24; }
+
+.practice-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.practice-label {
+  flex: 0 0 130px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  cursor: default;
+}
+.practice-input-wrap {
+  flex: 1 1 0;
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+.practice-row .practice-input {
+  display: block;
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  margin: 0;
+  background: #0f172a;
+  border: 1.5px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  text-align: left;
+  text-indent: 0;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+.practice-row .practice-input:focus { border-color: #2563eb; background: #0f172a; }
+.practice-row .practice-input::placeholder { color: #475569; }
+
+.practice-row .practice-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 36px;
+  text-align: left;
+  text-align-last: left;
+  cursor: pointer;
+}
+.practice-row .practice-select::-ms-expand { display: none; }
+.practice-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 11px;
+  pointer-events: none;
+}
+.practice-row .practice-input option { background: #1e293b; color: #e2e8f0; text-align: left; }
+
+/* Chống browser autofill làm trắng nền + đen chữ */
+.practice-row .practice-input:-webkit-autofill,
+.practice-row .practice-input:-webkit-autofill:hover,
+.practice-row .practice-input:-webkit-autofill:focus,
+.practice-row .practice-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #e2e8f0 !important;
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+  caret-color: #e2e8f0 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.practice-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.practice-actions .modal-submit i { margin-right: 6px; }
 .verify-banner-inner {
   display: flex;
   align-items: center;
@@ -526,6 +646,54 @@
       </div>
       <% } %>
 
+    </div>
+
+    <!-- ── Hồ sơ thực hành ── -->
+    <div class="profile-body practice-section">
+      <div class="practice-header">
+        <div>
+          <div class="practice-title"><i class="fas fa-futbol"></i> Hồ sơ thực hành</div>
+          <div class="practice-sub">Bắt buộc để đăng ký lớp thực hành</div>
+        </div>
+        <% if (profileCompleteForPractice) { %>
+          <span class="practice-badge ok">✓ Đã đầy đủ</span>
+        <% } else { %>
+          <span class="practice-badge warn">⚠ Chưa đầy đủ</span>
+        <% } %>
+      </div>
+
+      <div class="practice-row">
+        <span class="practice-label">SĐT Zalo</span>
+        <div class="practice-input-wrap">
+          <input type="tel" id="zalo-input" class="practice-input" autocomplete="off" value="<%= user.zaloPhone || '' %>" placeholder="VD: 0901234567" />
+        </div>
+      </div>
+
+      <div class="practice-row">
+        <span class="practice-label">Tên trong game</span>
+        <div class="practice-input-wrap">
+          <input type="text" id="ingame-input" class="practice-input" autocomplete="off" value="<%= user.inGameName || '' %>" placeholder="VD: KingSlayer" />
+        </div>
+      </div>
+
+      <div class="practice-row">
+        <span class="practice-label">Mức rank</span>
+        <div class="practice-input-wrap">
+          <select id="rank-select" class="practice-input practice-select" autocomplete="off">
+            <option value="">— Chưa chọn —</option>
+            <% rankLevels.forEach(r => { %>
+              <option value="<%= r.value %>" <%= user.rank === r.value ? 'selected' : '' %>><%= r.label %></option>
+            <% }) %>
+          </select>
+          <i class="fas fa-chevron-down practice-chevron"></i>
+        </div>
+      </div>
+
+      <div class="practice-actions">
+        <button class="modal-submit" id="practice-save-btn" onclick="savePracticeAll()">
+          <i class="fas fa-save"></i> Lưu hồ sơ thực hành
+        </button>
+      </div>
     </div>
 
     <!-- ── Banner xác nhận học viên ── -->
@@ -792,6 +960,39 @@ async function saveGender(gender) {
     else showToast('✗ Lưu thất bại', true);
   } catch(e) {
     showToast('✗ Lỗi kết nối', true);
+  }
+}
+
+// ── Lưu toàn bộ hồ sơ thực hành (zalo + ingame + rank) rồi reload ──
+async function savePracticeAll() {
+  const btn  = document.getElementById('practice-save-btn');
+  const zalo   = document.getElementById('zalo-input').value.trim();
+  const ingame = document.getElementById('ingame-input').value.trim();
+  const rank   = document.getElementById('rank-select').value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+
+  try {
+    const res  = await fetch('/users/updateInfor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ zaloPhone: zalo, inGameName: ingame, rank })
+    });
+    const json = await res.json();
+    if (json === true) {
+      showToast('✓ Đã lưu hồ sơ thực hành', false);
+      setTimeout(() => location.reload(), 600);
+    } else {
+      const msg = Array.isArray(json) ? json.map(e => e.msg).join(' • ') : 'Lưu thất bại';
+      showToast('✗ ' + msg, true);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Lưu hồ sơ thực hành';
+    }
+  } catch(e) {
+    showToast('✗ Lỗi kết nối', true);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> Lưu hồ sơ thực hành';
   }
 }
 

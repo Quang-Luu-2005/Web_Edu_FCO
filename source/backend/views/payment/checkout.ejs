@@ -144,7 +144,7 @@
         <div style="margin-bottom:8px">
           <div class="pay-row">
             <span class="pay-row-label">Giá gốc</span>
-            <span class="pay-row-value"><%= course.tuition.toLocaleString('vi-VN') %>₫</span>
+            <span class="pay-row-value"><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫</span>
           </div>
           <div class="pay-row" id="discount-row" style="display:none">
             <span class="pay-row-label">Giảm giá</span>
@@ -152,7 +152,7 @@
           </div>
           <div class="pay-row">
             <span class="pay-total-label">Tổng thanh toán</span>
-            <span class="pay-total" id="total-display"><%= course.tuition.toLocaleString('vi-VN') %>₫</span>
+            <span class="pay-total" id="total-display"><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫</span>
           </div>
         </div>
 

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('./source/backend/models/PracticeClass.model.js'\\); console.log\\('Model OK'\\);\")",
+      "Bash(node -e \"require\\('./source/backend/routers/practice.route.js'\\); require\\('./source/backend/admin/routers/practice.js'\\); require\\('./source/backend/config/practice.config.js'\\); console.log\\('All routes/configs OK'\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const express = require\\('express'\\); const app = express\\(\\); require\\('./middlewares/route.mdw'\\)\\(app\\); console.log\\('Routes wired OK'\\);\")"
+    ]
+  },
+  "model": "claude-opus-4.7"
+}

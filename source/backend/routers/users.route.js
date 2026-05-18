@@ -325,15 +325,18 @@ Router.get("/logout", (req, res) => {
 });
 
 Router.get("/account", ensureAuthenticated, (req, res) => {
+  const { RANK_LEVELS, isProfileCompleteForPractice } = require('../config/practice.config');
   res.render("./user/account", {
     isLocalAccount: req.user.password != undefined ? true : false,
     user: req.user,
-    isAuthenticated: req.isAuthenticated()
+    isAuthenticated: req.isAuthenticated(),
+    rankLevels: RANK_LEVELS,
+    profileCompleteForPractice: isProfileCompleteForPractice(req.user)
   });
 });
 
 Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res) => {
-  let { name, gender, description, oldPassword, newPassword, confPassword } = req.body;
+  let { name, gender, description, oldPassword, newPassword, confPassword, zaloPhone, inGameName, rank } = req.body;
   let errors = [];
 
   if (req.user.password != undefined) {
@@ -356,6 +359,20 @@ Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res
     }
   }
 
+  // Validate rank
+  const { RANK_VALUES } = require('../config/practice.config');
+  if (rank !== undefined && rank !== null && rank !== '' && !RANK_VALUES.includes(rank)) {
+    errors.push({ msg: "Mức rank không hợp lệ" });
+  }
+
+  // Validate zalo phone (optional, but if provided must be 9-12 digits)
+  if (zaloPhone !== undefined && zaloPhone !== null && zaloPhone !== '') {
+    const phoneClean = String(zaloPhone).trim().replace(/[\s.-]/g, '');
+    if (!/^\+?\d{9,12}$/.test(phoneClean)) {
+      errors.push({ msg: "Số điện thoại Zalo không hợp lệ" });
+    }
+  }
+
   if (errors.length > 0) {
     return res.json(errors);
   }
@@ -366,24 +383,25 @@ Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res
   if (gender && ['male','female','other'].includes(gender)) {
     update.gender = gender;
   } else if (gender !== undefined && gender !== null && gender !== '') {
-    // gender gửi lên nhưng không hợp lệ — log để debug
     console.warn('[updateInfor] invalid gender value:', JSON.stringify(gender));
   }
   if (typeof description === 'string') update.description = description.trim().slice(0, 500);
+  if (typeof zaloPhone === 'string')   update.zaloPhone   = zaloPhone.trim().replace(/[\s.-]/g, '').slice(0, 20);
+  if (typeof inGameName === 'string')  update.inGameName  = inGameName.trim().slice(0, 60);
+  if (typeof rank === 'string' && (rank === '' || RANK_VALUES.includes(rank))) {
+    update.rank = rank;
+  }
   if (newPassword && req.user.password != undefined) {
     update.password = await bcrypt.hash(newPassword, 10);
   }
 
-  console.log('[updateInfor] body received:', { name, gender, hasNewPw: !!newPassword });
   console.log('[updateInfor] update to apply:', update);
 
-  // Nếu không có gì để update (kể cả gender) → vẫn trả true
   if (Object.keys(update).length === 0) {
     return res.json(true);
   }
 
   try {
-    // Dùng findByIdAndUpdate để đảm bảo ghi DB thật sự
     const updated = await LocalUser.findByIdAndUpdate(
       req.user._id,
       { $set: update },
@@ -392,7 +410,6 @@ Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res
     if (!updated) {
       return res.json([{ msg: 'Không tìm thấy tài khoản' }]);
     }
-    // Refresh session với object mới
     await new Promise((resolve, reject) => {
       req.logIn(updated, err => err ? reject(err) : resolve());
     });

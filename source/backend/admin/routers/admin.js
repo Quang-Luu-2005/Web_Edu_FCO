@@ -476,6 +476,32 @@ router.get("/course/coursesList", ensureAuthenticated, async  (req, res) => {
     Courses_arr  = await Course.find({idLecturer:req.user._id});
   }
 
+  // ── Đếm số học viên thực tế cho từng khóa (theo user duy nhất, không theo số lần mua) ──
+  // Aggregate trên LocalUser: với mỗi course, đếm số user có purchasedCourses.idCourse = course._id
+  const courseIds = Courses_arr.map(c => c._id);
+  if (courseIds.length > 0) {
+    const counts = await LocalUser.aggregate([
+      { $match: { 'purchasedCourses.idCourse': { $in: courseIds } } },
+      { $unwind: '$purchasedCourses' },
+      { $match: { 'purchasedCourses.idCourse': { $in: courseIds } } },
+      { $group: {
+          _id: { user: '$_id', course: '$purchasedCourses.idCourse' }
+      }},
+      { $group: {
+          _id: '$_id.course',
+          count: { $sum: 1 }
+      }}
+    ]);
+    const countMap = {};
+    counts.forEach(c => { countMap[c._id.toString()] = c.count; });
+    // Gán vào từng course (override numberOfStudent)
+    Courses_arr = Courses_arr.map(c => {
+      const obj = c.toObject();
+      obj.numberOfStudent = countMap[c._id.toString()] || 0;
+      return obj;
+    });
+  }
+
   
   const CourseTopics_array = await Topic.find({}).populate('idCourseCategory').then(
     (CourseTopics)=>{
@@ -519,7 +545,7 @@ router.get("/course/courseEdit",ensureAuthenticated, async function (req, res) {
 });
 
 router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
-  const { name, lecture_id, category, description, tuition, id, image, status } = req.body;
+  const { name, lecture_id, category, description, tuition, id, image, status, totalSessions } = req.body;
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
 
   // Parse sessions
@@ -569,6 +595,7 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
     c.status        = status === '1' || status === true;
     c.sessions      = sessions;
     c.discountCodes = discountCodes;
+    c.totalSessions = Number(totalSessions) || 0;
     c.save();
     res.redirect("/admin/course/coursesList");
   });
@@ -633,6 +660,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
     poster:        req.body.image || '',
     status:        status === '1' || status === true,
     discountCodes,
+    totalSessions: Number(req.body.totalSessions) || 0,
   });
 
   try {
@@ -712,6 +740,79 @@ router.get("/is-local-user-available", ensureAuthenticated, async (req, res) => 
   res.json(user ? false : true);
 });
 
+// ── Gợi ý user theo email/username (fuzzy search) ──
+// Ưu tiên những user đã mua khóa học của class này; loại admin/lecturer khỏi gợi ý
+router.get("/classes/:classId/students/suggest", ensureAuthenticated, async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) return res.json([]);
+
+    // Tìm class để lấy idCourse và danh sách học viên hiện tại
+    const cls = await CourseClass.findById(req.params.classId).select('idCourse students');
+    const courseId = cls && cls.idCourse ? cls.idCourse.toString() : null;
+    const existingIds = cls ? cls.students.map(s => s.idUser.toString()) : [];
+
+    // Regex fuzzy: "abc" → /a.*b.*c/i
+    const safe = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const fuzzyRe = new RegExp(safe.join('.*'), 'i');
+
+    // Chỉ tìm trong "user", "guest", null (không tìm admin/lecturer)
+    const filter = {
+      $and: [
+        { $or: [{ role: 'user' }, { role: 'guest' }, { role: null }, { role: { $exists: false } }] },
+        { $or: [{ email: fuzzyRe }, { username: fuzzyRe }, { name: fuzzyRe }] }
+      ]
+    };
+    let users = await LocalUser.find(filter, 'name username email avatar role purchasedCourses').limit(20);
+
+    // Đánh dấu user đã mua khóa học của class này
+    const result = users.map(u => {
+      const purchased = courseId && (u.purchasedCourses || []).some(p => p.idCourse && p.idCourse.toString() === courseId);
+      const inClass   = existingIds.includes(u._id.toString());
+      return {
+        _id: u._id,
+        name: u.name,
+        username: u.username,
+        email: u.email,
+        avatar: u.avatar,
+        purchased,
+        inClass
+      };
+    });
+
+    // Sort: đã mua khóa & chưa vào lớp lên đầu, rồi đã vào lớp, rồi còn lại
+    result.sort((a, b) => {
+      const score = u => (u.inClass ? 0 : (u.purchased ? 2 : 1));
+      return score(b) - score(a);
+    });
+
+    return res.json(result.slice(0, 8));
+  } catch (err) {
+    console.error('[users/suggest] error:', err.message);
+    return res.json({ error: err.message });
+  }
+});
+
+// Giữ route cũ làm fallback, nhưng chỉ tìm trong học viên
+router.get("/users/suggest", ensureAuthenticated, async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) return res.json([]);
+    const safe = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const re = new RegExp(safe.join('.*'), 'i');
+    const users = await LocalUser.find({
+      $and: [
+        { $or: [{ role: 'user' }, { role: 'guest' }, { role: null }, { role: { $exists: false } }] },
+        { $or: [{ email: re }, { username: re }, { name: re }] }
+      ]
+    }, 'name username email avatar').limit(8);
+    res.json(users.map(u => ({ _id: u._id, name: u.name, username: u.username, email: u.email, avatar: u.avatar })));
+  } catch (err) {
+    console.error('[users/suggest] error:', err.message);
+    res.json([]);
+  }
+});
+
 
 
 
@@ -736,7 +837,64 @@ router.post("/register", async (req, res) => {
 const VerificationRequest = require('../../models/VerificationRequest.model');
 const CourseClass = require('../../models/CourseClass.model');
 
-// ── Classes (quản lý lớp học) ──
+// ── Xem học viên đã đăng ký 1 khóa học + lớp của khóa đó ──
+router.get('/course/students', ensureAuthenticated, async (req, res) => {
+  const courseId = req.query.id;
+  if (!courseId) return res.redirect('/admin/course/coursesList');
+
+  const course = await Course.findById(courseId);
+  if (!course) return res.redirect('/admin/course/coursesList');
+
+  // Tìm tất cả user đã mua khóa này
+  const allStudents = await LocalUser.find({
+    'purchasedCourses.idCourse': courseId
+  }, 'name username email avatar purchasedCourses');
+
+  const students = allStudents.map(u => {
+    const pc = u.purchasedCourses.find(p => p.idCourse && p.idCourse.toString() === courseId.toString());
+    return { user: u, enrolledAt: pc ? pc.enrolledAt : null };
+  });
+
+  // Tìm các lớp của khóa này
+  const classes = await CourseClass.find({ idCourse: courseId })
+    .populate('idLecturer', 'name avatar')
+    .sort({ createdAt: -1 });
+
+  // Tìm các user đã có trong lớp nào đó
+  const inClassUserIds = new Set();
+  classes.forEach(cls => {
+    cls.students.forEach(s => inClassUserIds.add(s.idUser.toString()));
+  });
+
+  // Học viên chưa được xếp lớp
+  const unassigned = students.filter(s => !inClassUserIds.has(s.user._id.toString()));
+
+  res.locals.layout = false;
+  res.render('admin/course/courseStudents', {
+    user: req.user,
+    data: { title: course.name, course, students, unassigned, classes }
+  });
+});
+
+// ── Thêm học viên vào lớp bằng userId ──
+router.post('/classes/:classId/students/add-by-id', ensureAuthenticated, express.json(), async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.json({ ok: false, msg: 'Thiếu userId' });
+
+  const cls = await CourseClass.findById(req.params.classId);
+  if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
+
+  const already = cls.students.some(s => s.idUser.toString() === userId);
+  if (already) return res.json({ ok: false, msg: 'Học viên đã có trong lớp' });
+
+  if (cls.students.length >= cls.maxStudents) {
+    return res.json({ ok: false, msg: 'Lớp đã đầy' });
+  }
+
+  cls.students.push({ idUser: userId, enrolledAt: new Date() });
+  await cls.save();
+  return res.json({ ok: true });
+});
 
 // List tất cả lớp (admin) hoặc lớp của giảng viên
 router.get('/classes', ensureAuthenticated, async (req, res) => {
@@ -766,18 +924,25 @@ router.get('/classes/new', ensureAuthenticated, async (req, res) => {
     ? await Course.find({}, 'name')
     : await Course.find({ idLecturer: req.user._id }, 'name');
 
+  // Danh sách giảng viên
+  const lecturers = await LocalUser.find({ role: 'lecturer' }, 'name email avatar');
+
   res.locals.layout = false;
   res.render('admin/classes/classForm', {
     user: req.user,
-    data: { title: 'Tạo lớp mới', cls: null, courses, isNew: true }
+    data: { title: 'Tạo lớp mới', cls: null, courses, lecturers, isNew: true, courseId: req.query.courseId || null }
   });
 });
 
 router.post('/classes/new', ensureAuthenticated, express.json(), express.urlencoded({ extended: true }), async (req, res) => {
-  const { idCourse, name, maxStudents, status } = req.body;
+  const { idCourse, idLecturer, name, maxStudents, status } = req.body;
+
+  // Nếu là giảng viên thì tự gán mình, admin chọn từ danh sách
+  const lecturerId = req.user.role === 'lecturer' ? req.user._id : (idLecturer || req.user._id);
+
   const cls = new CourseClass({
     idCourse,
-    idLecturer: req.user._id,
+    idLecturer: lecturerId,
     name:        name || 'Lớp mới',
     maxStudents: Number(maxStudents) || 10,
     status:      status || 'open'
@@ -789,30 +954,35 @@ router.post('/classes/new', ensureAuthenticated, express.json(), express.urlenco
 // Chi tiết / chỉnh sửa lớp
 router.get('/classes/:classId', ensureAuthenticated, async (req, res) => {
   const cls = await CourseClass.findById(req.params.classId)
-    .populate('idCourse', 'name')
+    .populate('idCourse', 'name totalSessions')
     .populate('idLecturer', 'name avatar')
     .populate('students.idUser', 'name avatar username email');
 
   if (!cls) return res.redirect('/admin/classes');
 
   // Giảng viên chỉ xem lớp của mình
-  if (req.user.role !== 'admin' && cls.idLecturer._id.toString() !== req.user._id.toString()) {
+  if (req.user.role !== 'admin' && cls.idLecturer && cls.idLecturer._id.toString() !== req.user._id.toString()) {
     return res.redirect('/admin/classes');
   }
+
+  // Danh sách giảng viên để admin đổi
+  const lecturers = req.user.role === 'admin'
+    ? await LocalUser.find({ role: 'lecturer' }, 'name email avatar')
+    : [];
 
   res.locals.layout = false;
   res.render('admin/classes/classDetail', {
     user: req.user,
-    data: { title: cls.name, cls }
+    data: { title: cls.name, cls, lecturers }
   });
 });
 
 // Cập nhật thông tin lớp
 router.post('/classes/:classId/update', ensureAuthenticated, express.urlencoded({ extended: true }), async (req, res) => {
-  const { name, maxStudents, status } = req.body;
-  await CourseClass.findByIdAndUpdate(req.params.classId, {
-    $set: { name, maxStudents: Number(maxStudents) || 10, status }
-  });
+  const { name, maxStudents, status, idLecturer } = req.body;
+  const update = { name, maxStudents: Number(maxStudents) || 10, status };
+  if (idLecturer && req.user.role === 'admin') update.idLecturer = idLecturer;
+  await CourseClass.findByIdAndUpdate(req.params.classId, { $set: update });
   res.redirect('/admin/classes/' + req.params.classId);
 });
 
@@ -853,9 +1023,10 @@ router.post('/classes/:classId/students/remove', ensureAuthenticated, express.js
 // Thêm buổi học
 router.post('/classes/:classId/sessions/add', ensureAuthenticated, express.json(), async (req, res) => {
   const { title, date, meetLink, note } = req.body;
-  const cls = await CourseClass.findById(req.params.classId);
+  const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions');
   if (!cls) return res.json({ ok: false });
   cls.sessions.push({ title, date: date ? new Date(date) : null, meetLink, note, status: 'scheduled' });
+  autoUpdateClassStatus(cls);
   await cls.save();
   const s = cls.sessions[cls.sessions.length - 1];
   return res.json({ ok: true, session: s });
@@ -864,7 +1035,7 @@ router.post('/classes/:classId/sessions/add', ensureAuthenticated, express.json(
 // Cập nhật buổi học (link record, status, v.v.)
 router.post('/classes/:classId/sessions/:sessionId/update', ensureAuthenticated, express.json(), async (req, res) => {
   const { title, date, meetLink, recordLink, note, status } = req.body;
-  const cls = await CourseClass.findById(req.params.classId);
+  const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions');
   if (!cls) return res.json({ ok: false });
   const s = cls.sessions.id(req.params.sessionId);
   if (!s) return res.json({ ok: false });
@@ -874,9 +1045,19 @@ router.post('/classes/:classId/sessions/:sessionId/update', ensureAuthenticated,
   if (recordLink !== undefined) s.recordLink = recordLink;
   if (note       !== undefined) s.note       = note;
   if (status     !== undefined) s.status     = status;
+  autoUpdateClassStatus(cls);
   await cls.save();
   return res.json({ ok: true, session: s });
 });
+
+// Helper: tự động cập nhật trạng thái lớp dựa vào số buổi đã hoàn thành
+function autoUpdateClassStatus(cls) {
+  const totalReq = (cls.idCourse && cls.idCourse.totalSessions) || cls.sessions.length || 0;
+  const doneCnt  = cls.sessions.filter(s => s.status === 'done').length;
+  if (totalReq > 0 && doneCnt >= totalReq) cls.status = 'completed';
+  else if (doneCnt > 0)                    cls.status = 'ongoing';
+  else                                     cls.status = 'open';
+}
 
 // Xóa buổi học
 router.post('/classes/:classId/sessions/:sessionId/delete', ensureAuthenticated, async (req, res) => {

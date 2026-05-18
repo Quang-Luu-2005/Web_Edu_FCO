@@ -145,6 +145,11 @@ const CourseSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    // Số buổi học dự kiến của khóa
+    totalSessions: {
+        type: Number,
+        default: 0
+    },
     previewIndex: {
         type: [Number],
         default: []

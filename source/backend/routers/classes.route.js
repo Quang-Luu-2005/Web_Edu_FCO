@@ -11,7 +11,7 @@ Router.get('/my-classes', ensureAuthenticated, async (req, res) => {
     'students.idUser': req.user._id,
     status: { $ne: 'cancelled' }
   })
-    .populate('idCourse', 'name poster')
+    .populate('idCourse', 'name poster totalSessions')
     .populate('idLecturer', 'name avatar')
     .sort({ createdAt: -1 });
 
@@ -24,6 +24,11 @@ Router.get('/my-classes', ensureAuthenticated, async (req, res) => {
 
 // ── Học viên: xem chi tiết 1 lớp ──
 Router.get('/my-classes/:classId', ensureAuthenticated, async (req, res) => {
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(req.params.classId)) {
+    return res.status(404).render('./error/404', { layout: false });
+  }
+
   const cls = await CourseClass.findById(req.params.classId)
     .populate('idCourse', 'name poster')
     .populate('idLecturer', 'name avatar email')

@@ -9,11 +9,21 @@ const { ensureAuthenticated } = require('../config/auth.config');
 
 const safeArray = (v) => Array.isArray(v) ? v : [];
 
-const payos = new PayOS(
-    process.env.PAYOS_CLIENT_ID,
-    process.env.PAYOS_API_KEY,
-    process.env.PAYOS_CHECKSUM_KEY
-);
+// Lazy init payOS — chỉ tạo khi có đủ credentials
+let _payos = null;
+function getPayOS() {
+    if (!_payos) {
+        if (!process.env.PAYOS_CLIENT_ID || !process.env.PAYOS_API_KEY || !process.env.PAYOS_CHECKSUM_KEY) {
+            throw new Error('PayOS credentials chưa được cấu hình trong .env');
+        }
+        _payos = new PayOS(
+            process.env.PAYOS_CLIENT_ID,
+            process.env.PAYOS_API_KEY,
+            process.env.PAYOS_CHECKSUM_KEY
+        );
+    }
+    return _payos;
+}
 
 const APP_URL = process.env.APP_URL || 'http://localhost:8000';
 
@@ -118,8 +128,15 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
             });
         }
 
-        req.flash && req.flash('success_msg', 'Đăng ký khóa học miễn phí thành công!');
-        return res.redirect('/my-courses');
+        // Render trang success
+        await course.populate('idCourseTopic');
+        return res.render('./payment/success', {
+            isAuthenticated: req.isAuthenticated(),
+            user: req.user,
+            course,
+            isFree: true,
+            amount: 0
+        });
     }
 
     // payOS yêu cầu tối thiểu 1000 VNĐ
@@ -140,7 +157,7 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
     };
 
     try {
-        const paymentLink = await payos.createPaymentLink(paymentData);
+        const paymentLink = await getPayOS().createPaymentLink(paymentData);
         // Lưu orderCode vào session để verify sau
         req.session.pendingPayment = {
             orderCode,
@@ -168,7 +185,7 @@ Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
     // Verify với payOS API
     let paymentInfo;
     try {
-        paymentInfo = await payos.getPaymentLinkInformation(orderCode);
+        paymentInfo = await getPayOS().getPaymentLinkInformation(orderCode);
     } catch (err) {
         console.error('[PayOS verify error]', err.message);
         req.flash && req.flash('error_msg', 'Không thể xác minh thanh toán');
@@ -238,14 +255,19 @@ Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
     }
 
     req.session.pendingPayment = null;
-    req.flash && req.flash('success_msg', `Đăng ký khóa học thành công!`);
-    return res.redirect('/my-courses');
+    return res.render('./payment/success', {
+        isAuthenticated: req.isAuthenticated(),
+        user: req.user,
+        course,
+        isFree: false,
+        amount: paymentInfo.amount || course.tuition
+    });
 });
 
 // ── Webhook từ payOS (server-to-server) ──
 Router.post('/webhook', express.json(), async (req, res) => {
     try {
-        const webhookData = payos.verifyPaymentWebhookData(req.body);
+        const webhookData = getPayOS().verifyPaymentWebhookData(req.body);
         console.log('[PayOS webhook]', webhookData);
         // Xử lý thêm nếu cần (ghi log, gửi email...)
         return res.json({ success: true });

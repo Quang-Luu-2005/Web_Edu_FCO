@@ -246,9 +246,8 @@
     <% if (items.length > 0) { %>
 
     <%
-      const doneCnt     = items.filter(i => i.isDone).length;
-      const learningCnt = items.filter(i => !i.isDone && i.learnedCount > 0).length;
-      const newCnt      = items.filter(i => i.learnedCount === 0).length;
+      const inClassCnt = items.filter(i => i.classId).length;
+      const waitingCnt = items.filter(i => !i.classId).length;
     %>
 
     <!-- Stats -->
@@ -258,17 +257,15 @@
         <span>Tổng: <strong><%= items.length %></strong></span>
       </div>
       <div class="mc-stat-chip">
-        <i class="fas fa-spinner" style="color:#3b6fd4"></i>
-        <span>Đang học: <strong><%= learningCnt %></strong></span>
+        <i class="fas fa-chalkboard-teacher" style="color:#16a34a"></i>
+        <span>Đã có lớp: <strong><%= inClassCnt %></strong></span>
       </div>
-      <div class="mc-stat-chip">
-        <i class="fas fa-check-circle" style="color:#16a34a"></i>
-        <span>Hoàn thành: <strong><%= doneCnt %></strong></span>
-      </div>
+      <% if (waitingCnt > 0) { %>
       <div class="mc-stat-chip">
         <i class="fas fa-clock" style="color:#b45309"></i>
-        <span>Chưa bắt đầu: <strong><%= newCnt %></strong></span>
+        <span>Chờ xếp lớp: <strong><%= waitingCnt %></strong></span>
       </div>
+      <% } %>
     </div>
 
     <!-- Table -->
@@ -277,22 +274,13 @@
         <thead>
           <tr>
             <th>Khóa học</th>
-            <th>Tiến độ</th>
-            <th>Trạng thái</th>
+            <th>Lớp của tôi</th>
             <th>Ngày đăng ký</th>
-            <th>Học lần cuối</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <% items.forEach(item => {
-            const statusClass = item.isDone ? 'mc-badge-done'
-                              : item.learnedCount > 0 ? 'mc-badge-learning'
-                              : 'mc-badge-new';
-            const statusLabel = item.isDone ? '✓ Hoàn thành'
-                              : item.learnedCount > 0 ? '▶ Đang học'
-                              : '○ Chưa bắt đầu';
-
             const fmtDate = (d) => {
               if (!d) return '—';
               const dt = new Date(d);
@@ -323,21 +311,14 @@
               </div>
             </td>
 
-            <!-- Tiến độ -->
+            <!-- Lớp của tôi -->
             <td>
-              <div class="mc-progress-wrap">
-                <div class="mc-progress-bar">
-                  <div class="mc-progress-fill" style="width:<%= item.progress %>%"></div>
-                </div>
-                <div class="mc-progress-text">
-                  <%= item.learnedCount %>/<%= item.totalVideos %> bài &nbsp;·&nbsp; <%= item.progress %>%
-                </div>
-              </div>
-            </td>
-
-            <!-- Trạng thái -->
-            <td>
-              <span class="mc-badge <%= statusClass %>"><%= statusLabel %></span>
+              <% if (item.className) { %>
+              <div style="font-size:13px;font-weight:600;color:#1a1f2e"><%= item.className %></div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px"><%= item.totalVideos %> buổi học</div>
+              <% } else { %>
+              <span style="font-size:12px;color:#b45309;background:#fef9ec;padding:3px 10px;border-radius:20px;border:1px solid #fde68a;font-weight:600">⏳ Chờ xếp lớp</span>
+              <% } %>
             </td>
 
             <!-- Ngày đăng ký -->
@@ -346,18 +327,17 @@
               <div class="mc-date-sub"><%= fmtTime(item.enrolledAt) %></div>
             </td>
 
-            <!-- Học lần cuối -->
-            <td>
-              <div class="mc-date"><%= fmtDate(item.lastLearnedAt) %></div>
-              <div class="mc-date-sub"><%= fmtTime(item.lastLearnedAt) %></div>
-            </td>
-
             <!-- Action -->
             <td>
-              <a href="/course/<%= encodeURIComponent(item.course.name) %>" class="mc-btn-go">
-                <i class="fas fa-play"></i>
-                <%= item.isDone ? 'Xem lại' : item.learnedCount > 0 ? 'Tiếp tục' : 'Bắt đầu' %>
+              <% if (item.classId) { %>
+              <a href="/classes/my-classes/<%= item.classId %>" class="mc-btn-go">
+                <i class="fas fa-play"></i> Vào lớp
               </a>
+              <% } else { %>
+              <span class="mc-btn-go" style="background:#cbd5e1;color:#fff;cursor:not-allowed">
+                <i class="fas fa-clock"></i> Chờ xếp lớp
+              </span>
+              <% } %>
             </td>
           </tr>
           <% }) %>

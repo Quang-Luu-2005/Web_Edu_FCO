@@ -1,0 +1,94 @@
+<style>
+.pl-page { min-height:calc(100vh - 120px); background:#f8f7f4; padding:40px 0 64px; }
+.pl-wrap { width:85%; max-width:1100px; margin:0 auto; }
+.pl-hero { background:linear-gradient(135deg,#3b6fd4 0%,#1e40af 100%); color:#fff; border-radius:18px; padding:36px 40px; margin-bottom:28px; }
+.pl-hero h1 { font-size:28px; font-weight:800; margin:0 0 8px; }
+.pl-hero p { font-size:15px; opacity:0.9; margin:0; max-width:640px; }
+.pl-pricing { display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; }
+.pl-tag { background:rgba(255,255,255,0.16); padding:10px 16px; border-radius:10px; font-size:13px; backdrop-filter:blur(10px); }
+.pl-tag strong { color:#fde68a; font-size:15px; }
+
+.pl-section-title { font-size:20px; font-weight:700; color:#1a1f2e; margin:0 0 16px; }
+.pl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px; }
+.pl-card { background:#fff; border:1px solid #e8e8e4; border-radius:14px; overflow:hidden; box-shadow:0 2px 8px rgba(26,31,46,0.05); transition:transform 0.2s, box-shadow 0.2s; cursor:pointer; }
+.pl-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(26,31,46,0.12); }
+.pl-poster { width:100%; aspect-ratio:16/9; object-fit:cover; background:#e8e8e4; }
+.pl-body { padding:14px 16px; }
+.pl-name { font-size:15px; font-weight:700; color:#1a1f2e; margin:0 0 6px; }
+.pl-desc { font-size:12.5px; color:#718096; line-height:1.5; min-height:36px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.pl-meta { display:flex; gap:10px; margin-top:10px; font-size:11.5px; color:#9ca3af; }
+.pl-meta .lec { display:flex; align-items:center; gap:5px; }
+.pl-meta img { width:18px; height:18px; border-radius:50%; object-fit:cover; }
+
+.pl-empty { background:#fff; border:1px solid #e8e8e4; border-radius:14px; text-align:center; padding:64px 24px; }
+.pl-empty i { font-size:48px; color:#cbd5e1; margin-bottom:14px; display:block; }
+</style>
+
+<div class="pl-page">
+  <div class="pl-wrap">
+    <div class="pl-hero">
+      <h1><i class="fas fa-futbol"></i> Lớp thực hành</h1>
+      <p>Rèn luyện kỹ năng trực tiếp với huấn luyện viên — đăng ký tham gia các buổi thực hành theo lịch.</p>
+      <div class="pl-pricing">
+        <% if (userIs2M) { %>
+          <div class="pl-tag">
+            <i class="fas fa-crown" style="color:#fde68a"></i>
+            Bạn là <strong>học viên khóa 2M</strong> — học miễn phí, không giới hạn buổi
+          </div>
+          <div class="pl-tag">
+            <i class="fas fa-info-circle"></i>
+            Lịch học sẽ do admin sắp xếp
+          </div>
+        <% } else { %>
+          <div class="pl-tag">
+            <i class="fas fa-tag"></i>
+            Phí mỗi buổi: <strong>50.000đ</strong>
+          </div>
+          <div class="pl-tag">
+            <i class="fas fa-crown" style="color:#fde68a"></i>
+            Học viên khóa <strong>2M</strong> — miễn phí
+          </div>
+        <% } %>
+      </div>
+      <% if (isAuthenticated) { %>
+      <a href="/practice/my" style="display:inline-block;margin-top:14px;background:#fff;color:#1e40af;padding:9px 18px;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px">
+        <i class="fas fa-list-check"></i> Buổi đã đăng ký của tôi
+      </a>
+      <% } %>
+    </div>
+
+    <h2 class="pl-section-title">Các lớp đang mở</h2>
+
+    <% if (!classes || classes.length === 0) { %>
+      <div class="pl-empty">
+        <i class="fas fa-calendar-alt"></i>
+        <div style="font-size:16px;font-weight:600;color:#4a5568;margin-bottom:6px">Chưa có lớp thực hành nào</div>
+        <div style="font-size:13px;color:#9ca3af">Hãy quay lại sau nhé.</div>
+      </div>
+    <% } else { %>
+      <div class="pl-grid">
+        <% classes.forEach(cls => {
+          const totalSessions = cls.sessions.length;
+          const upcoming = cls.sessions.filter(s => s.status === 'scheduled').length;
+        %>
+        <a class="pl-card" href="/practice/<%= cls._id %>" style="text-decoration:none;color:inherit;display:block">
+          <img class="pl-poster" src="<%= cls.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= cls.name %>" />
+          <div class="pl-body">
+            <div class="pl-name"><%= cls.name %></div>
+            <div class="pl-desc"><%= cls.description || 'Lớp thực hành kỹ năng — học trực tiếp với huấn luyện viên.' %></div>
+            <div class="pl-meta">
+              <% if (cls.idLecturer) { %>
+              <span class="lec">
+                <img src="<%= cls.idLecturer.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" />
+                <%= cls.idLecturer.name %>
+              </span>
+              <% } %>
+              <span><i class="fas fa-calendar"></i> <%= upcoming %> buổi sắp tới</span>
+            </div>
+          </div>
+        </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>

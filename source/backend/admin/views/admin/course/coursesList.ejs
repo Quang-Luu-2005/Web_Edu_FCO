@@ -175,6 +175,9 @@
             <td>
               <div style="display:flex;gap:6px">
                 <input type="hidden" value="<%= course._id %>">
+                <button class="adm-btn adm-btn-ghost adm-btn-sm adm-btn-icon" onclick="location.href='/admin/course/students?id=<%= course._id %>'" title="Học viên & lớp">
+                  <i class="fas fa-users"></i>
+                </button>
                 <button class="adm-btn adm-btn-primary adm-btn-sm adm-btn-icon viewCourse" title="Chỉnh sửa">
                   <i class="fas fa-pen"></i>
                 </button>

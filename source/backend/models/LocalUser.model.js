@@ -44,6 +44,19 @@ const LocalUserSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    zaloPhone: {
+        type: String,
+        default: ''
+    },
+    inGameName: {
+        type: String,
+        default: ''
+    },
+    rank: {
+        type: String,
+        enum: ['', 'ban-chuyen', 'chuyen-nghiep', 'the-gioi', 'tinh-anh', 'huyen-thoai', 'thach-dau', 'sieu-sao'],
+        default: ''
+    },
     isAuth: {
         type: Boolean,
         default: false

@@ -334,10 +334,10 @@ a { text-decoration: none; color: inherit; }
   width: 100%; box-sizing: border-box;
   padding: 0 14px;
   height: 40px;
-  background: #0f172a;
-  border: 1.5px solid rgba(255,255,255,0.10);
+  background: #ffffff;
+  border: 1.5px solid rgba(255,255,255,0.15);
   border-radius: 8px;
-  color: #f1f5f9;
+  color: #1a1f2e;
   font-size: 13px;
   font-family: inherit;
   outline: none;

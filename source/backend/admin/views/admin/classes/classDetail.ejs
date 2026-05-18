@@ -26,15 +26,43 @@
   </div>
   <!-- Đổi trạng thái nhanh -->
   <div style="display:flex;gap:8px;align-items:center">
+    <% if (user.role === 'admin' && data.lecturers && data.lecturers.length > 0) { %>
     <div style="position:relative">
-      <select id="status-select" onchange="updateStatus(this.value)"
+      <select id="lecturer-select" onchange="updateLecturer(this.value)"
         style="height:36px;padding:0 28px 0 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none">
-        <option value="open"      <%= data.cls.status==='open'      ? 'selected':'' %>>Mở đăng ký</option>
-        <option value="ongoing"   <%= data.cls.status==='ongoing'   ? 'selected':'' %>>Đang học</option>
-        <option value="completed" <%= data.cls.status==='completed' ? 'selected':'' %>>Hoàn thành</option>
-        <option value="cancelled" <%= data.cls.status==='cancelled' ? 'selected':'' %>>Đã hủy</option>
+        <option value="">-- Giảng viên --</option>
+        <% data.lecturers.forEach(lec => { %>
+          <option value="<%= lec._id %>" <%= data.cls.idLecturer && data.cls.idLecturer._id.toString() === lec._id.toString() ? 'selected' : '' %>>
+            <%= lec.name %>
+          </option>
+        <% }) %>
       </select>
       <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:9px">▼</span>
+    </div>
+    <% } else if (data.cls.idLecturer) { %>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.10);border-radius:8px">
+      <img src="<%= data.cls.idLecturer.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png' %>" style="width:22px;height:22px;border-radius:50%;object-fit:cover" />
+      <span style="font-size:13px;color:#e2e8f0"><%= data.cls.idLecturer.name %></span>
+    </div>
+    <% } %>
+    <%
+      // Trạng thái lớp tự động theo số buổi đã học
+      const totalReq = (data.cls.idCourse && data.cls.idCourse.totalSessions) || data.cls.sessions.length || 0;
+      const doneCnt  = data.cls.sessions.filter(s => s.status === 'done').length;
+      const autoStatus = totalReq > 0 && doneCnt >= totalReq ? 'completed'
+                       : doneCnt > 0 ? 'ongoing'
+                       : 'open';
+      const statusMap = {
+        open:      { label: 'Đang theo học', color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
+        ongoing:   { label: 'Đang theo học', color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
+        completed: { label: 'Hoàn thành',    color: '#16a34a', bg: 'rgba(22,163,74,0.12)' }
+      };
+      const st = statusMap[autoStatus];
+    %>
+    <div style="display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;background:<%= st.bg %>;border:1px solid <%= st.color %>33;border-radius:8px;font-size:13px;font-weight:600;color:<%= st.color %>">
+      <% if (autoStatus === 'completed') { %><i class="fas fa-check-circle"></i><% } else { %><i class="fas fa-play-circle"></i><% } %>
+      <%= st.label %>
+      <% if (totalReq > 0) { %><span style="color:#64748b;font-weight:400;margin-left:4px">(<%= doneCnt %>/<%= totalReq %>)</span><% } %>
     </div>
   </div>
 </div>
@@ -55,9 +83,22 @@
     <div class="adm-card-header">
       <span class="adm-card-title">Danh sách học viên</span>
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="add-student-input" placeholder="Email hoặc username..."
-          style="height:34px;padding:0 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#f1f5f9;font-size:13px;outline:none;width:220px"
-          onkeydown="if(event.key==='Enter')addStudent()" />
+        <div style="position:relative">
+          <input type="text" id="add-student-input" placeholder="Email hoặc username..."
+            autocomplete="off"
+            style="height:34px;padding:0 12px;background:#0f172a;border:1px solid rgba(255,255,255,0.10);border-radius:8px;color:#f1f5f9;font-size:13px;outline:none;width:220px"
+            onkeydown="if(event.key==='Enter'){hideSuggest();addStudent();}"
+            oninput="onSuggestInput(this.value)"
+            onblur="setTimeout(hideSuggest,200)" />
+          <div id="suggest-dropdown" style="
+            display:none; position:fixed;
+            background:#1e293b; border:1px solid rgba(255,255,255,0.12); border-radius:10px;
+            box-shadow:0 12px 32px rgba(0,0,0,0.55); z-index:9998; overflow:hidden;
+            min-width:320px; max-height:380px; overflow-y:auto;
+            transform-origin:top center; opacity:0; transform:translateY(-6px);
+            transition:opacity 0.15s ease, transform 0.15s ease;
+          "></div>
+        </div>
         <button class="adm-btn adm-btn-primary adm-btn-sm" onclick="addStudent()">
           <i class="fas fa-plus"></i> Thêm
         </button>
@@ -120,6 +161,8 @@
             <% if (s.date) { %>
             <div style="font-size:12px;color:#64748b;margin-bottom:4px">
               <i class="fas fa-calendar"></i> <%= new Date(s.date).toLocaleString('vi-VN') %>
+              <% const endMatch = s.note && s.note.match(/\[end:(\d{2}:\d{2})\]/); %>
+              <% if (endMatch) { %> — <%= endMatch[1] %><% } %>
             </div>
             <% } %>
             <% if (s.meetLink) { %>
@@ -135,7 +178,7 @@
             </div>
             <% } %>
             <% if (s.note) { %>
-            <div style="font-size:12px;color:#94a3b8;font-style:italic"><%= s.note %></div>
+            <div style="font-size:12px;color:#94a3b8;font-style:italic"><%= s.note.replace(/\s*\[end:\d{2}:\d{2}\]/, '').trim() %></div>
             <% } %>
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
@@ -154,13 +197,30 @@
 </div>
 
 <!-- Modal thêm/sửa buổi học -->
-<div class="modal-overlay" id="session-modal" onclick="if(event.target===this)closeSessionModal()">
+<div class="modal-overlay" id="session-modal">
   <div class="modal-box" style="max-width:480px">
     <button class="modal-close" onclick="closeSessionModal()">&times;</button>
     <h2 class="modal-title" id="session-modal-title"><i class="fas fa-calendar-plus" style="color:#2563eb"></i> Thêm buổi học</h2>
     <div class="adm-form-grid single">
       <div class="adm-field"><label>Tiêu đề buổi học</label><input type="text" id="s-title" placeholder="VD: Buổi 1 — Kỹ thuật dribble" /></div>
-      <div class="adm-field"><label>Ngày & giờ học</label><input type="datetime-local" id="s-date" /></div>
+      <div class="adm-field">
+        <label>Ngày học</label>
+        <input type="date" id="s-date-day" />
+      </div>
+      <div class="adm-field">
+        <label>Giờ học</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px">Bắt đầu</div>
+            <input type="time" id="s-time-start" style="width:100%" />
+          </div>
+          <span style="color:#64748b;margin-top:18px">→</span>
+          <div style="flex:1">
+            <div style="font-size:11px;color:#64748b;margin-bottom:4px">Kết thúc</div>
+            <input type="time" id="s-time-end" style="width:100%" />
+          </div>
+        </div>
+      </div>
       <div class="adm-field"><label>Link dạy học (Meet/Zoom)</label><input type="url" id="s-meet" placeholder="https://meet.google.com/..." /></div>
       <div class="adm-field"><label>Link video bài giảng</label><input type="url" id="s-record" placeholder="https://youtube.com/..." /></div>
       <div class="adm-field"><label>Ghi chú</label><input type="text" id="s-note" placeholder="Nội dung, yêu cầu chuẩn bị..." /></div>
@@ -188,6 +248,159 @@
 const CLASS_ID = '<%= data.cls._id %>';
 let _editSessionId = null;
 
+// ── Suggest / Autocomplete ──
+let _suggestTimer = null;
+let _lastQuery = '';
+function onSuggestInput(val) {
+  clearTimeout(_suggestTimer);
+  _lastQuery = val.trim();
+  if (!_lastQuery) { hideSuggest(); return; }
+  // Hiển thị "đang tìm..." ngay lập tức để feedback nhanh
+  showSuggestState('<div style="padding:14px 14px;color:#64748b;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Đang tìm "' + escapeHtml(_lastQuery) + '"...</div>');
+  _suggestTimer = setTimeout(() => fetchSuggest(_lastQuery), 220);
+}
+async function fetchSuggest(q) {
+  try {
+    const res  = await fetch('/admin/classes/' + CLASS_ID + '/students/suggest?q=' + encodeURIComponent(q));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const list = await res.json();
+    // Bỏ qua kết quả cũ nếu user đã gõ tiếp
+    if (q !== _lastQuery) return;
+    if (list && list.error) {
+      showSuggestState('<div style="padding:14px;color:#f87171;font-size:13px"><i class="fas fa-exclamation-circle"></i> Lỗi: ' + escapeHtml(list.error) + '</div>');
+      return;
+    }
+    renderSuggest(Array.isArray(list) ? list : [], q);
+  } catch(e) {
+    if (q !== _lastQuery) return;
+    showSuggestState('<div style="padding:14px;color:#f87171;font-size:13px"><i class="fas fa-exclamation-circle"></i> Không thể kết nối server</div>');
+  }
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function highlightMatch(text, query) {
+  if (!text) return '';
+  const safe = escapeHtml(text);
+  if (!query) return safe;
+  // Highlight từng ký tự xuất hiện trong query (fuzzy match cách hiển thị)
+  let out = '';
+  let qi = 0;
+  const lower = text.toLowerCase();
+  const ql = query.toLowerCase();
+  for (let i = 0; i < text.length; i++) {
+    const ch = escapeHtml(text[i]);
+    if (qi < ql.length && lower[i] === ql[qi]) {
+      out += `<mark style="background:rgba(37,99,235,0.35);color:#bfdbfe;padding:0;border-radius:2px">${ch}</mark>`;
+      qi++;
+    } else {
+      out += ch;
+    }
+  }
+  return out;
+}
+function showSuggestState(html) {
+  const dd    = document.getElementById('suggest-dropdown');
+  const input = document.getElementById('add-student-input');
+  const rect  = input.getBoundingClientRect();
+  dd.style.top   = (rect.bottom + 6) + 'px';
+  dd.style.left  = rect.left + 'px';
+  dd.style.width = Math.max(rect.width, 320) + 'px';
+  dd.innerHTML = html;
+  dd.style.display = 'block';
+  // Trigger animation
+  requestAnimationFrame(() => {
+    dd.style.opacity   = '1';
+    dd.style.transform = 'translateY(0)';
+  });
+}
+function renderSuggest(list, q) {
+  if (!list.length) {
+    showSuggestState(`
+      <div style="padding:18px 14px;text-align:center;color:#64748b;font-size:13px">
+        <i class="fas fa-search" style="font-size:20px;display:block;margin-bottom:6px;opacity:0.5"></i>
+        Không tìm thấy học viên nào cho <strong style="color:#94a3b8">"${escapeHtml(q)}"</strong>
+        <div style="font-size:11px;margin-top:6px;color:#475569">(Chỉ tìm người dùng có vai trò học viên)</div>
+      </div>
+    `);
+    return;
+  }
+  const enrolledCount = list.filter(u => u.purchased && !u.inClass).length;
+  const html = `
+    <div style="padding:8px 14px;font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center">
+      <span><i class="fas fa-users" style="margin-right:6px"></i>${list.length} kết quả</span>
+      ${enrolledCount > 0 ? `<span style="color:#16a34a;font-size:10px">${enrolledCount} đã mua khóa</span>` : ''}
+    </div>
+    ${list.map(u => {
+      const disabled = u.inClass;
+      const badge = u.inClass
+        ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(100,116,139,0.2);color:#94a3b8;font-weight:700">Đã ở lớp</span>`
+        : (u.purchased
+          ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(22,163,74,0.18);color:#86efac;font-weight:700"><i class="fas fa-check-circle"></i> Đã mua khóa</span>`
+          : `<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(245,158,11,0.15);color:#fbbf24;font-weight:700">Chưa mua</span>`);
+      const handler = disabled ? '' : `onmousedown="selectSuggest('${(u.email || u.username || '').replace(/'/g, "\\'")}')"`;
+      return `
+        <div class="suggest-item" ${handler}
+          style="display:flex; align-items:center; gap:11px; padding:10px 14px; cursor:${disabled?'not-allowed':'pointer'}; border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.1s; opacity:${disabled?'0.55':'1'};"
+          ${disabled ? '' : `onmouseover="this.style.background='rgba(37,99,235,0.12)'" onmouseout="this.style.background=''"`}>
+          <img src="${u.avatar || 'https://i.ibb.co/NnbNMtSw/default-avatar.png'}"
+            style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.08)" />
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+              <span style="font-size:13px;font-weight:600;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlightMatch(u.name || u.username || '—', q)}</span>
+              ${badge}
+            </div>
+            <div style="font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlightMatch(u.email || '', q)}</div>
+          </div>
+          ${disabled ? '' : '<i class="fas fa-arrow-right" style="font-size:11px;color:#475569;flex-shrink:0"></i>'}
+        </div>
+      `;
+    }).join('')}
+  `;
+  showSuggestState(html);
+}
+function selectSuggest(val) {
+  document.getElementById('add-student-input').value = val;
+  hideSuggest();
+}
+function hideSuggest() {
+  const dd = document.getElementById('suggest-dropdown');
+  dd.style.opacity   = '0';
+  dd.style.transform = 'translateY(-6px)';
+  setTimeout(() => { dd.style.display = 'none'; }, 150);
+}
+
+// ── Restore scroll + tab sau reload ──
+(function restoreState() {
+  const saved = sessionStorage.getItem('cls_state_' + CLASS_ID);
+  if (!saved) return;
+  sessionStorage.removeItem('cls_state_' + CLASS_ID);
+  try {
+    const { tab, scrollY } = JSON.parse(saved);
+    if (tab && tab !== 'students') {
+      const pane = document.getElementById('tab-' + tab);
+      const btn  = document.querySelector(`.cls-tab[data-tab="${tab}"]`);
+      if (pane && btn) {
+        document.querySelectorAll('.cls-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.cls-tab').forEach(b => b.classList.remove('active'));
+        pane.classList.add('active');
+        btn.classList.add('active');
+      }
+    }
+    if (scrollY) window.scrollTo({ top: scrollY, behavior: 'instant' });
+  } catch(e) {}
+})();
+
+// ── Lưu state rồi reload ──
+function reloadWithState() {
+  const activeTab = document.querySelector('.cls-tab.active')?.dataset?.tab || 'students';
+  sessionStorage.setItem('cls_state_' + CLASS_ID, JSON.stringify({
+    tab: activeTab,
+    scrollY: window.scrollY
+  }));
+  location.reload();
+}
+
 // ── Tabs ──
 function switchTab(name, btn) {
   document.querySelectorAll('.cls-pane').forEach(p => p.classList.remove('active'));
@@ -196,14 +409,15 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 
-// ── Cập nhật trạng thái lớp ──
-async function updateStatus(status) {
+// ── Cập nhật giảng viên ──
+async function updateLecturer(idLecturer) {
+  if (!idLecturer) return;
   const res  = await fetch('/admin/classes/' + CLASS_ID + '/update', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ status, name: '<%= data.cls.name %>', maxStudents: '<%= data.cls.maxStudents %>' })
+    body: new URLSearchParams({ idLecturer, name: '<%= data.cls.name %>', maxStudents: '<%= data.cls.maxStudents %>', status: '<%= data.cls.status %>' })
   });
-  admToast('✓ Đã cập nhật trạng thái', 'success');
+  admToast('✓ Đã cập nhật giảng viên', 'success');
 }
 
 // ── Thêm học viên ──
@@ -241,8 +455,8 @@ async function removeStudent(userId) {
     });
     const json = await res.json();
     if (json.ok) {
-      document.getElementById('sr-' + userId)?.remove();
       admToast('Đã xóa học viên', 'success');
+      setTimeout(() => reloadWithState(), 600);
     }
   }, '👤');
 }
@@ -251,7 +465,10 @@ async function removeStudent(userId) {
 function openAddSession() {
   _editSessionId = null;
   document.getElementById('session-modal-title').innerHTML = '<i class="fas fa-calendar-plus" style="color:#2563eb"></i> Thêm buổi học';
-  ['s-title','s-date','s-meet','s-record','s-note'].forEach(id => document.getElementById(id).value = '');
+  ['s-title','s-meet','s-record','s-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('s-date-day').value   = '';
+  document.getElementById('s-time-start').value = '';
+  document.getElementById('s-time-end').value   = '';
   document.getElementById('s-status-field').style.display = 'none';
   document.getElementById('session-error').textContent = '';
   document.getElementById('session-modal').classList.add('open');
@@ -261,13 +478,34 @@ function openEditSession(id, title, date, meet, record, note, status) {
   _editSessionId = id;
   document.getElementById('session-modal-title').innerHTML = '<i class="fas fa-pen" style="color:#2563eb"></i> Chỉnh sửa buổi học';
   document.getElementById('s-title').value  = title  || '';
-  document.getElementById('s-date').value   = date   || '';
   document.getElementById('s-meet').value   = meet   || '';
   document.getElementById('s-record').value = record || '';
   document.getElementById('s-note').value   = note   || '';
   document.getElementById('s-status').value = status || 'scheduled';
   document.getElementById('s-status-field').style.display = '';
   document.getElementById('session-error').textContent = '';
+
+  // Tách date thành ngày + giờ bắt đầu
+  if (date) {
+    const dt = new Date(date);
+    const yyyy = dt.getFullYear();
+    const mm   = String(dt.getMonth()+1).padStart(2,'0');
+    const dd   = String(dt.getDate()).padStart(2,'0');
+    document.getElementById('s-date-day').value   = `${yyyy}-${mm}-${dd}`;
+    document.getElementById('s-time-start').value = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  } else {
+    document.getElementById('s-date-day').value   = '';
+    document.getElementById('s-time-start').value = '';
+  }
+  // Đọc giờ kết thúc từ note nếu có (format: "[end:HH:MM]...")
+  const endMatch = (note || '').match(/\[end:(\d{2}:\d{2})\]/);
+  if (endMatch) {
+    document.getElementById('s-time-end').value = endMatch[1];
+    document.getElementById('s-note').value = note.replace(/\s*\[end:\d{2}:\d{2}\]/, '').trim();
+  } else {
+    document.getElementById('s-time-end').value = '';
+  }
+
   document.getElementById('session-modal').classList.add('open');
 }
 
@@ -278,12 +516,28 @@ function closeSessionModal() {
 async function saveSession() {
   const btn  = document.getElementById('session-save-btn');
   const errEl = document.getElementById('session-error');
+
+  // Ghép ngày + giờ bắt đầu thành ISO string
+  const dayVal   = document.getElementById('s-date-day').value;
+  const startVal = document.getElementById('s-time-start').value;
+  const endVal   = document.getElementById('s-time-end').value.trim();
+  let dateISO = '';
+  if (dayVal && startVal) {
+    dateISO = `${dayVal}T${startVal}`;
+  } else if (dayVal) {
+    dateISO = `${dayVal}T00:00`;
+  }
+
+  // Nhúng giờ kết thúc vào note nếu có
+  let noteVal = document.getElementById('s-note').value.trim();
+  if (endVal) noteVal = noteVal ? `${noteVal} [end:${endVal}]` : `[end:${endVal}]`;
+
   const payload = {
     title:      document.getElementById('s-title').value.trim(),
-    date:       document.getElementById('s-date').value,
+    date:       dateISO,
     meetLink:   document.getElementById('s-meet').value.trim(),
     recordLink: document.getElementById('s-record').value.trim(),
-    note:       document.getElementById('s-note').value.trim(),
+    note:       noteVal,
     status:     document.getElementById('s-status').value
   };
   btn.disabled = true; btn.textContent = 'Đang lưu...';
@@ -296,7 +550,7 @@ async function saveSession() {
     if (json.ok) {
       admToast('✓ Đã lưu buổi học', 'success');
       closeSessionModal();
-      setTimeout(() => location.reload(), 600);
+      setTimeout(() => reloadWithState(), 600);
     } else { errEl.textContent = 'Có lỗi xảy ra'; }
   } catch(e) { errEl.textContent = 'Lỗi kết nối'; }
   finally { btn.disabled = false; btn.textContent = 'Lưu'; }
@@ -307,8 +561,8 @@ async function deleteSession(sessionId) {
     const res  = await fetch('/admin/classes/' + CLASS_ID + '/sessions/' + sessionId + '/delete', { method:'POST' });
     const json = await res.json();
     if (json.ok) {
-      document.getElementById('sc-' + sessionId)?.remove();
       admToast('Đã xóa buổi học', 'success');
+      setTimeout(() => reloadWithState(), 600);
     }
   }, '🗑️');
 }

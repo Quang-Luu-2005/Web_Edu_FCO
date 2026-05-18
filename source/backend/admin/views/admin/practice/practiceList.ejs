@@ -1,0 +1,80 @@
+<% const activePage = 'practice'; const pageTitle = 'Lớp thực hành'; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
+
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title">Lớp thực hành</div>
+    <div class="adm-page-subtitle"><%= data.stats.length %> lớp</div>
+  </div>
+  <button class="adm-btn adm-btn-primary" onclick="location.href='/admin/practice/new'">
+    <i class="fas fa-plus"></i> Tạo lớp thực hành
+  </button>
+</div>
+
+<div class="adm-card">
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead>
+        <tr>
+          <th>Tên lớp</th>
+          <th>Giảng viên</th>
+          <th>Phí/buổi</th>
+          <th>Sức chứa/buổi</th>
+          <th>Buổi học</th>
+          <th>Tổng đăng ký</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (data.stats.length > 0) { %>
+          <% data.stats.forEach(({ cls, totalSessions, totalEnrollments }) => { %>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <img src="<%= cls.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" style="width:40px;height:40px;border-radius:8px;object-fit:cover" />
+                <span style="font-weight:600;color:#f1f5f9"><%= cls.name %></span>
+              </div>
+            </td>
+            <td style="color:#94a3b8"><%= cls.idLecturer ? cls.idLecturer.name : '—' %></td>
+            <td style="color:#94a3b8"><%= cls.pricePerSession.toLocaleString('vi-VN') %>đ</td>
+            <td><%= cls.maxStudentsPerSession %></td>
+            <td><%= totalSessions %></td>
+            <td><%= totalEnrollments %></td>
+            <td>
+              <span class="adm-badge <%= cls.status === 'active' ? 'adm-badge-green' : 'adm-badge-red' %>">
+                <%= cls.status === 'active' ? 'Đang mở' : 'Đã đóng' %>
+              </span>
+            </td>
+            <td>
+              <button class="adm-btn adm-btn-primary adm-btn-sm adm-btn-icon" onclick="location.href='/admin/practice/<%= cls._id %>'" title="Xem chi tiết">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="adm-btn adm-btn-danger adm-btn-sm adm-btn-icon" onclick="deletePractice('<%= cls._id %>')" title="Xóa" style="margin-left:4px">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+          <% }) %>
+        <% } else { %>
+          <tr><td colspan="8">
+            <div class="adm-empty"><i class="fas fa-futbol"></i><p>Chưa có lớp thực hành nào</p></div>
+          </td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function deletePractice(id) {
+  admConfirm('Xóa lớp thực hành này?', async () => {
+    const res = await fetch('/admin/practice/' + id + '/delete', { method: 'POST' });
+    const json = await res.json();
+    if (json.ok) { admToast('Đã xóa', 'success'); setTimeout(() => location.reload(), 600); }
+    else admToast('Lỗi', 'error');
+  }, '🗑️');
+}
+</script>
+
+<%- include('../common/footer') %>
