@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Báo cáo đồ án - Web Edu FCO (Online Academy & Practice Platform)</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111c33; --panel2:#16233f; --text:#e2e8f0;
+    --muted:#94a3b8; --brand:#3b82f6; --brand2:#22d3ee; --line:#1e2d4d;
+    --green:#22c55e; --amber:#f59e0b; --pink:#ec4899; --code:#0b1224;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.65;
+  }
+  a{color:var(--brand2); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* Layout */
+  .wrap{display:flex; min-height:100vh}
+  .sidebar{
+    width:290px; flex-shrink:0; background:var(--panel);
+    border-right:1px solid var(--line); position:sticky; top:0;
+    height:100vh; overflow-y:auto; padding:24px 18px;
+  }
+  .sidebar h1{font-size:17px; margin:0 0 4px; color:#fff}
+  .sidebar .sub{font-size:12px; color:var(--muted); margin-bottom:20px}
+  .nav a{
+    display:block; padding:7px 12px; border-radius:8px; color:var(--text);
+    font-size:14px; margin-bottom:2px;
+  }
+  .nav a:hover{background:var(--panel2); text-decoration:none}
+  .nav a.section{color:var(--muted); font-size:11px; text-transform:uppercase;
+    letter-spacing:.08em; margin-top:16px; padding-left:12px; pointer-events:none}
+
+  .content{flex:1; max-width:1080px; margin:0 auto; padding:40px 48px 120px}
+  header.hero{
+    background:linear-gradient(135deg,#1d3a8a 0%,#0e7490 100%);
+    border-radius:18px; padding:40px; margin-bottom:36px; border:1px solid var(--line);
+  }
+  header.hero h1{margin:0 0 8px; font-size:30px; color:#fff}
+  header.hero p{margin:4px 0; color:#dbeafe}
+  .badges{margin-top:18px; display:flex; flex-wrap:wrap; gap:8px}
+  .badge{
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
+    color:#fff; padding:5px 12px; border-radius:999px; font-size:12.5px;
+  }
+
+  section{margin-bottom:56px; scroll-margin-top:20px}
+  h2{font-size:24px; border-bottom:2px solid var(--line); padding-bottom:10px; color:#fff}
+  h3{font-size:18px; color:var(--brand2); margin-top:32px}
+  h4{font-size:15px; color:#fff; margin-bottom:6px}
+  p,li{font-size:15px}
+  ul{padding-left:22px}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:22px 26px; margin:18px 0;
+  }
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px}
+  .grid .card{margin:0}
+
+  .diagram{
+    background:#ffffff; border:1px solid var(--line); border-radius:14px;
+    padding:24px; margin:18px 0; overflow-x:auto; text-align:center;
+    position:relative; cursor:zoom-in; transition:box-shadow .2s;
+  }
+  .diagram:hover{box-shadow:0 8px 24px rgba(59,130,246,.25)}
+  .diagram::after{
+    content:"🔍 Click để xem to • cuộn để zoom"; position:absolute;
+    top:10px; right:14px; font-size:11.5px; color:#64748b;
+    background:rgba(255,255,255,.92); padding:4px 10px; border-radius:999px;
+    border:1px solid #e2e8f0; pointer-events:none; font-weight:500;
+  }
+  pre.mermaid{
+    background:transparent !important; border:none !important;
+    padding:0 !important; margin:0; text-align:center;
+    color:#0f172a;
+  }
+  .mermaid{font-size:15px; color:#0f172a}
+  .mermaid svg{max-width:100%; height:auto}
+
+  /* Zoom modal */
+  .zoom-modal{
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(15,23,42,.97);
+    justify-content:center; align-items:center;
+  }
+  .zoom-modal.active{display:flex}
+  .zoom-modal .stage{
+    width:100%; height:100%; overflow:hidden;
+    display:flex; justify-content:center; align-items:center;
+    cursor:grab; user-select:none;
+  }
+  .zoom-modal .stage.grabbing{cursor:grabbing}
+  .zoom-modal .stage svg{
+    max-width:none !important; max-height:none !important;
+    width:auto !important; height:auto !important;
+    transform-origin:center center; will-change:transform;
+    background:#ffffff; border-radius:10px; padding:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .zoom-modal .controls{
+    position:fixed; top:20px; right:20px;
+    display:flex; gap:8px; z-index:10000;
+  }
+  .zoom-modal .controls button{
+    min-width:42px; height:42px; padding:0 12px; border-radius:10px;
+    background:#1e293b; color:#fff; border:1px solid #334155;
+    font-size:18px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  .zoom-modal .controls button:hover{background:#334155}
+  .zoom-modal .controls .btn-close{background:#dc2626; border-color:#dc2626}
+  .zoom-modal .controls .btn-close:hover{background:#b91c1c}
+  .zoom-modal .info{
+    position:fixed; top:20px; left:20px; z-index:10000;
+    color:#e2e8f0; background:rgba(30,41,59,.85);
+    padding:10px 16px; border-radius:10px; font-size:13px;
+    border:1px solid #334155;
+  }
+  .zoom-modal .info kbd{
+    background:#0f172a; padding:2px 7px; border-radius:4px;
+    font-family:Consolas,monospace; font-size:12px; margin:0 2px;
+    border:1px solid #334155;
+  }
+
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14px}
+  th,td{border:1px solid var(--line); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:#fff}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  code{background:var(--code); padding:2px 6px; border-radius:5px; font-size:13px;
+    color:#7dd3fc; font-family:"Consolas",monospace}
+  pre{background:var(--code); border:1px solid var(--line); border-radius:10px;
+    padding:16px; overflow-x:auto; font-size:13px}
+  pre code{background:none; padding:0; color:#cbd5e1}
+
+  .pill{display:inline-block; padding:2px 9px; border-radius:6px; font-size:12px; font-weight:600}
+  .get{background:#14532d; color:#86efac}
+  .post{background:#78350f; color:#fcd34d}
+  .tag{background:var(--panel2); color:var(--brand2); border:1px solid var(--line)}
+
+  .note{border-left:4px solid var(--brand); background:var(--panel2);
+    padding:12px 18px; border-radius:0 10px 10px 0; margin:16px 0}
+  .footer{text-align:center; color:var(--muted); font-size:13px; padding-top:30px;
+    border-top:1px solid var(--line)}
+  @media(max-width:900px){
+    .sidebar{display:none}
+    .content{padding:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="sidebar">
+    <h1>📘 Báo cáo đồ án</h1>
+    <div class="sub">Web Edu FCO — Online Academy & Practice Platform</div>
+    <nav class="nav">
+      <a class="section">Tổng quan</a>
+      <a href="#gioi-thieu">1. Giới thiệu đề tài</a>
+      <a href="#cong-nghe">2. Công nghệ sử dụng</a>
+      <a href="#actor">3. Actor & Chức năng</a>
+      <a class="section">Mô hình hệ thống</a>
+      <a href="#usecase">4. Use Case Diagram</a>
+      <a href="#kientruc">5. System Architecture</a>
+      <a href="#erd">6. Mô hình dữ liệu (ERD)</a>
+      <a href="#routes">7. Bản đồ Route</a>
+      <a class="section">Luồng xử lý (Flow)</a>
+      <a href="#seq-register">8. Đăng ký + OTP</a>
+      <a href="#seq-login">9. Đăng nhập (Local/Google)</a>
+      <a href="#seq-payment">10. Mua khóa học</a>
+      <a href="#seq-learn">11. Học & tiến độ</a>
+      <a href="#seq-practice">12. Lớp thực hành</a>
+      <a href="#seq-admin">13. Quản trị (Admin)</a>
+      <a href="#seq-review">14. Đánh giá & bình luận</a>
+      <a class="section">Khác</a>
+      <a href="#trien-khai">15. Triển khai (Deploy)</a>
+      <a href="#ket-luan">16. Kết luận</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <header class="hero">
+      <h1>Web Edu FCO</h1>
+      <p><strong>Nền tảng học trực tuyến & luyện tập (Online Academy + Esports Practice)</strong></p>
+      <p>Tài liệu báo cáo kiến trúc hệ thống, luồng nghiệp vụ và thiết kế dữ liệu của toàn bộ đồ án.</p>
+      <div class="badges">
+        <span class="badge">Node.js + Express</span>
+        <span class="badge">MongoDB + Mongoose</span>
+        <span class="badge">EJS View Engine</span>
+        <span class="badge">Passport (Local + Google OAuth)</span>
+        <span class="badge">PayOS Payment</span>
+        <span class="badge">Nodemailer OTP</span>
+        <span class="badge">Docker + Railway</span>
+      </div>
+    </header>
+
+    <!-- 1. GIỚI THIỆU -->
+    <section id="gioi-thieu">
+      <h2>1. Giới thiệu đề tài</h2>
+      <p>
+        <strong>Web Edu FCO</strong> là một ứng dụng website cho phép người dùng <em>mua và học các khóa học
+        trực tuyến</em>, đồng thời <em>đăng ký các buổi thực hành (practice)</em> theo từng buổi. Giảng viên
+        có thể tạo và quản lý khóa học/lớp học của mình; quản trị viên quản lý toàn bộ hệ thống.
+      </p>
+      <p>
+        Hệ thống được xây dựng theo mô hình <strong>MVC monolith</strong> trên nền Express, render phía server
+        bằng EJS, lưu trữ dữ liệu trên MongoDB. Ngoài phần học truyền thống (video bài giảng), nền tảng còn có
+        một phân hệ <strong>lớp thực hành theo buổi</strong> tích hợp profile game (tên trong game, rank, SĐT Zalo),
+        cơ chế ghép cặp (bracket) và thanh toán theo từng buổi.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h4>🎯 Mục tiêu</h4>
+          <p>Cung cấp nền tảng mua/bán & học khóa học online kết hợp tổ chức buổi luyện tập có quản lý đăng ký và thanh toán.</p>
+        </div>
+        <div class="card">
+          <h4>👥 4 nhóm tác nhân</h4>
+          <p>Guest, Người dùng (User), Giảng viên (Lecturer), Quản trị viên (Admin) — phân biệt bằng trường <code>role</code>.</p>
+        </div>
+        <div class="card">
+          <h4>💳 Thanh toán</h4>
+          <p>Tích hợp cổng <strong>PayOS</strong> tạo link thanh toán, verify giao dịch và webhook server-to-server.</p>
+        </div>
+        <div class="card">
+          <h4>🔐 Xác thực</h4>
+          <p>Đăng nhập Local (username/mật khẩu + OTP email) và Google OAuth2 (xác nhận qua email link).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. CÔNG NGHỆ -->
+    <section id="cong-nghe">
+      <h2>2. Công nghệ sử dụng</h2>
+      <table>
+        <tr><th>Lớp</th><th>Công nghệ</th><th>Vai trò trong hệ thống</th></tr>
+        <tr><td>Runtime</td><td>Node.js 20 (alpine)</td><td>Môi trường chạy server</td></tr>
+        <tr><td>Web framework</td><td>Express 4</td><td>Routing, middleware pipeline, REST endpoints</td></tr>
+        <tr><td>View engine</td><td>EJS + express-ejs-layouts</td><td>Server-side rendering giao diện</td></tr>
+        <tr><td>Database</td><td>MongoDB + Mongoose 5</td><td>Lưu trữ dữ liệu, ODM, populate quan hệ</td></tr>
+        <tr><td>Xác thực</td><td>Passport (local + google-oauth20)</td><td>Chiến lược đăng nhập, serialize session</td></tr>
+        <tr><td>Phiên</td><td>express-session + connect-flash</td><td>Quản lý session đăng nhập, flash message</td></tr>
+        <tr><td>Mã hóa</td><td>bcryptjs</td><td>Hash mật khẩu</td></tr>
+        <tr><td>Thanh toán</td><td>@payos/node</td><td>Tạo link thanh toán, verify, webhook</td></tr>
+        <tr><td>Email</td><td>Nodemailer (Gmail SMTP)</td><td>Gửi OTP & link xác nhận đăng nhập Google</td></tr>
+        <tr><td>Lưu trữ media</td><td>Cloudinary / ImgBB</td><td>Lưu ảnh đại diện, poster, video bài giảng</td></tr>
+        <tr><td>Video</td><td>Video.js</td><td>Trình phát video bài giảng</td></tr>
+        <tr><td>Triển khai</td><td>Docker + Railway</td><td>Đóng gói container & deploy</td></tr>
+      </table>
+    </section>
+
+    <!-- 3. ACTOR -->
+    <section id="actor">
+      <h2>3. Actor & Phân quyền chức năng</h2>
+      <p>Tất cả người dùng được lưu chung trong collection <code>localusers</code> và phân biệt bằng trường
+        <code>role</code>: <code>guest</code> / <code>user</code> / <code>lecturer</code> / <code>admin</code>.</p>
+      <table>
+        <tr><th>Actor</th><th>Chức năng chính</th></tr>
+        <tr>
+          <td><strong>Guest</strong><br>(chưa đăng nhập)</td>
+          <td>Xem trang chủ, duyệt & tìm kiếm khóa học, xem chi tiết khóa học (xem trước video preview), đăng ký tài khoản.</td>
+        </tr>
+        <tr>
+          <td><strong>User</strong><br>(người học)</td>
+          <td>Toàn bộ chức năng Guest + mua khóa học, học video & ghi nhận tiến độ, thêm vào wishlist, đánh giá/bình luận, quản lý hồ sơ, đăng ký buổi thực hành, theo dõi lớp, xác minh học viên.</td>
+        </tr>
+        <tr>
+          <td><strong>Lecturer</strong><br>(giảng viên)</td>
+          <td>Đăng nhập khu admin, tạo/sửa khóa học của mình, quản lý lớp học (CourseClass) & học viên trong lớp, quản lý buổi học và điểm danh.</td>
+        </tr>
+        <tr>
+          <td><strong>Admin</strong></td>
+          <td>Toàn quyền: quản lý category/topic, khóa học, giảng viên, học viên, lớp học, lớp thực hành, banner trang chủ, duyệt yêu cầu xác minh, duyệt đăng ký buổi thực hành, xóa bình luận vi phạm.</td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- 4. USE CASE -->
+    <section id="usecase">
+      <h2>4. Use Case Diagram</h2>
+      <p>Sơ đồ use case tổng thể thể hiện quan hệ kế thừa chức năng giữa các actor (User kế thừa Guest; Lecturer & Admin có khu quản trị riêng).</p>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  %% Actors
+  Guest(["👤 Guest"])
+  User(["🎓 User"])
+  Lecturer(["🧑‍🏫 Lecturer"])
+  Admin(["🛡️ Admin"])
+
+  subgraph UC_PUBLIC["Chức năng công khai"]
+    UC1(["Xem trang chủ"])
+    UC2(["Duyệt / Tìm kiếm khóa học"])
+    UC3(["Xem chi tiết khóa học"])
+    UC4(["Đăng ký tài khoản + OTP"])
+    UC5(["Đăng nhập / Đăng xuất"])
+  end
+
+  subgraph UC_USER["Chức năng người học"]
+    UC6(["Mua khóa học (PayOS)"])
+    UC7(["Học video & lưu tiến độ"])
+    UC8(["Wishlist / Khóa học của tôi"])
+    UC9(["Đánh giá & bình luận"])
+    UC10(["Quản lý hồ sơ / đổi mật khẩu"])
+    UC11(["Đăng ký buổi thực hành"])
+    UC12(["Theo dõi lớp / nhận thông báo"])
+  end
+
+  subgraph UC_TEACH["Khu quản trị - Giảng viên"]
+    UC13(["Quản lý khóa học của mình"])
+    UC14(["Quản lý lớp & học viên"])
+    UC15(["Điểm danh buổi học"])
+  end
+
+  subgraph UC_ADMIN["Khu quản trị - Admin"]
+    UC16(["Quản lý Category / Topic"])
+    UC17(["Quản lý khóa học toàn hệ thống"])
+    UC18(["Quản lý giảng viên / học viên"])
+    UC19(["Quản lý lớp thực hành & duyệt đăng ký"])
+    UC20(["Duyệt xác minh học viên / Banner"])
+  end
+
+  Guest --- UC1 & UC2 & UC3 & UC4 & UC5
+  User --- UC6 & UC7 & UC8 & UC9 & UC10 & UC11 & UC12
+  User -. kế thừa .-> Guest
+  Lecturer --- UC13 & UC14 & UC15
+  Lecturer -. kế thừa .-> Guest
+  Admin --- UC16 & UC17 & UC18 & UC19 & UC20
+</pre>
+      </div>
+    </section>
+
+    <!-- 5. SYSTEM ARCHITECTURE -->
+    <section id="kientruc">
+      <h2>5. System Architecture Diagram</h2>
+      <p>
+        Kiến trúc tổng thể là một <strong>Express monolith</strong> theo mô hình MVC, render server-side bằng EJS,
+        kết nối MongoDB qua Mongoose, và tích hợp các dịch vụ ngoài (PayOS, Google OAuth, Gmail SMTP, Cloudinary/ImgBB).
+      </p>
+
+      <h3>5.1 Sơ đồ kiến trúc tổng thể</h3>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+  subgraph CLIENT["🌐 Client - Trình duyệt"]
+    Browser["Browser<br/>(EJS render + jQuery + Video.js)"]
+  end
+
+  subgraph SERVER["⚙️ Express Server (Node.js 20)"]
+    direction TB
+    Static["Static Middleware<br/>/public"]
+    Body["Body Parser<br/>urlencoded + json"]
+    DBmw["dbLocal.mdw<br/>(Mongoose connect)"]
+    Sess["session.mdw<br/>(express-session)"]
+    Pass["passport.mdw<br/>(local + google strategy)"]
+    Local["local.mdw<br/>(res.locals user)"]
+    View["view.mdw<br/>(EJS layout)"]
+    Route["route.mdw<br/>(mount routers)"]
+    Err["error.mdw"]
+    Pay["paypal.mdw"]
+    Cl["cloudinary.mdw"]
+
+    subgraph ROUTERS["Routers (MVC Controllers)"]
+      R1["/ index.route"]
+      R2["/users users.route"]
+      R3["/course course.route"]
+      R4["/courses courses.route"]
+      R5["/payment payment.route"]
+      R6["/classes classes.route"]
+      R7["/practice practice.route"]
+      R8["/admin admin.js"]
+      R9["/admin/practice practice.js"]
+    end
+
+    subgraph MODELS["Mongoose Models"]
+      M1["LocalUser"]
+      M2["Course"]
+      M3["CourseClass"]
+      M4["PracticeClass"]
+      M5["CourseCategory"]
+      M6["CourseTopic"]
+      M7["VerificationRequest"]
+    end
+
+    subgraph VIEWS["EJS Views"]
+      V1["views/index"]
+      V2["views/course"]
+      V3["views/payment"]
+      V4["views/practice"]
+      V5["admin/views/admin/*"]
+    end
+  end
+
+  subgraph EXT["🌍 Dịch vụ ngoài"]
+    Mongo[("MongoDB Atlas")]
+    PayOS["PayOS<br/>Payment Gateway"]
+    Google["Google OAuth2"]
+    SMTP["Gmail SMTP<br/>(Nodemailer)"]
+    Cloud["Cloudinary / ImgBB"]
+  end
+
+  Browser -->|HTTP request| Static
+  Static --> Body --> DBmw --> Sess --> Pass --> Local --> View --> Route --> Err
+  Route --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9
+  R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9 --> MODELS
+  MODELS <-->|Mongoose driver| Mongo
+  R5 -->|createPaymentLink / verify| PayOS
+  R7 -->|createPaymentLink / verify| PayOS
+  R2 -->|OAuth flow| Google
+  R2 -->|sendOtpMail| SMTP
+  R2 & R8 -->|upload media| Cloud
+  R1 & R2 & R3 --> VIEWS
+  R8 & R9 --> VIEWS
+  VIEWS -->|HTML| Browser
+</pre>
+      </div>
+
+      <h3>5.2 Pipeline middleware (thứ tự chạy)</h3>
+      <p>Trong <code>app.js</code>, các middleware được nạp theo thứ tự sau và đây cũng là pipeline xử lý mỗi request:</p>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  A[Request] --> B[Static files]
+  B --> C[Body parser]
+  C --> D[dbLocal<br/>Mongoose connect]
+  D --> E[session]
+  E --> F[passport.initialize<br/>+ session]
+  F --> G[local.mdw<br/>res.locals.user]
+  G --> H[view.mdw<br/>EJS layout]
+  H --> I[route.mdw<br/>mount routers]
+  I --> J[error.mdw]
+  J --> K[Response]
+</pre>
+      </div>
+
+      <h3>5.3 Cấu trúc thư mục backend</h3>
+<pre><code>source/backend/
+├── app.js                      # Entry point Express
+├── package.json
+├── config/
+│   ├── auth.config.js          # ensureAuthenticated, forwardAuthenticated
+│   ├── passport.config.js      # Local + Google strategy
+│   ├── mail.config.js          # Nodemailer (OTP, Google login mail)
+│   ├── practice.config.js      # Rank levels, helper 2M student
+│   ├── home-banner.config.js   # Đọc/ghi banners JSON
+│   ├── cloudinary.config.js
+│   ├── paypal.config.js
+│   └── key.config.js           # MONGO_URI
+├── middlewares/                # Pipeline middleware
+├── models/                     # Mongoose schema
+├── routers/                    # User-facing routes
+├── views/                      # EJS templates (user side)
+├── public/                     # CSS/JS/image static
+└── admin/
+    ├── routers/                # Admin & Lecturer panel routes
+    ├── views/admin/            # Admin EJS views
+    ├── public/                 # Admin static
+    ├── models/                 # (legacy duplicate models)
+    └── config/auth_admin.js
+</code></pre>
+    </section>
+
+    <!-- 6. ERD -->
+    <section id="erd">
+      <h2>6. Mô hình dữ liệu (ERD)</h2>
+      <p>
+        Cơ sở dữ liệu MongoDB tập trung quanh <strong>LocalUser</strong> (gộp mọi vai trò) và <strong>Course</strong>
+        (kèm sub-document đánh giá, bình luận, mã giảm giá, sessions).
+        <strong>CourseClass</strong> ánh xạ một khóa học đến nhóm học viên cụ thể với buổi học cụ thể.
+        <strong>PracticeClass</strong> là phân hệ độc lập cho lớp luyện tập theo buổi.
+      </p>
+      <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  LOCALUSER ||--o{ PURCHASED_COURSE : has
+  LOCALUSER ||--o{ WISHLIST : has
+  LOCALUSER ||--o{ VERIFICATION_REQUEST : submits
+  LOCALUSER }o--o{ COURSECLASS : "is student of"
+  LOCALUSER ||--o{ COURSECLASS : "teaches as lecturer"
+  LOCALUSER ||--o{ COURSE : "teaches as lecturer"
+  LOCALUSER }o--o{ PRACTICECLASS : "follows / enrolls"
+
+  COURSE }o--|| COURSETOPIC : "belongs to"
+  COURSETOPIC }o--|| COURSECATEGORY : "belongs to"
+  COURSE ||--o{ DISCOUNTCODE : has
+  COURSE ||--o{ COURSE_SESSION : has
+  COURSE ||--o{ USER_REVIEW : has
+  USER_REVIEW ||--o{ REPLY : has
+  USER_REVIEW ||--o{ REACTION : has
+  REPLY ||--o{ REACTION : has
+
+  COURSECLASS }o--|| COURSE : "for course"
+  COURSECLASS ||--o{ STUDENT : enrolls
+  COURSECLASS ||--o{ CLASS_SESSION : has
+
+  PRACTICECLASS ||--o{ PRACTICE_SESSION : has
+  PRACTICE_SESSION ||--o{ ENROLLMENT : has
+  PRACTICE_SESSION ||--o{ BRACKET_PAIR : has
+
+  LOCALUSER {
+    ObjectId _id
+    string username
+    string email PK
+    string password "bcrypt"
+    string provider "local | google"
+    string googleId
+    string role "guest | user | lecturer | admin"
+    string name
+    string gender
+    string avatar
+    string description
+    string zaloPhone
+    string inGameName
+    string rank "enum 7 mức"
+    bool isAuth "OTP verified"
+    string otpNumber
+    Date otpExpires
+    bool status "active flag"
+  }
+
+  COURSE {
+    ObjectId _id
+    string name UK
+    string poster
+    string description
+    number tuition
+    string priceType "fixed | contact"
+    ObjectId idCourseTopic FK
+    ObjectId idLecturer FK
+    number numberOfStudent
+    number numberOfView
+    number evaluationPoint
+    number totalSessions
+    array videos
+    array previewIndex
+    array whatYoullLearn
+  }
+
+  COURSECLASS {
+    ObjectId _id
+    ObjectId idCourse FK
+    ObjectId idLecturer FK
+    string name
+    number maxStudents
+    string status "open | ongoing | completed | cancelled"
+    array students
+    array sessions
+  }
+
+  PRACTICECLASS {
+    ObjectId _id
+    string name
+    string description
+    string poster
+    number pricePerSession
+    number maxStudentsPerSession
+    ObjectId idLecturer FK
+    string status "active | closed"
+    array sessions
+    array followers
+  }
+
+  PRACTICE_SESSION {
+    ObjectId _id
+    string title
+    Date date
+    string endTime
+    string meetLink
+    string zaloGroupLink
+    string status "scheduled | done | cancelled"
+  }
+
+  ENROLLMENT {
+    ObjectId idUser FK
+    string type "2M | paid"
+    string paymentStatus "requested | approved | paid | free | rejected | cancelled | pending"
+    number orderCode
+    number amount
+    string snapshotZaloPhone
+    string snapshotInGameName
+    string snapshotRank
+    bool attended
+  }
+</pre>
+      </div>
+      <div class="note">
+        Lưu ý kiến trúc: tất cả vai trò người dùng (kể cả Admin/Lecturer) đều được lưu trong collection
+        <code>localusers</code>, phân biệt qua <code>role</code>. Đây là quyết định tối giản hóa từ phiên bản cũ
+        (vốn có collection riêng cho admin và lecturer).
+      </div>
+    </section>
+
+    <!-- 7. ROUTES -->
+    <section id="routes">
+      <h2>7. Bản đồ Route (API surface)</h2>
+      <p>Tất cả router được mount trong <code>middlewares/route.mdw.js</code>. Bảng dưới liệt kê các endpoint chính phía người dùng và admin.</p>
+
+      <h3>7.1 Public &amp; User</h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th><th>Auth</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/</td><td>Trang chủ - khóa học nổi bật / xem nhiều / mới nhất</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/courses/search</td><td>Tìm kiếm khóa học theo từ khóa + topic</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/courses/:categoryName</td><td>Liệt kê khóa học theo category</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/courses/:categoryName/:topicName</td><td>Liệt kê khóa học theo topic</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/course/:nameCourse</td><td>Chi tiết khóa học (auto +1 view)</td><td>Public</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/evaluate</td><td>Đánh giá điểm sao</td><td>User</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/review</td><td>Bình luận / FAQ thread</td><td>User đã mua</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/review/:reviewId/reply</td><td>Trả lời bình luận</td><td>User đã mua</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/review/:reviewId/react</td><td>Thả reaction (like/love...)</td><td>User đã mua</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/review/:reviewId/report</td><td>Báo cáo nội dung vi phạm</td><td>User đã mua</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:nameCourse/review/:reviewId/delete</td><td>Xóa bình luận/trả lời</td><td>Admin</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/my-wish-list</td><td>Khóa học yêu thích (paginate)</td><td>User</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/my-courses</td><td>Khóa học đã mua + tiến độ</td><td>User</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/login | /users/register</td><td>Trang đăng nhập / đăng ký</td><td>Public</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/login</td><td>Đăng nhập (passport local)</td><td>Public</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/register</td><td>Đăng ký + gửi OTP email</td><td>Public</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/otp</td><td>Xác minh OTP (timeout 2 phút)</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/auth/google</td><td>Bắt đầu OAuth Google</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/auth/google/callback</td><td>Callback Google + gửi mail xác nhận</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/auth/google/confirm/:token</td><td>Xác nhận đăng nhập Google qua link email</td><td>Public</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/account</td><td>Trang hồ sơ cá nhân</td><td>User</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/updateInfor</td><td>Cập nhật profile (name, gender, rank, zalo, đổi pass)</td><td>User</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/updateAvatar</td><td>Cập nhật avatar (URL từ ImgBB)</td><td>User</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/verify-student</td><td>Gửi yêu cầu xác minh học viên</td><td>User (guest role)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/wish-list-change</td><td>Toggle wishlist</td><td>User</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/:nameCourse/updateLearnedVideo</td><td>Đánh dấu video đã học</td><td>User</td></tr>
+      </table>
+
+      <h3>7.2 Payment &amp; Practice</h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/checkout</td><td>Trang checkout khóa học (hoặc trang liên hệ)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/payment/:nameCourse/checkout</td><td>Tạo PayOS link, áp mã giảm giá, bypass nếu giá = 0</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/success</td><td>Callback từ PayOS, verify, enroll user</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/cancel</td><td>Hủy thanh toán</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/payment/webhook</td><td>Webhook server-to-server từ PayOS</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice</td><td>Danh sách lớp thực hành đang active</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/my</td><td>Buổi thực hành đã đăng ký của tôi</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/notifications</td><td>Lấy thông báo chưa đọc (admin đã review)</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/:id</td><td>Chi tiết lớp thực hành</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/follow</td><td>Toggle follow lớp</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/sessions/:sid/register</td><td>Đăng ký 1 buổi (snapshot rank/zalo/inGameName)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/sessions/:sid/pay</td><td>Thanh toán buổi đã được duyệt</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/:id/sessions/:sid/success</td><td>Callback PayOS cho buổi thực hành</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/sessions/:sid/withdraw</td><td>Hủy yêu cầu</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/:id/sessions/:sid/bracket</td><td>Xem bảng đấu (bracket) của buổi</td></tr>
+      </table>
+
+      <h3>7.3 Admin &amp; Lecturer panel</h3>
+      <table>
+        <tr><th>Path</th><th>Mô tả</th></tr>
+        <tr><td>/admin/homepage</td><td>Redirect → /admin/course/coursesList</td></tr>
+        <tr><td>/admin/home/banners</td><td>Quản lý banner trang chủ</td></tr>
+        <tr><td>/admin/account/edit</td><td>Sửa hồ sơ admin/lecturer</td></tr>
+        <tr><td>/admin/lecturer/lecturersList ... lecturerAdd / lecturerEdit / lecturerDelete</td><td>CRUD giảng viên</td></tr>
+        <tr><td>/admin/student/studentsList ... studentEdit / studentDelete</td><td>CRUD học viên</td></tr>
+        <tr><td>/admin/course/categoryList ... categoryAdd / categoryEdit / categoryDelete</td><td>CRUD category & topic</td></tr>
+        <tr><td>/admin/course/coursesList ... courseAdd / courseEdit / courseDelete</td><td>CRUD khóa học (lecturer chỉ thấy của mình)</td></tr>
+        <tr><td>/admin/course/students?id=:courseId</td><td>Xem học viên của khóa + lớp đã có</td></tr>
+        <tr><td>/admin/classes ... classes/new ... /:classId / update / students/add</td><td>Quản lý lớp học (CourseClass)</td></tr>
+        <tr><td>/admin/practice/*</td><td>Quản lý lớp thực hành, duyệt enrollment, ghép bracket</td></tr>
+      </table>
+    </section>
+
+    <!-- 8. SEQUENCE: REGISTER -->
+    <section id="seq-register">
+      <h2>8. Sequence Diagram - Đăng ký + xác thực OTP</h2>
+      <p>Người dùng đăng ký → server hash mật khẩu, sinh OTP 6 số (TTL 2 phút), gửi email qua Gmail SMTP. Người dùng nhập OTP để kích hoạt tài khoản.</p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User (Browser)
+  participant R as users.route
+  participant DB as MongoDB
+  participant Mail as Gmail SMTP
+
+  U->>R: GET /users/register
+  R-->>U: render register form
+  U->>R: POST /users/register {username, email, password}
+  R->>R: validate (length, regex, match)
+  R->>DB: findOne({email}) / findOne({username})
+  alt Email/username trùng
+    DB-->>R: existing user
+    R-->>U: render lại form + errors
+  else Hợp lệ
+    R->>R: bcrypt.hash(password, 10)
+    R->>R: random OTP 6 số, expires = +2 phút
+    R->>DB: insert LocalUser {role:'guest', isAuth:false, otpNumber, otpExpires}
+    R->>Mail: sendOtpMail(email, otp)
+    Mail-->>U: Email chứa OTP
+    R-->>U: render trang nhập OTP, lưu session.currentEmail
+  end
+
+  U->>R: POST /users/otp {otpNumber}
+  R->>DB: findOne({email: session.currentEmail})
+  alt OTP hết hạn (>2 phút)
+    R->>DB: deleteOne(user)
+    R-->>U: hiển thị "Đã hết hạn, đăng ký lại"
+  else OTP đúng
+    R->>DB: update isAuth=true, clear OTP fields
+    R->>R: req.logIn(user)
+    R-->>U: redirect /
+  else OTP sai
+    R-->>U: render OTP form + lỗi
+  end
+</pre>
+      </div>
+    </section>
+
+    <!-- 9. SEQUENCE: LOGIN -->
+    <section id="seq-login">
+      <h2>9. Sequence Diagram - Đăng nhập (Local &amp; Google)</h2>
+      <p>Hệ thống hỗ trợ 2 chiến lược qua Passport. User local có bước check OTP; Google OAuth có thêm bước xác nhận qua link email để bảo vệ thêm.</p>
+
+      <h3>9.1 Đăng nhập Local</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as users.route
+  participant P as Passport (LocalStrategy)
+  participant DB as MongoDB
+
+  U->>R: POST /users/login {username, password}
+  R->>P: passport.authenticate('local')
+  P->>DB: findOne(username OR email)
+  alt Không tìm thấy
+    P-->>R: false {message:'Tên đăng nhập không tồn tại'}
+    R-->>U: render login + error
+  else status=false
+    P-->>R: false {message:'Tài khoản đã bị khóa'}
+    R-->>U: render login + error
+  else mật khẩu sai
+    P->>P: bcrypt.compare
+    P-->>R: false {message:'Mật khẩu không đúng'}
+    R-->>U: render login + error
+  else role=user và isAuth=false
+    P-->>R: false {needsOtp:true, email}
+    R-->>U: render OTP form
+  else thành công
+    P-->>R: user
+    R->>R: req.logIn(user)
+    alt role admin/lecturer
+      R-->>U: redirect /admin/homepage
+    else
+      R-->>U: redirect /
+    end
+  end
+</pre>
+      </div>
+
+      <h3>9.2 Đăng nhập Google (OAuth2 + email confirm)</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as users.route
+  participant G as Google OAuth
+  participant DB as MongoDB
+  participant Mail as Gmail SMTP
+
+  U->>R: GET /users/auth/google
+  R->>G: redirect tới Google consent
+  U->>G: chọn tài khoản, đồng ý
+  G->>R: GET /users/auth/google/callback?code=...
+  R->>G: trao đổi code lấy profile
+  G-->>R: profile (id, email, name, photo)
+  R->>DB: findOne({email})
+  alt role admin/lecturer
+    R-->>U: từ chối, yêu cầu login mật khẩu
+  else
+    R->>DB: upsert user (provider='google', googleId, avatar, name)
+    R->>R: tạo googleLoginToken (TTL 15 phút)
+    R->>Mail: sendGoogleLoginMail(email, token)
+    Mail-->>U: email chứa link xác nhận
+    R-->>U: redirect /users/login + flash "check email"
+  end
+
+  U->>R: GET /users/auth/google/confirm/:token
+  R->>DB: find token còn hạn
+  alt hợp lệ
+    R->>DB: clear token
+    R->>R: req.logIn(user)
+    R-->>U: redirect tới landing path
+  else hết hạn
+    R-->>U: render login + lỗi
+  end
+</pre>
+      </div>
+    </section>
+
+    <!-- 10. SEQUENCE: PAYMENT -->
+    <section id="seq-payment">
+      <h2>10. Sequence Diagram - Mua khóa học (PayOS)</h2>
+      <p>Cổng thanh toán PayOS được khởi tạo lazy. Hỗ trợ mã giảm giá, bypass khi giá cuối = 0, và verify lại giao dịch sau khi PayOS redirect về.</p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as payment.route
+  participant DB as MongoDB
+  participant POS as PayOS
+  participant W as PayOS Webhook
+
+  U->>R: GET /payment/:nameCourse/checkout
+  R->>DB: Course.findOne(name)
+  alt đã mua
+    R-->>U: redirect /my-courses
+  else priceType='contact'
+    R-->>U: render trang liên hệ
+  else
+    R-->>U: render trang checkout
+  end
+
+  U->>R: POST /payment/:nameCourse/checkout {discountCode}
+  R->>R: tính finalAmount = tuition * (1 - percent/100)
+  alt finalAmount = 0 (free / 100% off)
+    R->>DB: tăng numberOfStudent, numberOfSignUp
+    R->>DB: push purchasedCourses
+    R->>R: refresh session
+    R-->>U: render success (isFree=true)
+  else
+    R->>R: orderCode = timestamp + userId
+    R->>POS: createPaymentLink(orderCode, amount, returnUrl, cancelUrl)
+    POS-->>R: checkoutUrl
+    R->>R: session.pendingPayment = {...}
+    R-->>U: redirect tới PayOS checkout
+    U->>POS: nhập thông tin & thanh toán
+    POS-->>U: redirect /payment/:nameCourse/success?orderCode&status=PAID
+    POS-->>W: webhook /payment/webhook (server-to-server)
+
+    U->>R: GET /payment/:nameCourse/success
+    R->>POS: getPaymentLinkInformation(orderCode)
+    POS-->>R: status PAID
+    R->>DB: tăng numberOfStudent, signUp counters
+    R->>DB: push purchasedCourses + idCourses
+    R->>DB: tăng usedCount mã giảm giá
+    R-->>U: render trang success
+  end
+</pre>
+      </div>
+      <div class="note">
+        <strong>Bảo mật:</strong> server luôn gọi <code>getPaymentLinkInformation(orderCode)</code> để verify lại trước khi enroll, không tin tưởng query string từ trình duyệt.
+      </div>
+    </section>
+
+    <!-- 11. SEQUENCE: LEARN -->
+    <section id="seq-learn">
+      <h2>11. Sequence Diagram - Học bài & lưu tiến độ</h2>
+      <p>Người dùng vào trang khóa học, xem video, và mỗi khi xem hết một video, frontend gửi yêu cầu cập nhật tiến độ. Trang "Khóa học của tôi" tự tính progress dựa trên buổi đã hoàn thành trong CourseClass.</p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant CR as course.route
+  participant UR as users.route
+  participant IR as index.route
+  participant DB as MongoDB
+
+  U->>CR: GET /course/:nameCourse
+  CR->>DB: Course.findOne + populate(lecturer, topic)
+  CR->>DB: $inc numberOfView (course, topic, category)
+  CR->>DB: load purchasedCourses, wishlist, evaluations, reviews
+  CR-->>U: render detail (kèm cờ isPaid, isWishCourse, learnedVideos)
+
+  U->>UR: POST /:nameCourse/updateLearnedVideo {videoIndex}
+  UR->>DB: tìm purchasedCourses theo idCourse
+  alt videoIndex chưa có trong learnedVideos
+    UR->>DB: push videoIndex, set lastLearnedAt = now
+    UR-->>U: true
+  else đã học
+    UR-->>U: false
+  end
+
+  U->>IR: GET /my-courses
+  IR->>DB: load user.purchasedCourses
+  IR->>DB: tìm CourseClass mà user là thành viên
+  loop mỗi khóa
+    IR->>IR: totalSessions = course.totalSessions ?? class.sessions.length
+    IR->>IR: learnedCount = số sessions có status='done'
+    IR->>IR: progress = round(learnedCount / totalSessions * 100)
+    alt class status cần đổi
+      IR->>DB: update CourseClass.status (open|ongoing|completed)
+    end
+  end
+  IR-->>U: render danh sách khóa + tiến độ %
+</pre>
+      </div>
+    </section>
+
+    <!-- 12. SEQUENCE: PRACTICE -->
+    <section id="seq-practice">
+      <h2>12. Sequence Diagram - Lớp thực hành (đăng ký, duyệt, thanh toán)</h2>
+      <p>Đây là luồng phức tạp nhất của hệ thống. Có 2 nhánh thanh toán: học viên đã mua khóa 2 triệu (<strong>type=2M</strong>) sẽ được miễn phí; còn lại đi qua PayOS theo từng buổi sau khi admin duyệt.</p>
+
+      <h3>12.1 Vòng đời enrollment (state diagram)</h3>
+      <div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> requested : User đăng ký buổi
+  requested --> approved : Admin duyệt (paid type)
+  requested --> free : Admin duyệt (2M student)
+  requested --> rejected : Admin từ chối
+  requested --> cancelled : User withdraw
+  approved --> pending : User bấm pay (PayOS)
+  pending --> paid : PayOS callback PAID
+  pending --> approved : User cancel checkout
+  approved --> cancelled : User withdraw
+  rejected --> [*]
+  paid --> [*]
+  free --> [*]
+  cancelled --> [*]
+</pre>
+      </div>
+
+      <h3>12.2 Sequence đăng ký + duyệt + thanh toán</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant PR as practice.route
+  participant AP as admin/practice
+  participant DB as MongoDB
+  participant POS as PayOS
+  actor A as Admin
+
+  U->>PR: POST /practice/:id/sessions/:sid/register
+  PR->>PR: isProfileCompleteForPractice(user) ?
+  alt thiếu zaloPhone/inGameName/rank
+    PR-->>U: {ok:false, code:'PROFILE_INCOMPLETE'}
+  else
+    PR->>PR: is2MStudent(user) ?
+    PR->>DB: snapshot zalo/inGame/rank vào enrollment
+    PR->>DB: push enrollment {type, paymentStatus:'requested'}
+    PR->>DB: auto-follow lớp
+    PR-->>U: "Đã gửi yêu cầu, chờ admin duyệt"
+  end
+
+  A->>AP: GET /admin/practice/:id (bảng enrollment)
+  A->>AP: POST duyệt 1 enrollment
+  AP->>DB: cập nhật paymentStatus
+  alt 2M student
+    AP->>DB: paymentStatus='free', reviewedAt=now
+  else paid type
+    AP->>DB: paymentStatus='approved', reviewedAt=now
+  end
+  AP->>DB: notifSeen=false (để user nhận noti)
+
+  U->>PR: GET /practice/notifications
+  PR->>DB: tìm enrollment có reviewedAt && notifSeen=false
+  PR-->>U: list notification + badge unread
+
+  alt type='paid' && status='approved'
+    U->>PR: POST /practice/:id/sessions/:sid/pay
+    PR->>PR: tạo orderCode, set paymentStatus='pending'
+    PR->>POS: createPaymentLink(amount=pricePerSession)
+    POS-->>U: redirect checkout
+    U->>POS: thanh toán
+    POS-->>U: redirect /success?orderCode&status=PAID
+    U->>PR: GET /:id/sessions/:sid/success
+    PR->>POS: getPaymentLinkInformation
+    POS-->>PR: PAID
+    PR->>DB: paymentStatus='paid'
+    PR-->>U: render success page
+  end
+
+  U->>PR: GET /:id/sessions/:sid/bracket
+  PR->>PR: chỉ show zaloLink nếu paid|free|approved
+  PR-->>U: render bảng đấu (kèm rank của đối thủ)
+</pre>
+      </div>
+    </section>
+
+    <!-- 13. SEQUENCE: ADMIN -->
+    <section id="seq-admin">
+      <h2>13. Sequence Diagram - Quản trị (Admin / Lecturer)</h2>
+      <p>Khu vực <code>/admin/*</code> tách biệt layout, dùng cùng pipeline auth. Lecturer chỉ thấy khóa học và lớp do mình phụ trách (filter bằng <code>idLecturer = req.user._id</code>).</p>
+
+      <h3>13.1 Tạo khóa học (Admin/Lecturer)</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor A as Admin/Lecturer
+  participant AR as admin.js
+  participant DB as MongoDB
+
+  A->>AR: GET /admin/course/courseAdd
+  AR->>DB: Topic.find().populate(category)
+  AR-->>A: render form (chọn lecturer, topic, priceType, discountCodes)
+
+  A->>AR: POST /admin/course/courseAdd
+  AR->>DB: Topic.findById(category) → tên topic
+  AR->>DB: countDocuments({idCourseTopic}) → suffix
+  AR->>AR: finalName = topicName hoặc topicName #N+1
+  AR->>AR: parse discountCodes[], totalSessions
+  AR->>DB: Course.save({name, idLecturer, tuition, priceType, discountCodes, totalSessions})
+  alt duplicate name
+    AR->>AR: append timestamp suffix
+    AR->>DB: save lại
+  end
+  AR-->>A: redirect /admin/course/coursesList + flash success
+</pre>
+      </div>
+
+      <h3>13.2 Quản lý lớp học CourseClass</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor A as Admin/Lecturer
+  participant AR as admin.js
+  participant DB as MongoDB
+
+  A->>AR: GET /admin/course/students?id=courseId
+  AR->>DB: LocalUser.find({purchasedCourses.idCourse=courseId})
+  AR->>DB: CourseClass.find({idCourse=courseId})
+  AR->>AR: tách unassigned (chưa vào lớp nào)
+  AR-->>A: render trang phân bổ
+
+  A->>AR: POST /admin/classes/new
+  AR->>DB: CourseClass.create({idCourse, idLecturer, maxStudents})
+  AR-->>A: redirect /admin/classes/:classId
+
+  A->>AR: GET /admin/classes/:classId/students/suggest?q=...
+  AR->>DB: regex fuzzy match name|email|username (loại admin/lecturer)
+  AR->>AR: đánh dấu purchased + inClass
+  AR-->>A: JSON gợi ý 8 user
+
+  A->>AR: POST /admin/classes/:classId/students/add-by-id
+  AR->>DB: kiểm tra maxStudents, đã trong lớp chưa
+  AR->>DB: push students {idUser, enrolledAt}
+  AR-->>A: ok:true
+</pre>
+      </div>
+    </section>
+
+    <!-- 14. SEQUENCE: REVIEW -->
+    <section id="seq-review">
+      <h2>14. Sequence Diagram - Đánh giá &amp; bình luận khóa học</h2>
+      <p>Reviews là sub-document trong Course với cấu trúc <em>thread</em>: review → replies, mỗi node có reactions và reports riêng. Chỉ user đã mua mới được tạo review/reply/react.</p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  actor A as Admin
+  participant CR as course.route
+  participant DB as MongoDB
+
+  U->>CR: POST /course/:nameCourse/evaluate {evaluationPoint}
+  CR->>DB: Course.findOne(name)
+  CR->>CR: upsert userEvaluations theo userId
+  CR->>CR: evaluationPoint = avg(point), numberOfEvaluation = length
+  CR->>DB: course.save()
+  CR-->>U: true
+
+  U->>CR: POST /course/:nameCourse/review {review}
+  CR->>CR: ensureCourseAccess (admin OR purchased)
+  alt không có quyền
+    CR-->>U: 403
+  else
+    CR->>DB: push userReviews {idUser, review, reactions:[], replies:[]}
+    CR-->>U: true
+  end
+
+  U->>CR: POST /:nameCourse/review/:reviewId/reply {reply}
+  CR->>CR: ensureCourseAccess
+  CR->>DB: push replies vào review
+  CR-->>U: true
+
+  U->>CR: POST /:nameCourse/review/:reviewId/react {targetId, reactionType}
+  CR->>CR: toggleReaction(target, userId, type)
+  Note right of CR: cùng type → xóa<br/>khác type → đổi<br/>chưa có → thêm
+  CR->>DB: course.save()
+  CR-->>U: true
+
+  U->>CR: POST /:nameCourse/review/:reviewId/report {reason}
+  CR->>CR: addReport(target, userId, reason)
+  CR->>DB: course.save()
+  CR-->>U: true
+
+  A->>CR: POST /:nameCourse/review/:reviewId/delete {targetId?}
+  CR->>CR: kiểm tra role='admin'
+  alt có targetId
+    CR->>DB: splice review.replies[index]
+  else
+    CR->>DB: splice course.userReviews[index]
+  end
+  CR->>DB: markModified('userReviews') + save
+  CR-->>A: true
+</pre>
+      </div>
+    </section>
+
+    <!-- 15. DEPLOY -->
+    <section id="trien-khai">
+      <h2>15. Triển khai (Deployment)</h2>
+      <p>Hệ thống đóng gói bằng Docker đơn tầng (<code>node:20-alpine</code>) và deploy trên Railway. Cấu hình runtime hoàn toàn qua biến môi trường (xem <code>.env.example</code>).</p>
+
+      <h3>15.1 Sơ đồ deploy</h3>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  Dev["👨‍💻 Developer<br/>git push"] --> GH["GitHub Repo"]
+  GH --> Rail["Railway Build<br/>(Dockerfile)"]
+  Rail --> Img["Docker Image<br/>node:20-alpine"]
+  Img --> Run["Railway Runtime<br/>(restart on failure, max 10)"]
+  Run --> Env[".env / Variables<br/>MONGO_URI, PAYOS, SMTP, GOOGLE_*"]
+  Run -->|TCP :8000| Public["🌐 Public URL"]
+  Run --> Mongo[("MongoDB Atlas")]
+  Run --> PayOS["PayOS API"]
+  Run --> SMTP["Gmail SMTP"]
+  Run --> Cloud["Cloudinary / ImgBB"]
+</pre>
+      </div>
+
+      <h3>15.2 Biến môi trường tối thiểu</h3>
+      <table>
+        <tr><th>Biến</th><th>Mục đích</th></tr>
+        <tr><td>PORT, HOST</td><td>Cổng + host bind (Railway dùng 0.0.0.0)</td></tr>
+        <tr><td>APP_URL</td><td>Dùng để build returnUrl/cancelUrl PayOS, link Google confirm</td></tr>
+        <tr><td>MONGO_URI</td><td>Connection string Atlas</td></tr>
+        <tr><td>SESSION_SECRET</td><td>Secret cho express-session</td></tr>
+        <tr><td>GOOGLE_CLIENT_ID / SECRET / CALLBACK_URL</td><td>OAuth Google login</td></tr>
+        <tr><td>SMTP_USER / SMTP_PASS</td><td>Gmail App Password để gửi OTP & confirm mail</td></tr>
+        <tr><td>PAYOS_CLIENT_ID / API_KEY / CHECKSUM_KEY</td><td>Tích hợp PayOS</td></tr>
+        <tr><td>CLOUDINARY_*</td><td>Upload media</td></tr>
+      </table>
+
+      <h3>15.3 Lệnh local</h3>
+<pre><code>cd source/backend
+npm install
+# Tạo file .env theo .env.example
+npm start
+# → Server running on 0.0.0.0:8000</code></pre>
+    </section>
+
+    <!-- 16. KẾT LUẬN -->
+    <section id="ket-luan">
+      <h2>16. Kết luận</h2>
+      <p>
+        Đồ án đã xây dựng thành công một <strong>nền tảng học trực tuyến kết hợp lớp luyện tập</strong> với đầy đủ
+        các luồng nghiệp vụ: đăng ký + xác thực OTP, đăng nhập (Local + Google + email confirm), mua khóa học qua PayOS,
+        quản lý nội dung học, ghi nhận tiến độ, đánh giá / bình luận có thread + reaction + report, và một phân hệ
+        thực hành theo buổi với cơ chế duyệt thủ công + thanh toán linh hoạt.
+      </p>
+
+      <h3>Điểm mạnh</h3>
+      <ul>
+        <li>Pipeline middleware sạch, tách bạch (auth, view, route, error).</li>
+        <li>Verify lại giao dịch PayOS server-side trước khi enroll - tránh giả mạo query string.</li>
+        <li>Snapshot rank / SĐT / tên trong game vào enrollment - admin xem chính xác kể cả khi user đổi profile sau đó.</li>
+        <li>Cấu trúc thread bình luận lồng (reply + reaction + report) tự build trong sub-document.</li>
+        <li>Phân quyền dựa trên <code>role</code> đơn giản, dễ mở rộng.</li>
+      </ul>
+
+      <h3>Hướng phát triển</h3>
+      <ul>
+        <li>Bổ sung <strong>refresh token / JWT</strong> cho mobile client.</li>
+        <li>Tách <code>admin/models</code> trùng lặp khỏi user models, gom 1 nguồn duy nhất.</li>
+        <li>Chuyển <strong>review</strong> sang collection riêng để tránh document Course phình to.</li>
+        <li>Bổ sung WebSocket / SSE cho thông báo realtime thay vì polling <code>/practice/notifications</code>.</li>
+        <li>Viết unit test + integration test cho các flow tiền (PayOS) và auth.</li>
+        <li>Index MongoDB cho các trường tìm kiếm (<code>name</code>, <code>email</code>, <code>idCourseTopic</code>).</li>
+      </ul>
+    </section>
+
+    <div class="footer">
+      <p>📘 Báo cáo đồ án Web Edu FCO &middot; Tự sinh từ phân tích mã nguồn &middot; Mermaid render client-side</p>
+    </div>
+  </main>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#dbeafe',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#3b82f6',
+      lineColor: '#475569',
+      fontFamily: 'Segoe UI, Roboto, sans-serif',
+      fontSize: '14px'
+    },
+    sequence: { useMaxWidth: true, mirrorActors: false, showSequenceNumbers: false },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    er:        { useMaxWidth: true }
+  });
+
+  // Smooth highlight active section in sidebar
+  const links = document.querySelectorAll('.nav a[href^="#"]');
+  const sections = [...document.querySelectorAll('main section[id]')];
+  const onScroll = () => {
+    const y = window.scrollY + 120;
+    let active = sections[0];
+    sections.forEach(s => { if (s.offsetTop <= y) active = s; });
+    links.forEach(l => l.style.background =
+      l.getAttribute('href') === '#' + active.id ? 'rgba(59,130,246,.18)' : '');
+  };
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+</script>
+</body>
+</html>
+
+
+    <!-- 5. KIẾN TRÚC HỆ THỐNG -->
+    <section id="kientruc">
+      <h2>5. System Architecture Diagram</h2>
+      <p>
+        Hệ thống được tổ chức theo mô hình <strong>monolith MVC</strong> với một process Express duy nhất phục
+        vụ cả <em>frontend người dùng</em> và <em>frontend admin</em>. Tất cả các tích hợp ngoài (PayOS, Gmail
+        SMTP, Google OAuth, Cloudinary/ImgBB) được gọi qua HTTP/SDK. Phía dữ liệu sử dụng MongoDB Atlas.
+      </p>
+
+      <h3>5.1. Sơ đồ kiến trúc tổng thể</h3>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  %% Clients
+  subgraph Client["🌐 Client (Browser)"]
+    U1["Người dùng cuối<br>EJS pages + jQuery/Fetch"]
+    U2["Admin / Lecturer<br>Admin panel EJS"]
+  end
+
+  %% Server (Express)
+  subgraph Server["🖥️ Express Server (app.js • PORT 8000)"]
+    direction TB
+    MW["Middleware Pipeline<br>session → passport → flash<br>view → routes → error"]
+    subgraph Routers["Routers"]
+      R1["/ (index)"]
+      R2["/users"]
+      R3["/course • /courses"]
+      R4["/payment"]
+      R5["/classes"]
+      R6["/practice"]
+      R7["/admin/*"]
+    end
+    subgraph Models["Mongoose Models"]
+      M1["LocalUser"]
+      M2["Course • CourseTopic • CourseCategory"]
+      M3["CourseClass"]
+      M4["PracticeClass"]
+      M5["VerificationRequest"]
+    end
+    MW --> Routers
+    Routers --> Models
+  end
+
+  %% External
+  subgraph External["☁️ Dịch vụ ngoài"]
+    DB[("🍃 MongoDB Atlas<br>collection: localusers,<br>courses, courseclasses,<br>practiceclasses ...")]
+    Pay["💳 PayOS API<br>create / verify / webhook"]
+    Mail["📧 Gmail SMTP<br>OTP + Google login mail"]
+    OAuth["🔑 Google OAuth 2.0"]
+    CDN["🖼️ Cloudinary / ImgBB<br>ảnh, poster, video"]
+  end
+
+  U1 -- HTTPS --> MW
+  U2 -- HTTPS --> MW
+  Models <--> DB
+  Routers -- "create payment / verify" --> Pay
+  Pay -. "webhook server-to-server" .-> Routers
+  Routers --> Mail
+  Routers <--> OAuth
+  U1 -- "upload trực tiếp" --> CDN
+</pre>
+      </div>
+
+      <h3>5.2. Express middleware pipeline</h3>
+      <p>Thứ tự đăng ký middleware trong <code>app.js</code> quyết định pipeline xử lý mỗi request:</p>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  REQ([HTTP Request])
+  STATIC[express.static<br>public/, admin/public/]
+  BODY[express.urlencoded + json]
+  DB[dbLocal.mdw<br>Mongoose connect + retry]
+  SESS[session.mdw<br>express-session]
+  PASS[passport.mdw<br>initialize + session]
+  LOCAL[local.mdw<br>connect-flash + locals]
+  VIEW[view.mdw<br>EJS + layouts]
+  ROUTE[route.mdw<br>mount all routers]
+  ERR[error.mdw<br>404 / 500 handler]
+  PAYPAL[paypal.mdw + cloudinary.mdw<br>SDK init]
+  RES([Response])
+
+  REQ --> STATIC --> BODY --> DB --> SESS --> PASS --> LOCAL --> VIEW --> ROUTE --> ERR --> RES
+  PAYPAL -. init khi server boot .-> ROUTE
+</pre>
+      </div>
+
+      <h3>5.3. Phân chia thư mục dự án</h3>
+<pre><code>source/backend/
+├── app.js                  # Entry point
+├── config/                 # passport, mail, payos, cloudinary, practice rules
+├── middlewares/            # session, passport, db, view, route, error, paypal, cloudinary
+├── models/                 # LocalUser, Course, CourseClass, PracticeClass, VerificationRequest...
+├── routers/                # index, users, course, courses, payment, classes, practice
+├── views/                  # EJS templates cho phân hệ user
+├── public/                 # static assets cho user
+└── admin/
+    ├── routers/            # admin.js, practice.js (phân hệ admin/lecturer)
+    ├── views/              # EJS cho admin
+    └── public/             # static cho admin</code></pre>
+    </section>
+
+    <!-- 6. ERD -->
+    <section id="erd">
+      <h2>6. Mô hình dữ liệu (ERD)</h2>
+      <p>
+        Đặc điểm thiết kế dữ liệu của dự án là <strong>hợp nhất user vào một collection</strong>
+        (<code>localusers</code>) phân biệt bằng <code>role</code>, kết hợp <strong>nhúng (embed) các sub-document</strong>
+        cho dữ liệu gắn chặt với entity cha (đánh giá, bình luận, buổi học, đăng ký buổi thực hành).
+      </p>
+
+      <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  LOCAL_USER ||--o{ PURCHASED_COURSE : "purchasedCourses[]"
+  LOCAL_USER ||--o{ WISH_LIST : "idWishList[]"
+  LOCAL_USER ||--o{ COURSE : "lecturer creates"
+  LOCAL_USER ||--o{ VERIFICATION_REQUEST : "submits"
+  COURSE ||--|| COURSE_TOPIC : "idCourseTopic"
+  COURSE_TOPIC ||--|| COURSE_CATEGORY : "idCourseCategory"
+  COURSE ||--o{ COURSE_VIDEO : "videos[]"
+  COURSE ||--o{ DISCOUNT_CODE : "discountCodes[]"
+  COURSE ||--o{ USER_REVIEW : "userReviews[]"
+  USER_REVIEW ||--o{ REPLY : "replies[]"
+  REPLY ||--o{ REACTION : "reactions[]"
+  COURSE ||--o{ COURSE_CLASS : "classes of course"
+  COURSE_CLASS ||--o{ CLASS_STUDENT : "students[]"
+  COURSE_CLASS ||--o{ CLASS_SESSION : "sessions[]"
+  CLASS_STUDENT ||--o{ ATTENDANCE : "attendance[]"
+  PRACTICE_CLASS ||--o{ PRACTICE_SESSION : "sessions[]"
+  PRACTICE_SESSION ||--o{ ENROLLMENT : "enrollments[]"
+  PRACTICE_SESSION ||--o{ BRACKET_PAIR : "bracket[]"
+  LOCAL_USER ||--o{ ENROLLMENT : "registers session"
+  LOCAL_USER ||--o{ PRACTICE_CLASS : "follows"
+
+  LOCAL_USER {
+    ObjectId _id
+    string email
+    string username
+    string password "bcrypt hash"
+    string provider "local | google"
+    string role "guest|user|lecturer|admin"
+    string name
+    string avatar
+    string zaloPhone
+    string inGameName
+    string rank "ban-chuyen..sieu-sao"
+    bool isAuth "OTP verified"
+    string otpNumber
+    Date otpExpires
+    bool status "active flag"
+  }
+  COURSE {
+    ObjectId _id
+    string name UK
+    string poster
+    string description
+    number tuition
+    string priceType "fixed | contact"
+    ObjectId idCourseTopic
+    ObjectId idLecturer
+    number evaluationPoint
+    number numberOfStudent
+    number numberOfView
+    number totalSessions
+  }
+  COURSE_TOPIC {
+    ObjectId _id
+    string name
+    ObjectId idCourseCategory
+    number numberOfView
+    number numberOfSignUp
+  }
+  COURSE_CATEGORY { ObjectId _id  string name }
+  COURSE_VIDEO { string name  string source }
+  DISCOUNT_CODE {
+    string code
+    number percent
+    number maxUses
+    number usedCount
+    Date expiresAt
+    bool active
+  }
+  PURCHASED_COURSE {
+    ObjectId idCourse
+    array learnedVideos
+    Date enrolledAt
+    Date lastLearnedAt
+  }
+  WISH_LIST { ObjectId idCourse }
+  USER_REVIEW {
+    ObjectId idUser
+    string review
+    Date date
+    bool status
+  }
+  REPLY { ObjectId idUser  string reply  Date date  bool status }
+  REACTION { ObjectId idUser  string type  Date date }
+  COURSE_CLASS {
+    ObjectId _id
+    ObjectId idCourse
+    ObjectId idLecturer
+    string name
+    number maxStudents
+    string status "open|ongoing|completed|cancelled"
+  }
+  CLASS_STUDENT { ObjectId idUser  Date enrolledAt }
+  CLASS_SESSION {
+    string title
+    Date date
+    string meetLink
+    string recordLink
+    string status "scheduled|done|cancelled"
+  }
+  ATTENDANCE { number sessionIndex  bool attended  string note }
+  PRACTICE_CLASS {
+    ObjectId _id
+    string name
+    number pricePerSession
+    number maxStudentsPerSession
+    ObjectId idLecturer
+    string status "active | closed"
+  }
+  PRACTICE_SESSION {
+    string title
+    Date date
+    string endTime
+    string meetLink
+    string zaloGroupLink
+    string status
+  }
+  ENROLLMENT {
+    ObjectId idUser
+    string type "2M | paid"
+    string paymentStatus
+    number orderCode
+    number amount
+    string snapshotZaloPhone
+    string snapshotInGameName
+    string snapshotRank
+    bool notifSeen
+    bool attended
+  }
+  BRACKET_PAIR { ObjectId player1  ObjectId player2 }
+  VERIFICATION_REQUEST {
+    ObjectId userId
+    string proofImageUrl
+    string note
+    string status "pending|approved|rejected"
+  }
+</pre>
+      </div>
+
+      <div class="note">
+        <strong>Lưu ý thiết kế:</strong> các quan hệ một-nhiều như <code>userReviews</code>,
+        <code>purchasedCourses</code>, <code>sessions</code>, <code>enrollments</code> được nhúng trực tiếp
+        thay vì tách collection. Đổi lại tốc độ truy vấn nhanh hơn (single document fetch) nhưng cần lưu ý
+        kích thước document tối đa 16MB của MongoDB.
+      </div>
+    </section>
+
+    <!-- 7. ROUTE MAP -->
+    <section id="routes">
+      <h2>7. Bản đồ Route (REST endpoints)</h2>
+      <p>Routers được mount trong <code>middlewares/route.mdw.js</code>. Bảng dưới liệt kê các endpoint chính theo từng prefix.</p>
+
+      <h3>7.1. <code>/users</code> — Tài khoản & xác thực</h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/login • /register</td><td>Render form đăng nhập / đăng ký</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/register</td><td>Tạo tài khoản, sinh OTP, gửi mail</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/otp</td><td>Xác nhận OTP (TTL 2 phút)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/login</td><td>Passport local strategy</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/auth/google • /callback • /confirm/:token</td><td>Google OAuth + email confirm link</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/users/logout</td><td>Xóa session</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/updateInfor • /updateAvatar</td><td>Cập nhật hồ sơ, đổi mật khẩu, avatar</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/verify-student</td><td>Gửi yêu cầu xác minh học viên</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/wish-list-change</td><td>Toggle khóa học trong wishlist</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/users/:nameCourse/updateLearnedVideo</td><td>Đánh dấu video đã học</td></tr>
+      </table>
+
+      <h3>7.2. <code>/course</code> & <code>/courses</code> — Khóa học</h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/course/:nameCourse</td><td>Chi tiết khóa học (tăng view)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:name/evaluate</td><td>Cho điểm khóa học (1–5★)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:name/review</td><td>Thêm bình luận (yêu cầu đã mua)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/course/:name/review/:id/reply • react • report • delete</td><td>Trả lời, thả reaction, báo cáo, xóa (admin)</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/courses/search</td><td>Tìm kiếm khóa học (regex theo name/description)</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/courses/:categoryName • /:categoryName/:topicName</td><td>Lọc theo category / topic</td></tr>
+      </table>
+
+      <h3>7.3. <code>/payment</code> — Thanh toán</h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/checkout</td><td>Trang checkout (hoặc liên hệ riêng)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/payment/:nameCourse/checkout</td><td>Áp mã giảm giá → tạo PayOS link / bypass nếu giá = 0</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/success</td><td>Verify giao dịch & enroll user</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/payment/:nameCourse/cancel</td><td>Hủy giao dịch</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/payment/webhook</td><td>Webhook server-to-server từ PayOS</td></tr>
+      </table>
+
+      <h3>7.4. <code>/classes</code> & <code>/practice</code></h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/classes/my-classes • /:classId</td><td>Lớp học của tôi & chi tiết</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice • /:id • /my</td><td>Danh sách lớp thực hành / chi tiết / lớp của tôi</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/sessions/:sid/register</td><td>Đăng ký 1 buổi (phải có Zalo + InGameName + Rank)</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/sessions/:sid/pay</td><td>Tạo PayOS link cho buổi đã được duyệt</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/:id/sessions/:sid/success • /cancel</td><td>Callback sau thanh toán</td></tr>
+        <tr><td><span class="pill post">POST</span></td><td>/practice/:id/follow • /sessions/:sid/withdraw</td><td>Theo dõi lớp / rút yêu cầu</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/practice/notifications</td><td>Thông báo khi admin duyệt</td></tr>
+      </table>
+
+      <h3>7.5. <code>/admin</code> & <code>/admin/practice</code></h3>
+      <table>
+        <tr><th>Method</th><th>Path</th><th>Mô tả</th></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/admin/homepage</td><td>Redirect về danh sách khóa học</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/admin/course/* • /lecturer/* • /student/* • /classes/*</td><td>CRUD toàn bộ entity</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/admin/home/banners</td><td>Quản lý banner trang chủ (file JSON)</td></tr>
+        <tr><td><span class="pill get">GET</span></td><td>/admin/practice/*</td><td>Tạo lớp thực hành, duyệt đăng ký, set bracket, điểm danh</td></tr>
+      </table>
+    </section>
+
+
+    <!-- 8. ĐĂNG KÝ + OTP -->
+    <section id="seq-register">
+      <h2>8. Sequence Diagram — Đăng ký tài khoản &amp; xác thực OTP</h2>
+      <p>
+        Khi đăng ký, hệ thống validate dữ liệu, hash mật khẩu bằng <code>bcrypt</code> (cost 10),
+        sinh OTP 6 chữ số, lưu vào DB cùng <code>otpExpires</code> (TTL 2 phút) và gửi mail qua Gmail SMTP.
+        Nếu OTP hết hạn, user record sẽ bị xóa để cho phép đăng ký lại với cùng email.
+      </p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as Guest (Browser)
+  participant R as users.route
+  participant DB as MongoDB
+  participant M as Nodemailer (SMTP)
+
+  U->>R: POST /users/register {username,email,password,password2}
+  R->>R: Validate (length, regex, match)
+  R->>DB: findOne {email} & findOne {username}
+  alt Email/username đã tồn tại
+    DB-->>R: existing user
+    R-->>U: render register có errors
+  else Hợp lệ
+    R->>R: bcrypt.hash(password, 10)
+    R->>R: otp = random 6 digits
+    R->>M: sendOtpMail(email, otp)
+    M-->>U: Email chứa mã OTP
+    R->>DB: insert LocalUser {role:'guest', isAuth:false,<br/>otpNumber, otpExpires=now+2min}
+    R->>R: req.session.currentEmail = email
+    R-->>U: render trang ./user/otp
+  end
+
+  U->>R: POST /users/otp {otpNumber}
+  R->>DB: findOne {email: session.currentEmail}
+  alt OTP hết hạn (now > otpExpires)
+    R->>DB: deleteOne user
+    R-->>U: render OTP form (expired=true)
+  else Khớp OTP
+    R->>DB: update isAuth=true, xóa otp fields
+    R->>R: req.logIn(user)
+    R-->>U: redirect /
+  else Sai OTP
+    R-->>U: render OTP form (errors)
+  end
+</pre>
+      </div>
+    </section>
+
+    <!-- 9. ĐĂNG NHẬP -->
+    <section id="seq-login">
+      <h2>9. Sequence Diagram — Đăng nhập (Local & Google OAuth)</h2>
+      <p>
+        Local strategy chấp nhận cả <em>username</em> và <em>email</em> ở field <code>username</code>;
+        kiểm tra <code>status</code>, so sánh bcrypt và xét cờ <code>isAuth</code>. Google OAuth lại
+        thêm bước <strong>xác nhận qua email link</strong>: server sinh token ngẫu nhiên (24 bytes hex,
+        TTL 15 phút), gửi link confirm về email, user click link mới thực sự được đăng nhập.
+      </p>
+
+      <h3>9.1. Local login (username/mật khẩu)</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as users.route
+  participant P as Passport (LocalStrategy)
+  participant DB as MongoDB
+
+  U->>R: POST /users/login {username, password}
+  R->>P: passport.authenticate('local')
+  P->>DB: findOne {username OR email}
+  alt Không tìm thấy
+    DB-->>P: null
+    P-->>R: done(null,false,'Tên đăng nhập không tồn tại')
+    R-->>U: render login + errors
+  else status === false
+    P-->>R: done(null,false,'Tài khoản đã bị khóa')
+    R-->>U: render login + errors
+  else
+    P->>P: bcrypt.compare(password, user.password)
+    alt Không khớp
+      P-->>R: done(null,false,'Mật khẩu không đúng')
+    else role==='user' &amp;&amp; isAuth===false
+      P-->>R: done(null,false,{needsOtp:true})
+      R-->>U: render OTP form
+    else OK
+      P-->>R: done(null,user)
+      R->>R: req.logIn(user)
+      alt role admin/lecturer
+        R-->>U: redirect /admin/homepage
+      else
+        R-->>U: redirect /
+      end
+    end
+  end
+</pre>
+      </div>
+
+      <h3>9.2. Google OAuth + email confirm</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as users.route
+  participant G as Google OAuth
+  participant DB as MongoDB
+  participant M as Nodemailer
+
+  U->>R: GET /users/auth/google
+  R->>G: redirect tới Google consent
+  U->>G: chọn tài khoản &amp; allow
+  G-->>R: GET /users/auth/google/callback?code=...
+  R->>G: exchange code → profile
+  G-->>R: profile {id,email,displayName,photo}
+  R->>DB: findOne {email}
+  alt Tài khoản admin/lecturer
+    R-->>U: render login + 'Use email/password login'
+  else
+    R->>DB: upsert LocalUser provider='google'
+    R->>R: token = randomBytes(24).hex<br/>googleLoginTokenExpires = now + 15min
+    R->>DB: save user
+    R->>M: sendGoogleLoginMail(email, token)
+    M-->>U: Email chứa link confirm
+    R-->>U: redirect /users/login + flash
+  end
+
+  U->>R: GET /users/auth/google/confirm/:token
+  R->>DB: findOne {googleLoginToken, expires>now}
+  alt Token hết hạn / sai
+    R-->>U: render login + 'link expired'
+  else
+    R->>DB: clear token fields
+    R->>R: req.logIn(user)
+    R-->>U: redirect landing page
+  end
+</pre>
+      </div>
+    </section>
+
+    <!-- 10. PAYMENT -->
+    <section id="seq-payment">
+      <h2>10. Sequence Diagram — Mua khóa học (PayOS)</h2>
+      <p>
+        Luồng thanh toán có 3 nhánh chính:
+        (a) <em>khóa học liên hệ riêng</em> (<code>priceType='contact'</code>) → render trang contact;
+        (b) <em>giá còn 0đ sau giảm giá</em> → bypass PayOS, enroll trực tiếp;
+        (c) <em>thanh toán PayOS</em> → tạo link, redirect, callback verify, enroll.
+        Mã đơn (<code>orderCode</code>) là số nguyên ghép từ timestamp + 4 ký tự cuối <code>userId</code>.
+      </p>
+
+      <h3>10.1. Tạo & verify giao dịch</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as payment.route
+  participant DB as MongoDB
+  participant P as PayOS API
+
+  U->>R: GET /payment/:nameCourse/checkout
+  R->>DB: Course.findOne({name})
+  alt Đã mua rồi
+    R-->>U: redirect /my-courses
+  else priceType==='contact'
+    R-->>U: render payment/contact
+  else
+    R-->>U: render payment/checkout (form mã giảm giá)
+  end
+
+  U->>R: POST /payment/:name/checkout {discountCode?}
+  R->>R: orderCode = ts + userId.tail
+  R->>R: tính finalAmount với discountCodes[]
+  alt finalAmount === 0
+    R->>DB: $inc Course.numberOfStudent<br/>push purchasedCourses<br/>tăng usedCount mã
+    R-->>U: render payment/success (isFree=true)
+  else
+    R->>P: createPaymentLink({orderCode,amount,returnUrl,cancelUrl})
+    P-->>R: checkoutUrl
+    R->>R: session.pendingPayment = {orderCode, courseId, amount}
+    R-->>U: redirect checkoutUrl
+    U->>P: thanh toán trên trang PayOS
+    P-->>U: redirect returnUrl?orderCode=...&status=PAID
+    U->>R: GET /payment/:name/success?orderCode=...&status=PAID
+    R->>P: getPaymentLinkInformation(orderCode)
+    P-->>R: { status: 'PAID', amount }
+    alt status !== 'PAID'
+      R-->>U: redirect / + flash error
+    else
+      R->>DB: $inc Course.numberOfStudent &amp; topic/category numberOfSignUp
+      R->>DB: push purchasedCourses<br/>cập nhật idCourses<br/>tăng usedCount discount
+      R->>R: req.logIn(updated)
+      R-->>U: render payment/success
+    end
+  end
+
+  Note over P,R: Webhook /payment/webhook<br/>chỉ verify dữ liệu, log
+</pre>
+      </div>
+
+      <h3>10.2. State machine của một đơn hàng</h3>
+      <div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> Checkout
+  Checkout --> ContactSeller: priceType='contact'
+  Checkout --> FreeEnroll: finalAmount = 0
+  Checkout --> PayOSPending: createPaymentLink ok
+  PayOSPending --> Cancelled: user hủy / timeout
+  PayOSPending --> Verifying: callback status=PAID
+  Verifying --> Enrolled: PayOS verify OK
+  Verifying --> Cancelled: verify fail
+  FreeEnroll --> Enrolled
+  Enrolled --> [*]
+  Cancelled --> [*]
+  ContactSeller --> [*]
+</pre>
+      </div>
+    </section>
+
+    <!-- 11. HỌC & TIẾN ĐỘ -->
+    <section id="seq-learn">
+      <h2>11. Sequence Diagram — Học khóa học &amp; ghi nhận tiến độ</h2>
+      <p>
+        Tiến độ học được tính kết hợp từ <code>course.totalSessions</code> + <code>CourseClass.sessions[].status='done'</code>.
+        Mỗi khi user xem hết 1 video, frontend gọi POST cập nhật <code>learnedVideos[]</code>. Khi truy cập
+        <code>/my-courses</code>, server đồng thời tự động chuyển status của lớp (<code>open → ongoing → completed</code>).
+      </p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant IDX as index.route
+  participant USR as users.route
+  participant DB as MongoDB
+
+  U->>IDX: GET /my-courses
+  IDX->>DB: CourseClass.find({students.idUser: me})
+  IDX->>DB: Course.findOne(idCourse) per purchased
+  loop for each purchasedCourse
+    IDX->>IDX: learnedCount = sessions.filter(done).length
+    IDX->>IDX: progress = learned / totalSessions
+    alt status changed
+      IDX->>DB: CourseClass.updateOne({_id},{status})
+    end
+  end
+  IDX-->>U: render courses/my-courses (items[])
+
+  U->>U: Click vào khóa → xem video
+  U->>USR: POST /users/:nameCourse/updateLearnedVideo {videoIndex}
+  USR->>DB: Course.findOne({name})
+  USR->>USR: tìm purchasedCourse[i]
+  alt videoIndex chưa có trong learnedVideos
+    USR->>DB: push learnedVideos<br/>set lastLearnedAt=now
+    USR-->>U: true
+  else
+    USR-->>U: false
+  end
+</pre>
+      </div>
+    </section>
+
+    <!-- 12. PRACTICE -->
+    <section id="seq-practice">
+      <h2>12. Sequence Diagram — Đăng ký buổi thực hành</h2>
+      <p>
+        Phân hệ practice có 2 loại enrollment: <strong>2M</strong> (user đã mua khóa học có
+        <code>tuition === 2.000.000đ</code>) — được miễn phí, tự động duyệt; và <strong>paid</strong> — phải
+        chờ admin duyệt rồi mới thanh toán PayOS theo từng buổi.
+      </p>
+
+      <h3>12.1. Người dùng đăng ký một buổi</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant R as practice.route
+  participant CFG as practice.config (is2M, profileComplete)
+  participant DB as MongoDB
+  participant P as PayOS
+  actor A as Admin
+
+  U->>R: POST /practice/:id/sessions/:sid/register
+  R->>CFG: isProfileCompleteForPractice(user)
+  alt thiếu Zalo / inGameName / rank
+    R-->>U: {ok:false, code:'PROFILE_INCOMPLETE'}
+  else
+    R->>DB: PracticeClass.findById(:id)
+    R->>R: kiểm tra session.status &amp; date còn hạn
+    R->>CFG: is2MStudent(user) → tra Course.tuition === 2_000_000
+    CFG-->>R: userIs2M (bool)
+    R->>R: enrollment = {type: userIs2M?'2M':'paid',<br/>paymentStatus:'requested',<br/>snapshot Zalo+InGameName+Rank}
+    R->>DB: push enrollment, auto-follow class
+    R-->>U: {ok:true, msg:'Đã gửi yêu cầu, admin sẽ xem xét'}
+  end
+
+  Note over A,DB: Admin duyệt qua /admin/practice
+  A->>DB: set en.paymentStatus = 'free' (2M) hoặc 'approved' (paid)<br/>en.reviewedAt = now
+  Note over U,R: User vào /practice/notifications<br/>thấy notification và enrollment đã duyệt
+
+  alt type === 'paid' &amp;&amp; status === 'approved'
+    U->>R: POST /practice/:id/sessions/:sid/pay
+    R->>P: createPaymentLink(orderCode,amount)
+    P-->>R: checkoutUrl
+    R->>DB: en.paymentStatus='pending', en.orderCode
+    R-->>U: redirect checkoutUrl
+    U->>P: thanh toán
+    P-->>U: redirect /success?orderCode=...
+    U->>R: GET /practice/:id/sessions/:sid/success
+    R->>P: getPaymentLinkInformation(orderCode)
+    P-->>R: status='PAID'
+    R->>DB: en.paymentStatus='paid'
+    R-->>U: render practice/success
+  else type === '2M'
+    Note over U,R: Không cần thanh toán<br/>status đã là 'free' sau khi admin duyệt
+  end
+</pre>
+      </div>
+
+      <h3>12.2. State machine của Enrollment</h3>
+      <div class="diagram">
+<pre class="mermaid">
+stateDiagram-v2
+  [*] --> requested: user đăng ký
+  requested --> approved: admin duyệt (paid)
+  requested --> free: admin duyệt (2M student)
+  requested --> rejected: admin từ chối
+  requested --> cancelled: user withdraw
+  approved --> pending: user bấm pay → tạo PayOS link
+  pending --> paid: PayOS verify PAID
+  pending --> approved: user hủy thanh toán
+  free --> [*]
+  paid --> [*]
+  rejected --> [*]
+  cancelled --> [*]
+</pre>
+      </div>
+    </section>
+
+    <!-- 13. ADMIN -->
+    <section id="seq-admin">
+      <h2>13. Sequence Diagram — Quản trị (Admin / Lecturer)</h2>
+      <p>
+        Khu admin chia sẻ chung <code>localusers</code> nhưng dùng route <code>/admin/*</code> với layout riêng
+        (set <code>res.locals.layout = false</code> trong route mount). Lecturer chỉ thao tác trên những entity
+        do mình tạo (<code>idLecturer === req.user._id</code>); admin có toàn quyền.
+      </p>
+
+      <h3>13.1. Admin tạo khóa học &amp; gán giảng viên</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor A as Admin
+  participant AR as admin.js
+  participant DB as MongoDB
+
+  A->>AR: GET /admin/course/courseAdd
+  AR->>DB: CourseTopic.find().populate('idCourseCategory')
+  AR-->>A: render courseAdd (form)
+  A->>AR: POST /admin/course/courseAdd<br/>{lecture_id, category, tuition, priceType, totalSessions, discountCodes}
+  AR->>DB: Topic.findById(category) để lấy tên
+  AR->>DB: countDocuments({idCourseTopic}) để gắn số thứ tự
+  AR->>AR: build finalName + parse discountCodes[]
+  AR->>DB: Course.save()
+  alt duplicate name (E11000)
+    AR->>DB: Course.save() với name + timestamp
+  end
+  AR-->>A: redirect coursesList + flash success
+</pre>
+      </div>
+
+      <h3>13.2. Admin/Lecturer quản lý lớp học &amp; thêm học viên</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor A as Admin/Lecturer
+  participant AR as admin.js
+  participant DB as MongoDB
+
+  A->>AR: GET /admin/classes
+  AR->>AR: filter idLecturer nếu role=lecturer
+  AR->>DB: CourseClass.find().populate(idCourse,idLecturer)
+  AR-->>A: render classList
+
+  A->>AR: GET /admin/classes/new
+  AR-->>A: render classForm (chọn course + lecturer)
+  A->>AR: POST /admin/classes/new
+  AR->>DB: CourseClass.save({maxStudents, status:'open'})
+  AR-->>A: redirect /admin/classes/:id
+
+  A->>AR: GET /admin/classes/:classId/students/suggest?q=...
+  AR->>DB: regex fuzzy search trong localusers (loại admin/lecturer)
+  AR->>AR: đánh dấu purchased / inClass
+  AR-->>A: JSON gợi ý
+
+  A->>AR: POST /admin/classes/:classId/students/add-by-id {userId}
+  AR->>DB: CourseClass.findById
+  alt đã có / lớp đầy
+    AR-->>A: {ok:false, msg}
+  else
+    AR->>DB: push students {idUser, enrolledAt}
+    AR-->>A: {ok:true}
+  end
+</pre>
+      </div>
+
+      <h3>13.3. Admin duyệt yêu cầu đăng ký buổi thực hành</h3>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor A as Admin
+  participant AP as admin/practice
+  participant DB as MongoDB
+  participant U as User
+
+  A->>AP: GET /admin/practice/:id (xem enrollments status='requested')
+  AP->>DB: PracticeClass.findById().populate(enrollments.idUser)
+  AP-->>A: render danh sách + snapshot Zalo/Rank
+
+  A->>AP: POST duyệt enrollment (approve / reject / free)
+  AP->>DB: set en.paymentStatus, en.adminNote, en.reviewedAt = now,<br/>en.notifSeen = false
+  AP-->>A: redirect
+
+  Note over U,DB: Lần kế tiếp user vào trang
+  U->>U: GET /practice/notifications
+  U-->>U: nhận danh sách notif chưa đọc (filter notifSeen=false &amp; reviewedAt!=null)
+  U->>U: POST /practice/notifications/seen → set notifSeen=true
+</pre>
+      </div>
+    </section>
+
+    <!-- 14. REVIEW -->
+    <section id="seq-review">
+      <h2>14. Sequence Diagram — Đánh giá &amp; bình luận khóa học</h2>
+      <p>
+        Mọi user đều có thể đánh giá <em>điểm</em>; nhưng viết review/reply/react chỉ dành cho người
+        <strong>đã mua khóa</strong> (hoặc admin). Xóa bình luận chỉ admin có quyền. Toàn bộ comment, reply,
+        reaction, report được nhúng trong document <code>Course</code>.
+      </p>
+      <div class="diagram">
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as User (đã mua)
+  participant CR as course.route
+  participant DB as MongoDB
+  actor V as Người dùng khác
+  actor AD as Admin
+
+  U->>CR: POST /course/:name/evaluate {evaluationPoint}
+  CR->>DB: Course.findOne({name})
+  CR->>CR: cập nhật userEvaluations[i] (upsert by idUser)<br/>tính lại evaluationPoint trung bình
+  CR->>DB: course.save()
+  CR-->>U: true
+
+  U->>CR: POST /course/:name/review {review}
+  CR->>CR: ensureCourseAccess (admin || đã mua)
+  CR->>DB: push userReviews {idUser,review,date,reactions:[],replies:[]}
+  CR-->>U: true
+
+  V->>CR: POST /course/:name/review/:rid/reply {reply}
+  CR->>DB: review.replies.push({...})
+  CR-->>V: true
+
+  V->>CR: POST /course/:name/review/:rid/react {targetId?, reactionType}
+  CR->>CR: toggleReaction(target, userId, type)<br/>(thêm / đổi / xóa nếu trùng)
+  CR->>DB: course.save()
+  CR-->>V: true
+
+  V->>CR: POST /course/:name/review/:rid/report {reason}
+  CR->>DB: target.reports.push({idUser,reason,date})
+  CR-->>V: true
+
+  AD->>CR: POST /course/:name/review/:rid/delete {targetId?}
+  alt targetId có
+    CR->>CR: review.replies.splice(idx,1)
+  else
+    CR->>CR: course.userReviews.splice(idx,1)
+  end
+  CR->>DB: markModified + save
+  CR-->>AD: true
+</pre>
+      </div>
+    </section>
+
+    <!-- 15. DEPLOY -->
+    <section id="trien-khai">
+      <h2>15. Triển khai (Deployment)</h2>
+      <p>
+        Dự án được container hóa bằng <strong>Docker</strong> và deploy trên <strong>Railway</strong>.
+        Database production sử dụng <strong>MongoDB Atlas</strong> qua biến môi trường <code>MONGO_URI</code>.
+      </p>
+
+      <h3>15.1. Dockerfile</h3>
+<pre><code>FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+COPY source/backend/package*.json ./
+RUN npm ci --omit=dev &amp;&amp; npm cache clean --force
+COPY source/backend ./
+EXPOSE 8000
+CMD ["npm", "start"]</code></pre>
+
+      <h3>15.2. Biến môi trường chính</h3>
+      <table>
+        <tr><th>Nhóm</th><th>Biến</th><th>Mục đích</th></tr>
+        <tr><td>App</td><td><code>PORT</code>, <code>HOST</code>, <code>APP_URL</code></td><td>Cấu hình server &amp; URL public</td></tr>
+        <tr><td>Database</td><td><code>MONGO_URI</code></td><td>MongoDB Atlas connection string</td></tr>
+        <tr><td>Session</td><td><code>SESSION_SECRET</code></td><td>Khóa ký session cookie</td></tr>
+        <tr><td>Google OAuth</td><td><code>GOOGLE_CLIENT_ID/SECRET</code>, <code>GOOGLE_CALLBACK_URL</code></td><td>Google login</td></tr>
+        <tr><td>Mail (SMTP)</td><td><code>SMTP_USER</code>, <code>SMTP_PASS</code></td><td>Gmail App Password gửi OTP</td></tr>
+        <tr><td>PayOS</td><td><code>PAYOS_CLIENT_ID</code>, <code>PAYOS_API_KEY</code>, <code>PAYOS_CHECKSUM_KEY</code></td><td>Tạo &amp; verify giao dịch</td></tr>
+        <tr><td>Cloudinary</td><td><code>CLOUDINARY_*</code></td><td>Upload &amp; lưu media</td></tr>
+      </table>
+
+      <h3>15.3. Pipeline deploy</h3>
+      <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  Dev[👨‍💻 Developer] -->|git push| Repo[(GitHub Repo)]
+  Repo -->|trigger build| Railway[Railway CI]
+  Railway -->|đọc railway.json| Builder[Docker Builder]
+  Builder -->|Dockerfile| Image[Docker Image node:20-alpine]
+  Image --> Container[Production Container :8000]
+  Container -->|MONGO_URI| Atlas[(🍃 MongoDB Atlas)]
+  Container -->|HTTPS| PayOS[(💳 PayOS)]
+  Container -->|SMTP 587| Gmail[(📧 Gmail)]
+  User[👤 End user] -->|HTTPS| Container
+</pre>
+      </div>
+    </section>
+
+    <!-- 16. KẾT LUẬN -->
+    <section id="ket-luan">
+      <h2>16. Kết luận</h2>
+      <div class="card">
+        <h4>✅ Kết quả đạt được</h4>
+        <ul>
+          <li>Xây dựng hoàn chỉnh nền tảng học trực tuyến với 4 nhóm tác nhân và phân quyền rõ ràng dựa trên trường <code>role</code>.</li>
+          <li>Tích hợp 2 phương thức đăng nhập (Local + Google OAuth) đều có tầng xác thực bổ sung qua email (OTP / confirm link).</li>
+          <li>Tích hợp cổng thanh toán PayOS với 3 nhánh xử lý: thanh toán thật, miễn phí (giá 0đ), liên hệ riêng.</li>
+          <li>Phân hệ luyện tập (practice) với cơ chế duyệt 2 cấp, snapshot profile và ghép cặp bracket — vượt yêu cầu đề bài.</li>
+          <li>Đóng gói Docker, deploy thành công trên Railway với MongoDB Atlas.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>🔍 Hạn chế &amp; hướng phát triển</h4>
+        <ul>
+          <li>Logic enrollment đang dùng sub-document mảng nên dễ gặp race condition khi nhiều user đăng ký cùng lúc — có thể tách thành collection riêng &amp; dùng transaction.</li>
+          <li>Webhook PayOS hiện chỉ log; nên tận dụng để đồng bộ trạng thái trong trường hợp user đóng tab trước khi quay lại <code>returnUrl</code>.</li>
+          <li>Có thể bổ sung CSRF token, rate limiting (express-rate-limit), helmet và HTTPS enforcement.</li>
+          <li>Frontend hiện thuần SSR; có thể tách thành SPA (React/Vue) gọi API JSON để tối ưu trải nghiệm.</li>
+          <li>Bổ sung unit test &amp; integration test (Jest + supertest) cho các luồng critical (payment, enrollment).</li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <p>📘 <strong>Web Edu FCO — Báo cáo đồ án</strong></p>
+        <p>Sinh ra tự động từ source code thực tế — diagram render bằng <a href="https://mermaid.js.org" target="_blank" rel="noopener">Mermaid.js</a></p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Zoom modal -->
+<div class="zoom-modal" id="zoomModal" aria-hidden="true">
+  <div class="info">
+    Zoom: <span id="zoomLevel">100%</span>
+    &nbsp;•&nbsp; <kbd>scroll</kbd> zoom &nbsp; <kbd>drag</kbd> pan &nbsp; <kbd>0</kbd> reset &nbsp; <kbd>Esc</kbd> đóng
+  </div>
+  <div class="controls">
+    <button class="btn-out"   title="Zoom out (-)">−</button>
+    <button class="btn-reset" title="Reset (0)">⟲</button>
+    <button class="btn-in"    title="Zoom in (+)">+</button>
+    <button class="btn-close" title="Close (Esc)">✕</button>
+  </div>
+  <div class="stage" id="zoomStage"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  // ── Mermaid theme: dark text trên nền trắng ──
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    securityLevel: 'loose',
+    themeVariables: {
+      fontFamily: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      fontSize: '15px',
+      primaryColor: '#dbeafe',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#3b82f6',
+      secondaryColor: '#fef3c7',
+      tertiaryColor: '#fce7f3',
+      lineColor: '#475569',
+      textColor: '#0f172a',
+      mainBkg: '#dbeafe',
+      nodeBorder: '#3b82f6',
+      clusterBkg: '#f1f5f9',
+      clusterBorder: '#94a3b8',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#ffffff',
+      // Sequence
+      actorBkg: '#dbeafe',
+      actorBorder: '#3b82f6',
+      actorTextColor: '#0f172a',
+      actorLineColor: '#475569',
+      signalColor: '#0f172a',
+      signalTextColor: '#0f172a',
+      labelBoxBkgColor: '#fef3c7',
+      labelBoxBorderColor: '#f59e0b',
+      labelTextColor: '#0f172a',
+      loopTextColor: '#0f172a',
+      noteBorderColor: '#f59e0b',
+      noteBkgColor: '#fef9c3',
+      noteTextColor: '#0f172a',
+      activationBorderColor: '#475569',
+      activationBkgColor: '#e2e8f0',
+      sequenceNumberColor: '#ffffff',
+      // State
+      stateBkg: '#dbeafe',
+      stateBorder: '#3b82f6',
+      altBackground: '#f1f5f9',
+      // ER
+      attributeBackgroundColorOdd: '#f8fafc',
+      attributeBackgroundColorEven: '#ffffff'
+    },
+    flowchart: { htmlLabels: true, curve: 'basis', useMaxWidth: true },
+    sequence: { actorMargin: 60, useMaxWidth: true, mirrorActors: true },
+    er: { useMaxWidth: true }
+  });
+
+  // ── Zoom modal logic ──
+  (function() {
+    const modal  = document.getElementById('zoomModal');
+    const stage  = document.getElementById('zoomStage');
+    const lblPct = document.getElementById('zoomLevel');
+    let scale = 1, tx = 0, ty = 0;
+    let panning = false, sx = 0, sy = 0;
+    let svgEl = null;
+
+    function applyTransform() {
+      if (!svgEl) return;
+      svgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      lblPct.textContent = Math.round(scale * 100) + '%';
+    }
+
+    function openZoom(diagramEl) {
+      const original = diagramEl.querySelector('svg');
+      if (!original) return;
+      const clone = original.cloneNode(true);
+      // Bỏ các style inline có thể giới hạn kích thước
+      clone.removeAttribute('style');
+      clone.style.maxWidth  = 'none';
+      clone.style.maxHeight = 'none';
+      stage.innerHTML = '';
+      stage.appendChild(clone);
+      svgEl = clone;
+      // Tự động fit ban đầu: scale sao cho vừa 90% màn hình
+      const bb = clone.getBoundingClientRect();
+      const fitW = (window.innerWidth  * 0.9) / bb.width;
+      const fitH = (window.innerHeight * 0.85) / bb.height;
+      scale = Math.min(1.4, Math.max(0.4, Math.min(fitW, fitH)));
+      tx = 0; ty = 0;
+      applyTransform();
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeZoom() {
+      modal.classList.remove('active');
+      stage.innerHTML = '';
+      svgEl = null;
+      document.body.style.overflow = '';
+    }
+
+    // Click vào diagram → mở
+    document.addEventListener('click', (e) => {
+      if (modal.classList.contains('active')) return;
+      const d = e.target.closest('.diagram');
+      if (d && d.querySelector('svg')) {
+        e.preventDefault();
+        openZoom(d);
+      }
+    });
+
+    // Buttons
+    modal.querySelector('.btn-in').addEventListener('click', (e) => {
+      e.stopPropagation();
+      scale = Math.min(scale * 1.25, 8); applyTransform();
+    });
+    modal.querySelector('.btn-out').addEventListener('click', (e) => {
+      e.stopPropagation();
+      scale = Math.max(scale / 1.25, 0.2); applyTransform();
+    });
+    modal.querySelector('.btn-reset').addEventListener('click', (e) => {
+      e.stopPropagation();
+      scale = 1; tx = 0; ty = 0; applyTransform();
+    });
+    modal.querySelector('.btn-close').addEventListener('click', closeZoom);
+
+    // Wheel zoom (centered on cursor)
+    stage.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = svgEl.getBoundingClientRect();
+      const cx = e.clientX - rect.left - rect.width  / 2;
+      const cy = e.clientY - rect.top  - rect.height / 2;
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      const newScale = Math.max(0.2, Math.min(8, scale * factor));
+      // Điều chỉnh tx/ty để zoom vào vị trí con trỏ
+      tx -= cx * (newScale / scale - 1);
+      ty -= cy * (newScale / scale - 1);
+      scale = newScale;
+      applyTransform();
+    }, { passive: false });
+
+    // Drag pan
+    stage.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.controls')) return;
+      panning = true;
+      sx = e.clientX - tx;
+      sy = e.clientY - ty;
+      stage.classList.add('grabbing');
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!panning) return;
+      tx = e.clientX - sx;
+      ty = e.clientY - sy;
+      applyTransform();
+    });
+    window.addEventListener('mouseup', () => {
+      panning = false;
+      stage.classList.remove('grabbing');
+    });
+
+    // Touch pan + pinch zoom
+    let pinchDist = 0;
+    stage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        panning = true;
+        sx = e.touches[0].clientX - tx;
+        sy = e.touches[0].clientY - ty;
+      } else if (e.touches.length === 2) {
+        panning = false;
+        pinchDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+    stage.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && panning) {
+        tx = e.touches[0].clientX - sx;
+        ty = e.touches[0].clientY - sy;
+        applyTransform();
+      } else if (e.touches.length === 2) {
+        const d = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (pinchDist > 0) {
+          scale = Math.max(0.2, Math.min(8, scale * (d / pinchDist)));
+          applyTransform();
+        }
+        pinchDist = d;
+        e.preventDefault();
+      }
+    }, { passive: false });
+    stage.addEventListener('touchend', () => { panning = false; pinchDist = 0; });
+
+    // Keyboard
+    window.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('active')) return;
+      if (e.key === 'Escape') closeZoom();
+      else if (e.key === '+' || e.key === '=') modal.querySelector('.btn-in').click();
+      else if (e.key === '-' || e.key === '_') modal.querySelector('.btn-out').click();
+      else if (e.key === '0') modal.querySelector('.btn-reset').click();
+    });
+
+    // Click ngoài SVG cũng đóng (click vào nền tối)
+    stage.addEventListener('click', (e) => {
+      if (e.target === stage) closeZoom();
+    });
+  })();
+</script>
+</body>
+</html>
