@@ -20,9 +20,9 @@ const createTransporter = () =>
 const sendOtpMail = async (email, otpNumber) => {
   const transporter = createTransporter();
   await transporter.sendMail({
-    from: `"WEBCTT2" <${process.env.SMTP_USER}>`,
+    from: `"MansterClass" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: 'Mã xác nhận tài khoản WEBCTT2',
+    subject: 'Mã xác nhận tài khoản MansterClass',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;
                   border:1px solid #e5e7eb;border-radius:12px">
@@ -50,9 +50,9 @@ const sendGoogleLoginMail = async (email, token) => {
   const confirmUrl = `${APP_URL}/users/auth/google/confirm/${token}`;
   const transporter = createTransporter();
   await transporter.sendMail({
-    from: `"WEBCTT2" <${process.env.SMTP_USER}>`,
+    from: `"MansterClass" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: 'Xác nhận đăng nhập Google - WEBCTT2',
+    subject: 'Xác nhận đăng nhập Google - MansterClass',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;
                   border:1px solid #e5e7eb;border-radius:12px">

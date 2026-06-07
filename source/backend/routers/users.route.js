@@ -270,7 +270,7 @@ Router.post("/otp", async (req, res) => {
         req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
         return res.redirect("/users/login");
       }
-      req.flash("success_msg", "Chào mừng đến với WEBCTT2!");
+      req.flash("success_msg", "Chào mừng đến với MansterClass!");
       return res.redirect("/");
     });
   } else {
