@@ -275,13 +275,28 @@ input[type=text]:placeholder {
   box-sizing: border-box;
 }
 
+/* ── Logo navbar: hiển thị PNG nền trong suốt, hòa với navbar nền tối ── */
+#header-logo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+#header-logo .navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;          /* bỏ padding mặc định của Bootstrap để ảnh sát mép trái */
+  margin: 0;
+  height: 100%;
+  background: transparent;
+}
 #header-logo .navbar-brand img {
   /* Giữ tỷ lệ ảnh gốc, không ép kéo méo */
-  height: 48px;        /* vừa khít navbar (min-height 66px) */
+  height: 52px;        /* lấp gần hết navbar (min-height 66px) */
   width: auto;          /* khung tự co theo tỷ lệ ảnh */
   max-width: 100%;      /* không tràn cột logo (220px) */
   object-fit: contain;
   display: block;
+  background: transparent;
 }
 
 #header {

@@ -19,7 +19,7 @@ Upload từng ảnh dưới đây lên ImgBB, sau đó điền link vào cột *
 
 | Tên hiển thị       | File gốc                                      | Dùng ở đâu                          | ImgBB URL |
 |--------------------|-----------------------------------------------|--------------------------------------|-----------|
-| Logo               | `source/backend/public/logo.png`              | Navbar, favicon toàn site            | https://i.ibb.co/ZzfSrk62/image.png |
+| Logo               | `source/backend/public/logo.png`              | Navbar, favicon toàn site            | https://i.ibb.co/69L9ymq/image-removebg-preview.png |
 | PayPal icon        | `source/backend/public/paypal.png`            | Trang checkout                       | https://i.ibb.co/zVY9852q/paypal.jpg |
 | Feature: Price     | `source/backend/public/images/features/price.svg`  | Trang giới thiệu tính năng      | https://i.ibb.co/qL5p8gYy/feature-price.jpg |
 | Feature: Quality   | `source/backend/public/images/features/quality.svg` | Trang giới thiệu tính năng     | https://i.ibb.co/kVNLfk2L/feature-quality.jpg |
