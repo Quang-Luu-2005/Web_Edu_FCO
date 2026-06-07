@@ -291,9 +291,9 @@ input[type=text]:placeholder {
 }
 #header-logo .navbar-brand img {
   /* Giữ tỷ lệ ảnh gốc, không ép kéo méo */
-  height: 52px;        /* lấp gần hết navbar (min-height 66px) */
+  height: 80px;        /* logo to hơn, lấp gần hết navbar */
   width: auto;          /* khung tự co theo tỷ lệ ảnh */
-  max-width: 100%;      /* không tràn cột logo (220px) */
+  max-width: 100%;      /* không tràn cột logo */
   object-fit: contain;
   display: block;
   background: transparent;
@@ -317,14 +317,14 @@ input[type=text]:placeholder {
   align-items: center;
   gap: 16px;
   position: relative;
-  min-height: 66px;
+  min-height: 92px;
   padding-left: 18px;
   padding-right: 18px;
 }
 
 #header .container-fluid > .col-sm-2 {
-  flex: 0 0 220px;
-  max-width: 220px;
+  flex: 0 0 260px;
+  max-width: 260px;
   padding-left: 0;
   padding-right: 0;
 }
@@ -489,7 +489,7 @@ input.hidden {
 }
 
 #header {
-  min-height: 66px;
+  min-height: 92px;
   height: auto !important;
 }
 
