@@ -275,9 +275,13 @@ input[type=text]:placeholder {
   box-sizing: border-box;
 }
 
-header img {
-  width: 200px;
-  height: 50px;
+#header-logo .navbar-brand img {
+  /* Giữ tỷ lệ ảnh gốc, không ép kéo méo */
+  height: 48px;        /* vừa khít navbar (min-height 66px) */
+  width: auto;          /* khung tự co theo tỷ lệ ảnh */
+  max-width: 100%;      /* không tràn cột logo (220px) */
+  object-fit: contain;
+  display: block;
 }
 
 #header {
