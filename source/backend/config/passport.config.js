@@ -8,6 +8,7 @@ const DEFAULT_AVATAR = 'https://i.ibb.co/NnbNMtSw/default-avatar.png';
 const GOOGLE_CLIENT_ID     = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_CALLBACK_URL  = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:8000/users/auth/google/callback';
+const escapeRegex = (value) => (value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Tất cả user đều nằm trong LocalUser, phân biệt bằng role
 const attachRole = (user) => {
@@ -18,14 +19,22 @@ const attachRole = (user) => {
 
 // Tìm theo username (LocalUser) hoặc email (tất cả role)
 const findAccountByUsername = async (username) => {
+    const identifier = (username || '').trim();
+    const email = identifier.toLowerCase();
     const user = await LocalUser.findOne({
-        $or: [{ username }, { email: username }]
+        $or: [
+            { username: identifier },
+            { email },
+            { email: identifier },
+            { email: { $regex: new RegExp(`^${escapeRegex(identifier)}$`, 'i') } }
+        ]
     });
     return user ? attachRole(user) : null;
 };
 
 const findAccountByEmail = async (email) => {
-    const user = await LocalUser.findOne({ email });
+    const normalized = (email || '').trim().toLowerCase();
+    const user = await LocalUser.findOne({ email: normalized });
     return user ? attachRole(user) : null;
 };
 
@@ -115,12 +124,20 @@ const buildLocalStrategy = () => new LocalStrategy({
             return done(null, false, { message: 'Mật khẩu không đúng' });
         }
 
-        // Chỉ user thường mới cần OTP; admin/lecturer bỏ qua
-        if (user.role === 'user' && user.isAuth === false) {
+        // Admin/lecturer bypass OTP; every normal local account must be verified.
+        const bypassOtp = user.role === 'admin' || user.role === 'lecturer';
+        if (!bypassOtp && user.isAuth === false) {
+            if (!user.otpExpires || new Date() > user.otpExpires) {
+                return done(null, false, {
+                    message: 'Mã OTP đã hết hạn. Vui lòng đăng ký lại để nhận mã mới.'
+                });
+            }
+
             return done(null, false, {
                 message: 'Vui lòng xác nhận OTP để đăng nhập',
                 needsOtp: true,
-                email: user.email
+                email: user.email,
+                otpExpires: user.otpExpires
             });
         }
 

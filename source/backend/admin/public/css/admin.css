@@ -121,6 +121,21 @@ a { text-decoration: none; color: inherit; }
   width: 16px; text-align: center; font-size: 13px; flex: 0 0 auto;
 }
 
+.adm-nav-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
 .adm-sidebar-footer {
   padding: 16px;
   border-top: 1px solid rgba(255,255,255,0.06);

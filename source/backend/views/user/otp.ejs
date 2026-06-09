@@ -1,4 +1,4 @@
-<style>
+﻿<style>
   .auth-page {
     min-height: calc(100vh - 120px);
     display: flex;
@@ -32,7 +32,7 @@
     line-height: 1.6;
   }
 
-  /* Đếm ngược */
+  /* Äáº¿m ngÆ°á»£c */
   .otp-timer {
     display: inline-flex;
     align-items: center;
@@ -45,7 +45,7 @@
 
   .otp-timer.warning { color: #dc2626; }
 
-  /* 6 ô nhập OTP */
+  /* 6 Ă´ nháº­p OTP */
   .otp-inputs {
     display: flex;
     justify-content: center;
@@ -109,22 +109,22 @@
 
 <div class="auth-page">
   <div class="auth-card">
-    <h1 class="otp-title">Nhập mã xác nhận</h1>
+    <h1 class="otp-title">Nháº­p mĂ£ xĂ¡c nháº­n</h1>
     <p class="otp-subtitle">
-      Mã 6 số đã được gửi đến email của bạn.<br>
-      Mã có hiệu lực trong <strong>2 phút</strong>.
+      MĂ£ 6 sá»‘ Ä‘Ă£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n.<br>
+      MĂ£ cĂ³ hiá»‡u lá»±c trong <strong><%= typeof otpTtlMinutes !== 'undefined' ? otpTtlMinutes : 2 %> phĂºt</strong>.
     </p>
 
     <%- include('../partials/messages') %>
 
     <% if (typeof expired !== 'undefined' && expired) { %>
-      <p style="margin-top:16px"><a href="/users/register" style="color:#2563eb;font-weight:600">← Đăng ký lại</a></p>
+      <p style="margin-top:16px"><a href="/users/register" style="color:#2563eb;font-weight:600">â† ÄÄƒng kĂ½ láº¡i</a></p>
     <% } else { %>
 
-    <!-- Đếm ngược -->
+    <!-- Äáº¿m ngÆ°á»£c -->
     <div class="otp-timer" id="otp-timer">
       <i class="fas fa-clock"></i>
-      <span id="timer-text">2:00</span>
+      <span id="timer-text"><%= typeof otpTtlMinutes !== 'undefined' ? otpTtlMinutes : 2 %>:00</span>
     </div>
 
     <form action="/users/otp" method="POST" id="otp-form">
@@ -137,11 +137,11 @@
         <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
       </div>
       <input type="hidden" name="otpNumber" id="otpNumber" />
-      <button type="submit" class="otp-submit" id="otp-submit" disabled>Xác nhận</button>
+      <button type="submit" class="otp-submit" id="otp-submit" disabled>XĂ¡c nháº­n</button>
     </form>
 
-    <span class="otp-back">Không nhận được mail?
-      <a href="/users/register">Đăng ký lại</a>
+    <span class="otp-back">KhĂ´ng nháº­n Ä‘Æ°á»£c mail?
+      <a href="/users/register">ÄÄƒng kĂ½ láº¡i</a>
     </span>
 
     <% } %>
@@ -155,7 +155,7 @@
   const timerEl = document.getElementById('timer-text');
   const timerWrap = document.getElementById('otp-timer');
 
-  // ── Điều hướng giữa các ô ──
+  // â”€â”€ Äiá»u hÆ°á»›ng giá»¯a cĂ¡c Ă´ â”€â”€
   boxes.forEach((box, i) => {
     box.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace') {
@@ -172,14 +172,14 @@
     });
 
     box.addEventListener('input', () => {
-      // Chỉ cho nhập số
+      // Chá»‰ cho nháº­p sá»‘
       box.value = box.value.replace(/\D/g, '').slice(-1);
       box.classList.toggle('filled', box.value !== '');
       if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
       syncHidden();
     });
 
-    // Paste toàn bộ mã
+    // Paste toĂ n bá»™ mĂ£
     box.addEventListener('paste', (e) => {
       const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
       if (text.length === 6) {
@@ -200,8 +200,8 @@
     submit.disabled = val.length < 6;
   }
 
-  // ── Đếm ngược 2 phút ──
-  let seconds = 120;
+  // â”€â”€ Äáº¿m ngÆ°á»£c theo TTL server trả về â”€â”€
+  let seconds = <%= typeof otpTtlSeconds !== 'undefined' ? otpTtlSeconds : 120 %>;
   const interval = setInterval(() => {
     seconds--;
     const m = Math.floor(seconds / 60);
@@ -210,15 +210,16 @@
     if (seconds <= 30) timerWrap.classList.add('warning');
     if (seconds <= 0) {
       clearInterval(interval);
-      timerEl.textContent = 'Hết hạn';
+      timerEl.textContent = 'Háº¿t háº¡n';
       submit.disabled = true;
       boxes.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-      // Tự submit form rỗng để server xóa user và báo hết hạn
+      // Tá»± submit form rá»—ng Ä‘á»ƒ server xĂ³a user vĂ  bĂ¡o háº¿t háº¡n
       hidden.value = 'EXPIRED';
       document.getElementById('otp-form').submit();
     }
   }, 1000);
 
-  // Focus ô đầu tiên
+  // Focus Ă´ Ä‘áº§u tiĂªn
   if (boxes[0]) boxes[0].focus();
 </script>
+

@@ -836,6 +836,67 @@ router.post("/register", async (req, res) => {
 
 const VerificationRequest = require('../../models/VerificationRequest.model');
 const CourseClass = require('../../models/CourseClass.model');
+const SupportTicket = require('../../models/SupportTicket.model');
+
+function ensureAdmin(req, res, next) {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+  return res.redirect('/admin/course/coursesList');
+}
+
+router.get('/support/unread-count', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  const count = await SupportTicket.countDocuments({ status: 'pending' });
+  return res.json({ ok: true, count });
+});
+
+router.get('/support', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  const tickets = await SupportTicket.find({})
+    .populate('userId', 'username name email avatar')
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .lean();
+
+  const unreadIds = tickets
+    .filter(ticket => ticket.status === 'pending')
+    .map(ticket => ticket._id);
+
+  if (unreadIds.length > 0) {
+    await SupportTicket.updateMany(
+      { _id: { $in: unreadIds } },
+      { $set: { status: 'read', readAt: new Date() } }
+    );
+  }
+
+  res.render('admin/support/tickets', {
+    user: req.user,
+    data: {
+      title: 'Support tickets',
+      tickets,
+      pendingCount: unreadIds.length
+    }
+  });
+});
+
+router.post('/support/:id/resolve', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.json({ ok: false });
+  }
+
+  const ticket = await SupportTicket.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        status: 'resolved',
+        resolvedAt: new Date(),
+        resolvedBy: req.user._id
+      }
+    },
+    { new: true }
+  );
+
+  return res.json({ ok: !!ticket });
+});
 
 // ── Xem học viên đã đăng ký 1 khóa học + lớp của khóa đó ──
 router.get('/course/students', ensureAuthenticated, async (req, res) => {

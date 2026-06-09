@@ -43,6 +43,10 @@
       <a href="/admin/verifications" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'verifications' ? 'active' : '' %>">
         <i class="fas fa-id-card-alt"></i> Xác nhận
       </a>
+      <a href="/admin/support" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'support' ? 'active' : '' %>">
+        <i class="fas fa-headset"></i> H&#7895; tr&#7907;
+        <span class="adm-nav-badge" id="support-unread-badge" style="display:none"></span>
+      </a>
 
       <div class="adm-nav-section" style="margin-top:8px">Cấu hình</div>
       <a href="/admin/home/banners" class="adm-nav-item <%= typeof activePage !== 'undefined' && activePage === 'banners' ? 'active' : '' %>">
@@ -82,3 +86,20 @@
       </div>
     </header>
     <div class="adm-content">
+      <% if (user.role === 'admin') { %>
+      <script>
+      document.addEventListener('DOMContentLoaded', async function () {
+        const badge = document.getElementById('support-unread-badge');
+        if (!badge) return;
+        try {
+          const res = await fetch('/admin/support/unread-count', { credentials: 'same-origin' });
+          const json = await res.json();
+          const count = Number(json.count) || 0;
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-flex';
+          }
+        } catch (e) {}
+      });
+      </script>
+      <% } %>

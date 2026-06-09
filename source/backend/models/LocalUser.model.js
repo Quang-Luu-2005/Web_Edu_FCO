@@ -109,6 +109,9 @@ const LocalUserSchema = mongoose.Schema({
     }
 });
 
+LocalUserSchema.index({ email: 1 }, { unique: true });
+LocalUserSchema.index({ username: 1 });
+
 const LocalUser = mongoose.models.localusers || mongoose.model('localusers', LocalUserSchema);
 
 module.exports = LocalUser;

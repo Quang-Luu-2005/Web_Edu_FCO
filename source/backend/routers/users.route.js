@@ -28,6 +28,9 @@ const Course = require("../models/Course.model");
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
+const normalizeEmail = (value) => (value || '').trim().toLowerCase();
+const normalizeUsername = (value) => (value || '').trim();
+
 const isEmailInUse = async (email) => {
   return await LocalUser.findOne({ email });
 };
@@ -55,7 +58,23 @@ const renderRegister = (req, res, extra = {}) => {
   });
 };
 
-const { sendOtpMail, sendGoogleLoginMail } = require('../config/mail.config');
+const {
+  OTP_TTL_MINUTES,
+  sendOtpMail,
+  sendGoogleLoginMail
+} = require('../config/mail.config');
+
+const OTP_TTL_MS = OTP_TTL_MINUTES * 60 * 1000;
+
+const renderOtp = (req, res, extra = {}) => {
+  res.render("./user/otp", {
+    ...extra,
+    otpTtlSeconds: Math.floor(OTP_TTL_MS / 1000),
+    otpTtlMinutes: OTP_TTL_MINUTES,
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user
+  });
+};
 
 //GET LOGIN
 Router.get("/login", forwardAuthenticated, (req, res) => {
@@ -65,6 +84,126 @@ Router.get("/login", forwardAuthenticated, (req, res) => {
 //GET register
 Router.get("/register", forwardAuthenticated, (req, res) => {
   renderRegister(req, res);
+});
+
+Router.post("/register", async function (req, res) {
+  const username = normalizeUsername(req.body.username);
+  const email = normalizeEmail(req.body.email);
+  const { password, password2, gender } = req.body;
+
+  let errors = [];
+
+  if (!username) errors.push({ msg: "Vui lòng nhập tên đăng nhập" });
+  if (!email) errors.push({ msg: "Vui lòng nhập email" });
+  if (!password) errors.push({ msg: "Vui lòng nhập mật khẩu" });
+  if (!password2) errors.push({ msg: "Vui lòng xác nhận mật khẩu" });
+
+  if (errors.length > 0) {
+    return renderRegister(req, res, {
+      errors,
+      username,
+      email
+    });
+  }
+
+  if (username.length < 4) {
+    errors.push({ msg: "Tên đăng nhập phải có ít nhất 4 ký tự" });
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    errors.push({ msg: "Tên đăng nhập chỉ được dùng chữ, số và dấu _" });
+  }
+
+  if (password !== password2) {
+    errors.push({ msg: "Mật khẩu không khớp" });
+  }
+
+  if (password.length < 6) {
+    errors.push({ msg: "Mật khẩu phải có ít nhất 6 ký tự" });
+  }
+
+  if (errors.length > 0) {
+    return renderRegister(req, res, {
+      errors,
+      username,
+      email
+    });
+  }
+
+  try {
+    const now = new Date();
+    await LocalUser.deleteMany({
+      isAuth: false,
+      otpExpires: { $lt: now },
+      $or: [{ email }, { username }]
+    });
+
+    const [existEmail, existUsername] = await Promise.all([
+      LocalUser.findOne({ email }),
+      LocalUser.findOne({ username })
+    ]);
+
+    let pendingUser = null;
+    if (existEmail && existEmail.isAuth === false) {
+      pendingUser = existEmail;
+    }
+    if (existUsername && existUsername.isAuth === false) {
+      if (pendingUser && pendingUser._id.toString() !== existUsername._id.toString()) {
+        errors.push({ msg: "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác" });
+      } else {
+        pendingUser = existUsername;
+      }
+    }
+
+    if (existEmail && (!pendingUser || existEmail._id.toString() !== pendingUser._id.toString())) {
+      errors.push({ msg: "Email đã được sử dụng, vui lòng dùng email khác" });
+    }
+
+    if (existUsername && (!pendingUser || existUsername._id.toString() !== pendingUser._id.toString())) {
+      errors.push({ msg: "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác" });
+    }
+
+    if (errors.length > 0) {
+      return renderRegister(req, res, {
+        errors,
+        username,
+        email
+      });
+    }
+
+    const otpNumber = (Math.floor(Math.random() * 900000) + 100000).toString();
+    const userToVerify = pendingUser || new LocalUser();
+    userToVerify.username = username;
+    userToVerify.name = username;
+    userToVerify.email = email;
+    userToVerify.password = await bcrypt.hash(password, 10);
+    userToVerify.gender = gender || 'other';
+    userToVerify.role = userToVerify.role || 'guest';
+    userToVerify.isAuth = false;
+    userToVerify.otpNumber = otpNumber;
+    userToVerify.otpExpires = new Date(Date.now() + OTP_TTL_MS);
+    await userToVerify.save();
+
+    try {
+      await sendOtpMail(email, otpNumber);
+    } catch (mailError) {
+      await LocalUser.deleteOne({ _id: userToVerify._id, isAuth: false });
+      throw mailError;
+    }
+
+    req.session.currentEmail = email;
+
+    return renderOtp(req, res, {
+      otpExpires: userToVerify.otpExpires
+    });
+  } catch (error) {
+    console.error("[Register] Lỗi gửi mail OTP:", error.message, error.stack);
+    return renderRegister(req, res, {
+      errors: [{ msg: `Không thể gửi email xác nhận: ${error.message}` }],
+      username,
+      email
+    });
+  }
 });
 
 Router.get("/auth/google", passport.authenticate("google", {
@@ -139,7 +278,7 @@ Router.get("/auth/google/confirm/:token", async (req, res, next) => {
 });
 
 //POST register
-Router.post("/register", async function (req, res) {
+Router.post("/register-legacy-disabled", async function (req, res) {
   const { username, email, password, password2, gender } = req.body;
 
   let errors = [];
@@ -230,6 +369,88 @@ Router.post("/register", async function (req, res) {
   }
 });
 
+Router.post("/otp", async (req, res) => {
+  const otpNumber = req.body.otpNumber;
+  const localUser = await LocalUser.findOne({
+    email: req.session.currentEmail,
+  });
+
+  if (!localUser) {
+    return renderOtp(req, res, {
+      errors: [{ msg: "Phiên đã hết hạn, vui lòng đăng ký lại" }]
+    });
+  }
+
+  if (!localUser.otpExpires || new Date() > localUser.otpExpires) {
+    await LocalUser.deleteOne({ _id: localUser._id });
+    req.session.currentEmail = undefined;
+    return renderOtp(req, res, {
+      errors: [{ msg: `Mã OTP đã hết hạn (${OTP_TTL_MINUTES} phút). Vui lòng đăng ký lại.` }],
+      expired: true
+    });
+  }
+
+  if (otpNumber == localUser.otpNumber) {
+    localUser.isAuth = true;
+    localUser.otpNumber = undefined;
+    localUser.otpExpires = undefined;
+    await localUser.save();
+
+    req.session.currentEmail = undefined;
+
+    req.logIn(localUser, (err) => {
+      if (err) {
+        req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
+        return res.redirect("/users/login");
+      }
+      req.flash("success_msg", "Chào mừng đến với MansterClass!");
+      return res.redirect("/");
+    });
+  } else {
+    return renderOtp(req, res, {
+      errors: [{ msg: "Mã OTP không đúng, vui lòng thử lại" }],
+      otpExpires: localUser.otpExpires,
+      otpTtlSeconds: Math.max(0, Math.floor((localUser.otpExpires.getTime() - Date.now()) / 1000)),
+      otpTtlMinutes: OTP_TTL_MINUTES
+    });
+  }
+});
+
+Router.post("/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+
+    if (!user) {
+      if (info && info.needsOtp) {
+        req.session.currentEmail = info.email || req.body.email;
+        return renderOtp(req, res, {
+          errors: [{
+            msg: info.message || "Vui lòng nhập OTP để đăng nhập"
+          }],
+          otpExpires: info.otpExpires
+        });
+      }
+
+      return renderLogin(req, res, {
+        errors: [{
+          msg: (info && info.message) || "Invalid account"
+        }]
+      });
+    }
+
+    req.logIn(user, (loginErr) => {
+      if (loginErr) {
+        return next(loginErr);
+      }
+
+      return res.redirect(getLandingPath(user));
+    });
+  })(req, res, next);
+});
+
+// legacy handler below
 Router.post("/otp", async (req, res) => {
   const otpNumber = req.body.otpNumber;
   const localUser = await LocalUser.findOne({

@@ -1,0 +1,116 @@
+<% const activePage = 'support'; const pageTitle = 'Ho tro'; %>
+<%- include('../common/header', {user, activePage, pageTitle}) %>
+
+<style>
+.support-list { display:flex; flex-direction:column; gap:12px; }
+.support-meta { display:flex; flex-wrap:wrap; gap:8px 14px; color:#64748b; font-size:12px; margin-top:6px; }
+.support-url { color:#93c5fd; word-break:break-all; text-decoration:none; }
+.support-url:hover { color:#bfdbfe; }
+.support-badge {
+  display:inline-flex; align-items:center; height:24px; padding:0 10px;
+  border-radius:999px; font-size:12px; font-weight:700;
+}
+.support-badge-new { background:rgba(245,158,11,0.16); color:#fbbf24; }
+.support-badge-read { background:rgba(37,99,235,0.16); color:#93c5fd; }
+.support-badge-resolved { background:rgba(22,163,74,0.16); color:#86efac; }
+</style>
+
+<div class="adm-page-header">
+  <div>
+    <div class="adm-page-title">Y&#234;u c&#7847;u h&#7895; tr&#7907;</div>
+    <div class="adm-page-subtitle">
+      <%= data.tickets.length %> phi&#7871;u g&#7847;n nh&#7845;t
+      <% if (data.pendingCount > 0) { %>
+        - <%= data.pendingCount %> phi&#7871;u m&#7899;i
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (data.tickets.length === 0) { %>
+  <div class="adm-card">
+    <div class="adm-empty">
+      <i class="fas fa-inbox" style="color:#93c5fd"></i>
+      <p>Ch&#432;a c&#243; phi&#7871;u h&#7895; tr&#7907; n&#224;o.</p>
+    </div>
+  </div>
+<% } else { %>
+  <div class="support-list">
+    <% data.tickets.forEach(ticket => {
+      const ticketUser = ticket.userId || null;
+      const statusLabel = ticket.status === 'pending' ? 'Moi'
+        : ticket.status === 'resolved' ? 'Da xu ly'
+        : 'Da xem';
+      const statusClass = ticket.status === 'pending' ? 'support-badge-new'
+        : ticket.status === 'resolved' ? 'support-badge-resolved'
+        : 'support-badge-read';
+      const safeHref = (/^https?:\/\//i.test(ticket.pageUrl || '') || (ticket.pageUrl || '').startsWith('/'))
+        ? ticket.pageUrl
+        : '#';
+    %>
+      <div class="adm-card" id="support-ticket-<%= ticket._id %>">
+        <div class="adm-card-body" style="display:flex;gap:16px;align-items:flex-start">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(37,99,235,0.16);display:flex;align-items:center;justify-content:center;color:#93c5fd;flex:0 0 auto">
+            <i class="fas fa-envelope-open-text"></i>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+              <span class="support-badge <%= statusClass %>"><%= statusLabel %></span>
+              <span style="font-size:13px;color:#94a3b8">Error: <%= ticket.errorType || 'unknown' %></span>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:#f1f5f9;margin-bottom:4px">
+              <%= ticketUser ? (ticketUser.name || ticketUser.username || ticketUser.email) : 'Guest' %>
+            </div>
+            <% if (ticketUser && ticketUser.email) { %>
+              <div style="font-size:13px;color:#64748b;margin-bottom:10px"><%= ticketUser.email %></div>
+            <% } %>
+            <div style="font-size:13px;color:#cbd5e1;margin-bottom:8px"><%= ticket.message || 'No message' %></div>
+            <a class="support-url" href="<%= safeHref %>" target="_blank" rel="noopener">
+              <i class="fas fa-link"></i> <%= ticket.pageUrl %>
+            </a>
+            <div class="support-meta">
+              <span><i class="fas fa-clock"></i> <%= new Date(ticket.createdAt).toLocaleString('vi-VN') %></span>
+              <% if (ticket.ip) { %><span>IP: <%= ticket.ip %></span><% } %>
+            </div>
+          </div>
+          <div style="flex:0 0 auto">
+            <% if (ticket.status !== 'resolved') { %>
+              <button class="adm-btn adm-btn-success adm-btn-sm" onclick="resolveSupportTicket('<%= ticket._id %>')">
+                <i class="fas fa-check"></i> Xong
+              </button>
+            <% } else { %>
+              <button class="adm-btn adm-btn-ghost adm-btn-sm" disabled>
+                <i class="fas fa-check"></i> Xong
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<script>
+async function resolveSupportTicket(id) {
+  const res = await fetch('/admin/support/' + id + '/resolve', {
+    method: 'POST',
+    credentials: 'same-origin'
+  });
+  const json = await res.json();
+  if (!json.ok) {
+    admToast('Khong the xu ly phieu ho tro', 'error');
+    return;
+  }
+
+  const card = document.getElementById('support-ticket-' + id);
+  if (card) {
+    card.style.transition = 'opacity 0.25s, transform 0.25s';
+    card.style.opacity = '0.45';
+    card.style.transform = 'translateX(8px)';
+  }
+  admToast('Da danh dau phieu ho tro la xong', 'success');
+  setTimeout(() => location.reload(), 700);
+}
+</script>
+
+<%- include('../common/footer') %>
