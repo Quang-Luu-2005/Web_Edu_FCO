@@ -4,8 +4,10 @@ const TopicEnum = require('./CourseTopic.enum');
 
 const CourseTopicSchema = mongoose.Schema({
     name: {
-        type: TopicEnum,
-        required: true
+        type: String,
+        enum: Object.values(TopicEnum),
+        required: true,
+        unique: true
     },
     numberOfView: {
         type: Number,

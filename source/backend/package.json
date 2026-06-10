@@ -4,7 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "import:database": "node scripts/import-database.js",
+    "import:database:dry": "node scripts/import-database.js --dry-run"
   },
   "author": "Võ Thế Minh",
   "license": "ISC",
