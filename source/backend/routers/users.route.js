@@ -13,8 +13,6 @@ const LocalUser = require("../models/LocalUser.model");
 
 const nodemailer = require("nodemailer");
 
-const crypto = require("crypto");
-
 const bcrypt = require("bcryptjs");
 
 const fs = require("fs");
@@ -61,8 +59,7 @@ const renderRegister = (req, res, extra = {}) => {
 const {
   OTP_TTL_MINUTES,
   canUseOtpFallback,
-  sendOtpMail,
-  sendGoogleLoginMail
+  sendOtpMail
 } = require('../config/mail.config');
 
 const OTP_TTL_MS = OTP_TTL_MINUTES * 60 * 1000;
@@ -213,77 +210,6 @@ Router.post("/register", async function (req, res) {
       username,
       email
     });
-  }
-});
-
-Router.get("/auth/google", passport.authenticate("google", {
-  scope: ["profile", "email"],
-}));
-
-Router.get("/auth/google/callback", (req, res, next) => {
-  passport.authenticate("google", async (err, user, info) => {
-    if (err) {
-      return next(err);
-    }
-
-    if (!user) {
-      return renderLogin(req, res, {
-        errors: [{
-          msg: (info && info.message) || "Google login failed"
-        }]
-      });
-    }
-
-    try {
-      const token = crypto.randomBytes(24).toString("hex");
-      user.googleLoginToken = token;
-      user.googleLoginTokenExpires = new Date(Date.now() + 15 * 60 * 1000);
-      await user.save();
-
-      await sendGoogleLoginMail(user.email, token);
-      req.flash("success_msg", "Check your email to confirm Google login");
-      return res.redirect("/users/login");
-    } catch (error) {
-      console.error("Google login mail error:", error.message);
-      user.googleLoginToken = undefined;
-      user.googleLoginTokenExpires = undefined;
-      await user.save();
-      return renderLogin(req, res, {
-        errors: [{
-          msg: "Cannot send confirmation email. Check mail config."
-        }]
-      });
-    }
-  })(req, res, next);
-});
-
-Router.get("/auth/google/confirm/:token", async (req, res, next) => {
-  try {
-    const user = await LocalUser.findOne({
-      googleLoginToken: req.params.token,
-      googleLoginTokenExpires: { $gt: new Date() }
-    });
-
-    if (!user) {
-      return renderLogin(req, res, {
-        errors: [{
-          msg: "Google confirm link expired or invalid"
-        }]
-      });
-    }
-
-    user.googleLoginToken = undefined;
-    user.googleLoginTokenExpires = undefined;
-    await user.save();
-
-    req.logIn(user, (loginErr) => {
-      if (loginErr) {
-        return next(loginErr);
-      }
-      return res.redirect(getLandingPath(user));
-    });
-  } catch (error) {
-    return next(error);
   }
 });
 

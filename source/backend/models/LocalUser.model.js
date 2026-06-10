@@ -17,9 +17,6 @@ const LocalUserSchema = mongoose.Schema({
         type: String,
         default: 'local'
     },
-    googleId: {
-        type: String
-    },
     name: {
         type: String,
         requried: true
@@ -65,12 +62,6 @@ const LocalUserSchema = mongoose.Schema({
         type: String
     },
     otpExpires: {
-        type: Date
-    },
-    googleLoginToken: {
-        type: String
-    },
-    googleLoginTokenExpires: {
         type: Date
     },
     idCourses: {

@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 
-const APP_URL = process.env.APP_URL || 'http://localhost:8000';
 const MAIL_FROM = process.env.MAIL_FROM || process.env.RESEND_FROM || 'MansterClass <onboarding@resend.dev>';
 const OTP_TTL_MINUTES = Number(process.env.OTP_TTL_MINUTES || 10);
 const OTP_FALLBACK_ON_MAIL_ERROR = process.env.OTP_FALLBACK_ON_MAIL_ERROR !== 'false';
@@ -124,27 +123,6 @@ const buildOtpHtml = (otpNumber) => `
   </div>
 `;
 
-const buildGoogleLoginHtml = (token) => {
-  const confirmUrl = `${APP_URL}/users/auth/google/confirm/${token}`;
-  return `
-    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;
-                border:1px solid #e5e7eb;border-radius:12px">
-      <h2 style="color:#111827;margin:0 0 8px">Xac nhan dang nhap Google</h2>
-      <p style="color:#6b7280;margin:0 0 24px">
-        Click nut ben duoi de xac nhan dang nhap:
-      </p>
-      <a href="${confirmUrl}"
-         style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;
-                border-radius:8px;text-decoration:none;font-weight:700">
-        Xac nhan dang nhap
-      </a>
-      <p style="color:#9ca3af;font-size:12px;margin:16px 0 0">
-        Link co hieu luc trong 15 phut.
-      </p>
-    </div>
-  `;
-};
-
 const sendOtpMail = async (email, otpNumber) => {
   return sendMail({
     to: email,
@@ -153,17 +131,8 @@ const sendOtpMail = async (email, otpNumber) => {
   });
 };
 
-const sendGoogleLoginMail = async (email, token) => {
-  return sendMail({
-    to: email,
-    subject: 'Xac nhan dang nhap Google - MansterClass',
-    html: buildGoogleLoginHtml(token),
-  });
-};
-
 module.exports = {
   OTP_TTL_MINUTES,
   canUseOtpFallback,
   sendOtpMail,
-  sendGoogleLoginMail,
 };

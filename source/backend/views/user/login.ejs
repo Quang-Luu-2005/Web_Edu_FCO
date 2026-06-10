@@ -87,48 +87,6 @@
 
   .auth-submit:hover { background: #1d4ed8; }
 
-  .auth-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 20px 0;
-    color: #9ca3af;
-    font-size: 13px;
-  }
-
-  .auth-divider::before,
-  .auth-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e5e7eb;
-  }
-
-  .auth-google {
-    width: 100%;
-    height: 46px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 8px;
-    background: #ffffff;
-    color: #374151;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-decoration: none;
-    transition: background 0.15s, border-color 0.15s;
-  }
-
-  .auth-google:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
-    color: #111827;
-    text-decoration: none;
-  }
-
   .auth-footer {
     margin-top: 20px;
     text-align: center;
@@ -164,12 +122,6 @@
 
       <button type="submit" class="auth-submit">Đăng nhập</button>
     </form>
-
-    <div class="auth-divider">hoặc</div>
-
-    <a href="/users/auth/google" class="auth-google">
-      <i class="fab fa-google"></i> Đăng nhập bằng Google
-    </a>
 
     <p class="auth-footer" style="margin-top:16px">
       <a href="#">Quên mật khẩu?</a>
