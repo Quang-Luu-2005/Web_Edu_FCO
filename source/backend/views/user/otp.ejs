@@ -32,7 +32,7 @@
     line-height: 1.6;
   }
 
-  /* Äáº¿m ngÆ°á»£c */
+  /* Đếm ngược */
   .otp-timer {
     display: inline-flex;
     align-items: center;
@@ -45,7 +45,7 @@
 
   .otp-timer.warning { color: #dc2626; }
 
-  /* 6 Ă´ nháº­p OTP */
+  /* 6 ô nhập OTP */
   .otp-inputs {
     display: flex;
     justify-content: center;
@@ -109,17 +109,17 @@
 
 <div class="auth-page">
   <div class="auth-card">
-    <h1 class="otp-title">Nháº­p mĂ£ xĂ¡c nháº­n</h1>
+    <h1 class="otp-title">Nhập mã xác nhận</h1>
     <p class="otp-subtitle">
-      MĂ£ 6 sá»‘ Ä‘Ă£ Ä‘Æ°á»£c gá»­i Ä‘áº¿n email cá»§a báº¡n.<br>
-      MĂ£ cĂ³ hiá»‡u lá»±c trong <strong><%= typeof otpTtlMinutes !== 'undefined' ? otpTtlMinutes : 2 %> phĂºt</strong>.
+      Mã 6 số đã được gửi đến email của bạn.<br>
+      Mã có hiệu lực trong <strong><%= typeof otpTtlMinutes !== 'undefined' ? otpTtlMinutes : 2 %> phút</strong>.
     </p>
 
     <%- include('../partials/messages') %>
 
     <% if (typeof mailWarning !== 'undefined' && mailWarning) { %>
       <div style="margin:0 0 20px;padding:12px 14px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px;line-height:1.5;text-align:left">
-        <strong>Luu y:</strong> <%= mailWarning %>
+        <strong>Lưu ý:</strong> <%= mailWarning %>
         <% if (typeof otpDebugCode !== 'undefined' && otpDebugCode) { %>
           <div style="margin-top:10px;text-align:center;font-size:28px;letter-spacing:8px;font-weight:800;color:#2563eb;background:#ffffff;border-radius:8px;padding:10px">
             <%= otpDebugCode %>
@@ -129,10 +129,10 @@
     <% } %>
 
     <% if (typeof expired !== 'undefined' && expired) { %>
-      <p style="margin-top:16px"><a href="/users/register" style="color:#2563eb;font-weight:600">â† ÄÄƒng kĂ½ láº¡i</a></p>
+      <p style="margin-top:16px"><a href="/users/register" style="color:#2563eb;font-weight:600">← Đăng ký lại</a></p>
     <% } else { %>
 
-    <!-- Äáº¿m ngÆ°á»£c -->
+    <!-- Đếm ngược -->
     <div class="otp-timer" id="otp-timer">
       <i class="fas fa-clock"></i>
       <span id="timer-text"><%= typeof otpTtlMinutes !== 'undefined' ? otpTtlMinutes : 2 %>:00</span>
@@ -148,11 +148,11 @@
         <input class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" />
       </div>
       <input type="hidden" name="otpNumber" id="otpNumber" />
-      <button type="submit" class="otp-submit" id="otp-submit" disabled>XĂ¡c nháº­n</button>
+      <button type="submit" class="otp-submit" id="otp-submit" disabled>Xác nhận</button>
     </form>
 
-    <span class="otp-back">KhĂ´ng nháº­n Ä‘Æ°á»£c mail?
-      <a href="/users/register">ÄÄƒng kĂ½ láº¡i</a>
+    <span class="otp-back">Không nhận được mail?
+      <a href="/users/register">Đăng ký lại</a>
     </span>
 
     <% } %>
@@ -166,7 +166,7 @@
   const timerEl = document.getElementById('timer-text');
   const timerWrap = document.getElementById('otp-timer');
 
-  // â”€â”€ Äiá»u hÆ°á»›ng giá»¯a cĂ¡c Ă´ â”€â”€
+  // Điều hướng giữa các ô
   boxes.forEach((box, i) => {
     box.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace') {
@@ -183,14 +183,14 @@
     });
 
     box.addEventListener('input', () => {
-      // Chá»‰ cho nháº­p sá»‘
+      // Chỉ cho nhập số
       box.value = box.value.replace(/\D/g, '').slice(-1);
       box.classList.toggle('filled', box.value !== '');
       if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
       syncHidden();
     });
 
-    // Paste toĂ n bá»™ mĂ£
+    // Paste toàn bộ mã
     box.addEventListener('paste', (e) => {
       const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
       if (text.length === 6) {
@@ -211,7 +211,7 @@
     submit.disabled = val.length < 6;
   }
 
-  // â”€â”€ Äáº¿m ngÆ°á»£c theo TTL server trả về â”€â”€
+  // Đếm ngược theo TTL server trả về
   let seconds = <%= typeof otpTtlSeconds !== 'undefined' ? otpTtlSeconds : 120 %>;
   const interval = setInterval(() => {
     seconds--;
@@ -221,16 +221,16 @@
     if (seconds <= 30) timerWrap.classList.add('warning');
     if (seconds <= 0) {
       clearInterval(interval);
-      timerEl.textContent = 'Háº¿t háº¡n';
+      timerEl.textContent = 'Hết hạn';
       submit.disabled = true;
       boxes.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-      // Tá»± submit form rá»—ng Ä‘á»ƒ server xĂ³a user vĂ  bĂ¡o háº¿t háº¡n
+      // Tự submit form rỗng để server xóa user và báo hết hạn
       hidden.value = 'EXPIRED';
       document.getElementById('otp-form').submit();
     }
   }, 1000);
 
-  // Focus Ă´ Ä‘áº§u tiĂªn
+  // Focus ô đầu tiên
   if (boxes[0]) boxes[0].focus();
 </script>
 
