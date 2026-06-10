@@ -60,6 +60,7 @@ const renderRegister = (req, res, extra = {}) => {
 
 const {
   OTP_TTL_MINUTES,
+  canUseOtpFallback,
   sendOtpMail,
   sendGoogleLoginMail
 } = require('../config/mail.config');
@@ -184,17 +185,26 @@ Router.post("/register", async function (req, res) {
     userToVerify.otpExpires = new Date(Date.now() + OTP_TTL_MS);
     await userToVerify.save();
 
+    let mailWarning = '';
+    let otpDebugCode = '';
     try {
       await sendOtpMail(email, otpNumber);
     } catch (mailError) {
-      await LocalUser.deleteOne({ _id: userToVerify._id, isAuth: false });
-      throw mailError;
+      console.warn('[Register] OTP mail not delivered, using fallback:', mailError.message);
+      if (!canUseOtpFallback(mailError)) {
+        await LocalUser.deleteOne({ _id: userToVerify._id, isAuth: false });
+        throw mailError;
+      }
+      mailWarning = 'Email OTP chưa gửi được vì dịch vụ mail chưa cấu hình gửi thật. Dùng mã tạm thời bên dưới để tiếp tục.';
+      otpDebugCode = otpNumber;
     }
 
     req.session.currentEmail = email;
 
     return renderOtp(req, res, {
-      otpExpires: userToVerify.otpExpires
+      otpExpires: userToVerify.otpExpires,
+      mailWarning,
+      otpDebugCode
     });
   } catch (error) {
     console.error("[Register] Lỗi gửi mail OTP:", error.message, error.stack);

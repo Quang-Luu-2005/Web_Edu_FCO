@@ -117,6 +117,17 @@
 
     <%- include('../partials/messages') %>
 
+    <% if (typeof mailWarning !== 'undefined' && mailWarning) { %>
+      <div style="margin:0 0 20px;padding:12px 14px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px;line-height:1.5;text-align:left">
+        <strong>Luu y:</strong> <%= mailWarning %>
+        <% if (typeof otpDebugCode !== 'undefined' && otpDebugCode) { %>
+          <div style="margin-top:10px;text-align:center;font-size:28px;letter-spacing:8px;font-weight:800;color:#2563eb;background:#ffffff;border-radius:8px;padding:10px">
+            <%= otpDebugCode %>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
     <% if (typeof expired !== 'undefined' && expired) { %>
       <p style="margin-top:16px"><a href="/users/register" style="color:#2563eb;font-weight:600">â† ÄÄƒng kĂ½ láº¡i</a></p>
     <% } else { %>

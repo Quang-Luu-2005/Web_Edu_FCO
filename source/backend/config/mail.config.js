@@ -4,6 +4,25 @@ const { Resend } = require('resend');
 const APP_URL = process.env.APP_URL || 'http://localhost:8000';
 const MAIL_FROM = process.env.MAIL_FROM || process.env.RESEND_FROM || 'MansterClass <onboarding@resend.dev>';
 const OTP_TTL_MINUTES = Number(process.env.OTP_TTL_MINUTES || 10);
+const OTP_FALLBACK_ON_MAIL_ERROR = process.env.OTP_FALLBACK_ON_MAIL_ERROR !== 'false';
+const SMTP_FALLBACK_ENABLED = process.env.SMTP_FALLBACK_ENABLED === 'true';
+
+class MailDeliveryError extends Error {
+  constructor(message, options = {}) {
+    super(message);
+    this.name = 'MailDeliveryError';
+    this.code = options.code || 'MAIL_DELIVERY_FAILED';
+    this.provider = options.provider || 'unknown';
+    this.recoverable = options.recoverable !== false;
+    this.cause = options.cause;
+  }
+}
+
+const isResendSandboxError = (error) => {
+  const msg = (error && error.message || '').toLowerCase();
+  return msg.includes('only send testing emails to your own email address')
+    || msg.includes('verify a domain');
+};
 
 const createTransporter = () => {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -26,7 +45,10 @@ const createTransporter = () => {
 
 const sendWithResend = async ({ to, subject, html }) => {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not configured');
+    throw new MailDeliveryError('RESEND_API_KEY is not configured', {
+      code: 'RESEND_NOT_CONFIGURED',
+      provider: 'resend',
+    });
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -38,7 +60,13 @@ const sendWithResend = async ({ to, subject, html }) => {
   });
 
   if (result.error) {
-    throw new Error(result.error.message || 'Resend mail error');
+    const message = result.error.message || 'Resend mail error';
+    throw new MailDeliveryError(message, {
+      code: isResendSandboxError(result.error) ? 'RESEND_SANDBOX_RECIPIENT_BLOCKED' : 'RESEND_SEND_FAILED',
+      provider: 'resend',
+      recoverable: true,
+      cause: result.error,
+    });
   }
 
   return result.data;
@@ -59,14 +87,23 @@ const sendMail = async (payload) => {
     try {
       return await sendWithResend(payload);
     } catch (resendError) {
-      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      if (isResendSandboxError(resendError)) {
+        throw resendError;
+      }
+
+      if (SMTP_FALLBACK_ENABLED && process.env.SMTP_USER && process.env.SMTP_PASS) {
         console.warn('[Mail] Resend failed, falling back to SMTP:', resendError.message);
         return sendWithSmtp(payload);
       }
+
       throw resendError;
     }
   }
   return sendWithSmtp(payload);
+};
+
+const canUseOtpFallback = (error) => {
+  return OTP_FALLBACK_ON_MAIL_ERROR && (!error || error.recoverable !== false);
 };
 
 const buildOtpHtml = (otpNumber) => `
@@ -126,6 +163,7 @@ const sendGoogleLoginMail = async (email, token) => {
 
 module.exports = {
   OTP_TTL_MINUTES,
+  canUseOtpFallback,
   sendOtpMail,
   sendGoogleLoginMail,
 };
