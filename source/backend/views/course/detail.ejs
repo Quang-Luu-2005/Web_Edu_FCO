@@ -229,6 +229,62 @@
     flex: 1;
   }
 
+  .course-rich-description {
+    color: #374151;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .course-rich-description p,
+  .course-rich-description ul,
+  .course-rich-description ol,
+  .course-rich-description blockquote,
+  .course-rich-description table {
+    margin: 0 0 14px;
+  }
+
+  .course-rich-description ul,
+  .course-rich-description ol {
+    padding-left: 24px;
+  }
+
+  .course-rich-description blockquote {
+    border-left: 4px solid #2563eb;
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .course-rich-description table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .course-rich-description th,
+  .course-rich-description td {
+    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+  }
+
+  .course-rich-description th {
+    background: #eff6ff;
+    font-weight: 700;
+  }
+
+  .course-rich-description code {
+    background: #f1f5f9;
+    border-radius: 6px;
+    padding: 2px 5px;
+  }
+
+  .course-rich-description pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 8px;
+    overflow: auto;
+    padding: 12px;
+  }
+
   .fas {
     font-size: 11px;
   }
@@ -712,7 +768,7 @@
     <div id="couser-intro" class="text-container course-panel active">
       <h2 class="heading-xl">Giới thiệu khóa học</h2>
       <% if (course.description) { %>
-        <div style="line-height:1.8;color:#374151;white-space:pre-wrap"><%= course.description %></div>
+        <div class="course-rich-description"><%- courseDescriptionHtml %></div>
       <% } else { %>
         <p style="color:#9ca3af">Chưa có mô tả cho khóa học này.</p>
       <% } %>

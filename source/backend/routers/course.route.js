@@ -10,6 +10,8 @@ const CourseTopic = require('../models/CourseTopic.model');
 
 const LocalUser = require('../models/LocalUser.model');
 
+const { renderCourseDescription } = require('../utils/courseDescriptionRenderer');
+
 const {
     ensureAuthenticated
 } = require('../config/auth.config');
@@ -299,11 +301,13 @@ Router.get('/:nameCourse', async (req, res) => {
     const learnedVideos = safeArray(purchasedCourse && purchasedCourse.learnedVideos);
     const faqThreads = await buildFaqThreads(course, req.user);
     const userReviews = faqThreads.map((thread) => thread.author);
+    const courseDescriptionHtml = renderCourseDescription(course.description);
 
     return res.render('./course/detail', {
         isAuthenticated: req.isAuthenticated(),
         isWishCourse: isWishCourse,
         course: course,
+        courseDescriptionHtml: courseDescriptionHtml,
         isPaid: isPaid,
         isAdmin: isAdmin,
         isEvaluate: isEvaluate,

@@ -83,6 +83,34 @@
   cursor:pointer; font-family:inherit; transition:all 0.15s;
 }
 .desc-toggle-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+.md-style-tools {
+  display:none;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:0 0 8px;
+}
+.md-style-tools.is-visible { display:flex; }
+.md-style-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  padding:0 10px;
+  border-radius:7px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:#0f172a;
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.md-style-btn:hover {
+  border-color:#2563eb;
+  color:#93c5fd;
+  background:rgba(37,99,235,0.12);
+}
+.md-style-btn i { font-size:11px; }
 
 /* Override EasyMDE dark */
 .EasyMDEContainer .CodeMirror {
@@ -136,14 +164,8 @@
         <div class="adm-card-body">
           <div class="adm-form-grid">
             <div class="adm-field">
-              <label>Danh mục <span style="color:#f87171">*</span></label>
-              <div class="ca-select-wrap">
-                <select name="category" id="category-select" class="ca-select" required onchange="syncName(this)">
-                  <% data.categories && data.categories.forEach(cat => { %>
-                    <option value="<%= cat._id %>" data-name="<%= cat.name %>"><%= cat.name %></option>
-                  <% }) %>
-                </select>
-              </div>
+              <label>Tên khóa học <span style="color:#f87171">*</span></label>
+              <input type="text" name="name" id="course-name" required maxlength="120" placeholder="VD: Lập trình Web cơ bản" autocomplete="off" />
             </div>
             <div class="adm-field">
               <label>Trạng thái</label>
@@ -154,18 +176,23 @@
                 </select>
               </div>
             </div>
-            <!-- name ẩn — tự lấy từ danh mục -->
-            <input type="hidden" name="name" id="course-name" value="<%= data.categories && data.categories[0] ? data.categories[0].name : '' %>" />
             <div class="adm-field adm-field-full">
               <label>Mô tả khóa học</label>
               <!-- Toggle mode -->
               <div class="desc-toggle" style="align-items:center">
-                <button type="button" class="desc-toggle-btn active" onclick="setDescMode('plain', this)">Văn bản</button>
-                <button type="button" class="desc-toggle-btn"        onclick="setDescMode('md', this)">Markdown</button>
+                <button type="button" class="desc-toggle-btn active" data-desc-mode="plain" onclick="setDescMode('plain', this)">Văn bản</button>
+                <button type="button" class="desc-toggle-btn" data-desc-mode="md" onclick="setDescMode('md', this)">Markdown</button>
                 <label id="md-upload-btn" title="Tải lên file .md" style="display:none;margin-left:4px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap">
                   <i class="fas fa-file-upload" style="margin-right:4px"></i> Tải file .md
                   <input type="file" id="md-file-input" accept=".md,.markdown,text/markdown" style="display:none" />
                 </label>
+              </div>
+              <div id="md-style-tools" class="md-style-tools">
+                <button type="button" class="md-style-btn" title="Chèn dòng kết quả" onclick="insertMdSnippet('result')"><i class="fas fa-check-circle"></i>Kết quả</button>
+                <button type="button" class="md-style-btn" title="Chèn highlight" onclick="insertMdSnippet('highlight')"><i class="fas fa-highlighter"></i>Highlight</button>
+                <button type="button" class="md-style-btn" title="Chèn badge" onclick="insertMdSnippet('badge')"><i class="fas fa-certificate"></i>Badge</button>
+                <button type="button" class="md-style-btn" title="Chèn ghi chú màu xanh" onclick="insertMdSnippet('note')"><i class="fas fa-info-circle"></i>Ghi chú</button>
+                <button type="button" class="md-style-btn" title="Chèn cảnh báo màu vàng" onclick="insertMdSnippet('warning')"><i class="fas fa-bolt"></i>Lưu ý</button>
               </div>
               <!-- Plain textarea -->
               <div id="desc-plain">
@@ -177,7 +204,7 @@
               </div>
               <input type="hidden" name="description_md" id="desc-md-value" />
               <p style="font-size:11px;color:#475569;margin:6px 0 0">
-                Markdown hỗ trợ: **bold**, *italic*, bảng, danh sách, emoji 🎯, tiêu đề #
+                Markdown hỗ trợ: tiêu đề, bảng, danh sách, link, emoji, highlight và badge màu.
               </p>
             </div>
           </div>
@@ -301,35 +328,70 @@ function togglePriceType(val) {
 }
 let _mde = null;
 let _descMode = 'plain';
+const MD_TOOLBAR = [
+  'bold','italic','strikethrough','heading','|',
+  'quote','unordered-list','ordered-list','|',
+  'link','table','code','horizontal-rule','|',
+  'preview','side-by-side','fullscreen','guide'
+];
+const MD_PLACEHOLDER = '# Tiêu đề\n\nMô tả khóa học...\n\n| Nội dung | Chi tiết |\n|---|---|\n| Mục tiêu | Học viên đạt được gì? |';
+const MD_SNIPPETS = {
+  result: '<span style="color:#15803d;font-weight:700">✅ Kết quả đạt được:</span> Nội dung nổi bật',
+  highlight: '<mark style="background-color:#fef3c7;color:#92400e;padding:2px 6px;border-radius:6px">⭐ Điểm nổi bật</mark>',
+  badge: '<span style="display:inline-block;background-color:#dbeafe;color:#1d4ed8;font-weight:700;padding:3px 10px;border-radius:16px">🚀 Mục tiêu</span>',
+  note: '<div style="border-left:4px solid #2563eb;background-color:#eff6ff;color:#1e3a8a;padding:10px 12px;border-radius:8px;margin:0 0 12px">💡 Ghi chú nổi bật...</div>',
+  warning: '<div style="border-left:4px solid #f59e0b;background-color:#fffbeb;color:#92400e;padding:10px 12px;border-radius:8px;margin:0 0 12px">⚡ Lưu ý quan trọng...</div>'
+};
+
+function ensureMde() {
+  if (_mde) return _mde;
+
+  _mde = new EasyMDE({
+    element: document.getElementById('desc-md-editor'),
+    placeholder: MD_PLACEHOLDER,
+    spellChecker: false,
+    autofocus: true,
+    toolbar: MD_TOOLBAR,
+    minHeight: '180px',
+  });
+
+  return _mde;
+}
 
 function setDescMode(mode, btn) {
   _descMode = mode;
   document.querySelectorAll('.desc-toggle-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
-  // Hiện nút upload file .md chỉ khi ở chế độ Markdown
+  // Hiện các công cụ markdown chỉ khi ở chế độ Markdown
   document.getElementById('md-upload-btn').style.display = mode === 'md' ? '' : 'none';
+  document.getElementById('md-style-tools').classList.toggle('is-visible', mode === 'md');
 
   if (mode === 'md') {
     const plainVal = document.getElementById('desc-textarea').value;
     document.getElementById('desc-plain').style.display = 'none';
     document.getElementById('desc-md').style.display    = 'block';
-    if (!_mde) {
-      _mde = new EasyMDE({
-        element: document.getElementById('desc-md-editor'),
-        placeholder: '# Tiêu đề\n\nMô tả khóa học...\n\n| Cột 1 | Cột 2 |\n|-------|-------|\n| A     | B     |',
-        spellChecker: false,
-        autofocus: true,
-        toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','table','|','preview','side-by-side','fullscreen'],
-        minHeight: '180px',
-      });
-    }
-    if (plainVal) _mde.value(plainVal);
+    const editor = ensureMde();
+    if (plainVal) editor.value(plainVal);
   } else {
     if (_mde) document.getElementById('desc-textarea').value = _mde.value();
     document.getElementById('desc-plain').style.display = 'block';
     document.getElementById('desc-md').style.display    = 'none';
   }
+}
+
+function insertMdSnippet(type) {
+  const mdBtn = document.querySelector('[data-desc-mode="md"]');
+  if (_descMode !== 'md' && mdBtn) setDescMode('md', mdBtn);
+
+  const snippet = MD_SNIPPETS[type];
+  if (!snippet) return;
+
+  const editor = ensureMde();
+  const cm = editor.codemirror;
+  const prefix = editor.value().trim() ? '\n\n' : '';
+  cm.replaceSelection(prefix + snippet + '\n');
+  cm.focus();
 }
 
 // ── Upload file .md ──
@@ -339,18 +401,9 @@ document.getElementById('md-file-input').addEventListener('change', function() {
   const reader = new FileReader();
   reader.onload = e => {
     const content = e.target.result;
-    // Khởi tạo MDE nếu chưa có
-    if (!_mde) {
-      document.getElementById('desc-plain').style.display = 'none';
-      document.getElementById('desc-md').style.display    = 'block';
-      _mde = new EasyMDE({
-        element: document.getElementById('desc-md-editor'),
-        spellChecker: false,
-        toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','table','|','preview','side-by-side','fullscreen'],
-        minHeight: '180px',
-      });
-    }
-    _mde.value(content);
+    const mdBtn = document.querySelector('[data-desc-mode="md"]');
+    if (_descMode !== 'md' && mdBtn) setDescMode('md', mdBtn);
+    ensureMde().value(content);
     // Highlight nút upload để báo thành công
     const btn = document.getElementById('md-upload-btn');
     btn.style.borderColor = 'rgba(74,222,128,0.5)';
@@ -371,17 +424,6 @@ document.getElementById('frmAdd').addEventListener('submit', () => {
     // Xóa name của plain textarea để không gửi trùng
     document.getElementById('desc-textarea').removeAttribute('name');
   }
-});
-
-// Đồng bộ name ẩn theo danh mục đã chọn
-function syncName(select) {
-  const opt = select.options[select.selectedIndex];
-  document.getElementById('course-name').value = opt.dataset.name || opt.text;
-}
-// Gọi ngay khi load để set giá trị mặc định
-document.addEventListener('DOMContentLoaded', () => {
-  const sel = document.getElementById('category-select');
-  if (sel) syncName(sel);
 });
 
 // ── Upload poster → ImgBB ──

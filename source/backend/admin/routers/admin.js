@@ -602,35 +602,23 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
 });
 
 router.get("/course/courseAdd",ensureAuthenticated,async function (req, res) {
-  const categories = await Topic.find({}).populate('idCourseCategory');
   res.locals.layout = false;
   res.render("admin/course/courseAdd", {
     user: req.user,
-    data: { title: "TẠO KHÓA HỌC", categories }
+    data: { title: "TẠO KHÓA HỌC" }
   });
 });
 router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
-  const { name, lecture_id, category, description, tuition, status } = req.body;
+  const { name, lecture_id, description, tuition, status } = req.body;
   // Ưu tiên markdown nếu có
   const finalDescription = req.body.description_md || description || '';
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
+  const finalName = (name || '').toString().trim();
 
-  // Tên lấy từ topic trong DB — không phụ thuộc FE
-  const categoryId = (category || '').toString().trim();
-  let topic = null;
-  try {
-    if (categoryId && categoryId.length === 24) {
-      topic = await Topic.findById(categoryId);
-    }
-  } catch(e) { console.error('[courseAdd] findById error:', e.message); }
-  
-  const topicName = topic && topic.name ? String(topic.name) : null;
-  const existCount = topicName ? await Course.countDocuments({ idCourseTopic: categoryId }) : 0;
-  const finalName = topicName
-    ? (existCount > 0 ? `${topicName} #${existCount + 1}` : topicName)
-    : `Khóa học ${Date.now()}`;
-
-  console.log('[courseAdd] categoryId:', categoryId, '| topic:', topicName, '| finalName:', finalName);
+  if (!finalName) {
+    req.flash && req.flash('error_msg', 'Vui long nhap ten khoa hoc');
+    return res.redirect('/admin/course/courseAdd');
+  }
 
   // Parse discount codes
   const discountCodes = [];
@@ -653,7 +641,6 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
   const Course_new = new Course({
     name:          finalName,
     idLecturer:    lecture_id,
-    idCourseTopic: categoryId,
     description:   finalDescription,
     tuition:       priceType === 'contact' ? 0 : (Number(tuition) || 500000),
     priceType,

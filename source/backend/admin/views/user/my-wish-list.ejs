@@ -41,7 +41,7 @@
             </div>
             <div class="courses-detail">
                 <p><%=  courses[i].numberOfStudent%> Studying</p>
-                <p><%=  courses[i].idCourseTopic.name%></p>
+                <p><%= courses[i].idCourseTopic && courses[i].idCourseTopic.name ? courses[i].idCourseTopic.name : 'Khóa học' %></p>
             </div>
         </div>
     </a>
