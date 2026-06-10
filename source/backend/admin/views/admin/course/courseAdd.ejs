@@ -33,6 +33,36 @@
 .ca-select:focus { border-color:#2563eb; }
 .ca-select option { background:#1e293b; color:#f1f5f9; }
 
+.course-basic-grid {
+  align-items:start;
+}
+.course-basic-grid .adm-field {
+  min-width:0;
+  gap:8px;
+}
+.course-basic-grid .adm-field label {
+  display:flex;
+  align-items:center;
+  height:16px;
+  line-height:16px;
+  margin:0;
+}
+.course-basic-grid .course-title-input,
+.course-basic-grid .ca-select {
+  display:block;
+  height:42px;
+  min-height:42px;
+  margin:0;
+  border-radius:10px;
+}
+.course-basic-grid .course-title-input {
+  padding:0 14px;
+  line-height:42px;
+}
+.course-basic-grid .ca-select-wrap {
+  height:42px;
+}
+
 /* Poster drop zone */
 .poster-zone {
   border:2px dashed rgba(255,255,255,0.12);
@@ -162,10 +192,10 @@
       <div class="adm-card">
         <div class="adm-card-header"><span class="adm-card-title"><i class="fas fa-info-circle" style="color:#2563eb;margin-right:8px"></i>Thông tin cơ bản</span></div>
         <div class="adm-card-body">
-          <div class="adm-form-grid">
+          <div class="adm-form-grid course-basic-grid">
             <div class="adm-field">
               <label>Tên khóa học <span style="color:#f87171">*</span></label>
-              <input type="text" name="name" id="course-name" required maxlength="120" placeholder="VD: Lập trình Web cơ bản" autocomplete="off" />
+              <input class="course-title-input" type="text" name="name" id="course-name" required maxlength="120" placeholder="VD: Lập trình Web cơ bản" autocomplete="off" />
             </div>
             <div class="adm-field">
               <label>Trạng thái</label>
