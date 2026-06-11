@@ -1,10 +1,6 @@
 <% const activePage = 'courses'; const pageTitle = 'Thêm khóa học'; %>
 <%- include('../common/header', {user, activePage, pageTitle}) %>
 
-<!-- EasyMDE Markdown Editor -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-
 <style>
 /* Custom select đẹp */
 .ca-select-wrap { position:relative; display:block; }
@@ -103,23 +99,45 @@
 .poster-spinner i { animation:spin 0.8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-/* Desc mode toggle */
-.desc-toggle {
-  display:flex; gap:4px; margin-bottom:8px;
+.desc-field-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
 }
-.desc-toggle-btn {
-  padding:4px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.10);
-  background:transparent; color:#64748b; font-size:12px; font-weight:600;
-  cursor:pointer; font-family:inherit; transition:all 0.15s;
+.desc-field-header label {
+  margin:0;
 }
-.desc-toggle-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+.md-upload-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  padding:0 11px;
+  border-radius:7px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:600;
+  text-transform:none;
+  letter-spacing:0;
+  cursor:pointer;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.md-upload-btn:hover {
+  border-color:#2563eb;
+  color:#93c5fd;
+  background:rgba(37,99,235,0.12);
+}
 .md-style-tools {
-  display:none;
+  display:flex;
   flex-wrap:wrap;
   gap:6px;
-  margin:0 0 8px;
+  margin:0 0 10px;
 }
-.md-style-tools.is-visible { display:flex; }
 .md-style-btn {
   display:inline-flex;
   align-items:center;
@@ -141,37 +159,22 @@
   background:rgba(37,99,235,0.12);
 }
 .md-style-btn i { font-size:11px; }
-
-/* Override EasyMDE dark */
-.EasyMDEContainer .CodeMirror {
-  background:#0f172a !important;
-  color:#e2e8f0 !important;
-  border:1.5px solid rgba(255,255,255,0.10) !important;
-  border-top:none !important;
-  border-radius:0 0 8px 8px !important;
-  font-size:13px !important;
+.course-desc-textarea {
+  min-height:150px;
+  background:#ffffff !important;
+  color:#0f172a !important;
+  caret-color:#0f172a !important;
+  line-height:1.6;
+  padding:14px 16px !important;
 }
-.EasyMDEContainer .editor-toolbar {
-  background:#1e293b !important;
-  border:1.5px solid rgba(255,255,255,0.10) !important;
-  border-bottom:1px solid rgba(255,255,255,0.07) !important;
-  border-radius:8px 8px 0 0 !important;
+.course-desc-textarea::placeholder {
+  color:#64748b;
 }
-.EasyMDEContainer .editor-toolbar button {
-  color:#94a3b8 !important;
+.course-desc-textarea:focus {
+  background:#ffffff !important;
+  color:#0f172a !important;
+  caret-color:#0f172a !important;
 }
-.EasyMDEContainer .editor-toolbar button:hover,
-.EasyMDEContainer .editor-toolbar button.active {
-  background:rgba(37,99,235,0.2) !important;
-  color:#93c5fd !important;
-}
-.EasyMDEContainer .editor-toolbar i.separator { border-color:rgba(255,255,255,0.10) !important; }
-.editor-preview { background:#0f172a !important; color:#e2e8f0 !important; }
-.editor-preview table { border-collapse:collapse; width:100%; }
-.editor-preview table td, .editor-preview table th {
-  border:1px solid rgba(255,255,255,0.15); padding:6px 10px;
-}
-.editor-preview table th { background:rgba(37,99,235,0.15); }
 </style>
 
 <div class="adm-page-header">
@@ -207,13 +210,10 @@
               </div>
             </div>
             <div class="adm-field adm-field-full">
-              <label>Mô tả khóa học</label>
-              <!-- Toggle mode -->
-              <div class="desc-toggle" style="align-items:center">
-                <button type="button" class="desc-toggle-btn active" data-desc-mode="plain" onclick="setDescMode('plain', this)">Văn bản</button>
-                <button type="button" class="desc-toggle-btn" data-desc-mode="md" onclick="setDescMode('md', this)">Markdown</button>
-                <label id="md-upload-btn" title="Tải lên file .md" style="display:none;margin-left:4px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;white-space:nowrap">
-                  <i class="fas fa-file-upload" style="margin-right:4px"></i> Tải file .md
+              <div class="desc-field-header">
+                <label>Mô tả khóa học</label>
+                <label id="md-upload-btn" class="md-upload-btn" title="Tải mô tả từ file .md">
+                  <i class="fas fa-file-upload"></i> Tải mô tả
                   <input type="file" id="md-file-input" accept=".md,.markdown,text/markdown" style="display:none" />
                 </label>
               </div>
@@ -224,15 +224,7 @@
                 <button type="button" class="md-style-btn" title="Chèn ghi chú màu xanh" onclick="insertMdSnippet('note')"><i class="fas fa-info-circle"></i>Ghi chú</button>
                 <button type="button" class="md-style-btn" title="Chèn cảnh báo màu vàng" onclick="insertMdSnippet('warning')"><i class="fas fa-bolt"></i>Lưu ý</button>
               </div>
-              <!-- Plain textarea -->
-              <div id="desc-plain">
-                <textarea name="description" id="desc-textarea" rows="5" placeholder="Mô tả ngắn về khóa học..."></textarea>
-              </div>
-              <!-- Markdown editor (ẩn mặc định) -->
-              <div id="desc-md" style="display:none">
-                <textarea id="desc-md-editor"></textarea>
-              </div>
-              <input type="hidden" name="description_md" id="desc-md-value" />
+              <textarea name="description" id="desc-textarea" class="course-desc-textarea" rows="6" placeholder="Mô tả khóa học bằng văn bản hoặc Markdown..."></textarea>
               <p style="font-size:11px;color:#475569;margin:6px 0 0">
                 Markdown hỗ trợ: tiêu đề, bảng, danh sách, link, emoji, highlight và badge màu.
               </p>
@@ -356,15 +348,6 @@ function togglePriceType(val) {
     lblContact.style.borderColor = 'rgba(255,255,255,0.10)';
   }
 }
-let _mde = null;
-let _descMode = 'plain';
-const MD_TOOLBAR = [
-  'bold','italic','strikethrough','heading','|',
-  'quote','unordered-list','ordered-list','|',
-  'link','table','code','horizontal-rule','|',
-  'preview','side-by-side','fullscreen','guide'
-];
-const MD_PLACEHOLDER = '# Tiêu đề\n\nMô tả khóa học...\n\n| Nội dung | Chi tiết |\n|---|---|\n| Mục tiêu | Học viên đạt được gì? |';
 const MD_SNIPPETS = {
   result: '<span style="color:#15803d;font-weight:700">✅ Kết quả đạt được:</span> Nội dung nổi bật',
   highlight: '<mark style="background-color:#fef3c7;color:#92400e;padding:2px 6px;border-radius:6px">⭐ Điểm nổi bật</mark>',
@@ -373,55 +356,22 @@ const MD_SNIPPETS = {
   warning: '<div style="border-left:4px solid #f59e0b;background-color:#fffbeb;color:#92400e;padding:10px 12px;border-radius:8px;margin:0 0 12px">⚡ Lưu ý quan trọng...</div>'
 };
 
-function ensureMde() {
-  if (_mde) return _mde;
-
-  _mde = new EasyMDE({
-    element: document.getElementById('desc-md-editor'),
-    placeholder: MD_PLACEHOLDER,
-    spellChecker: false,
-    autofocus: true,
-    toolbar: MD_TOOLBAR,
-    minHeight: '180px',
-  });
-
-  return _mde;
-}
-
-function setDescMode(mode, btn) {
-  _descMode = mode;
-  document.querySelectorAll('.desc-toggle-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  // Hiện các công cụ markdown chỉ khi ở chế độ Markdown
-  document.getElementById('md-upload-btn').style.display = mode === 'md' ? '' : 'none';
-  document.getElementById('md-style-tools').classList.toggle('is-visible', mode === 'md');
-
-  if (mode === 'md') {
-    const plainVal = document.getElementById('desc-textarea').value;
-    document.getElementById('desc-plain').style.display = 'none';
-    document.getElementById('desc-md').style.display    = 'block';
-    const editor = ensureMde();
-    if (plainVal) editor.value(plainVal);
-  } else {
-    if (_mde) document.getElementById('desc-textarea').value = _mde.value();
-    document.getElementById('desc-plain').style.display = 'block';
-    document.getElementById('desc-md').style.display    = 'none';
-  }
-}
-
 function insertMdSnippet(type) {
-  const mdBtn = document.querySelector('[data-desc-mode="md"]');
-  if (_descMode !== 'md' && mdBtn) setDescMode('md', mdBtn);
-
   const snippet = MD_SNIPPETS[type];
   if (!snippet) return;
 
-  const editor = ensureMde();
-  const cm = editor.codemirror;
-  const prefix = editor.value().trim() ? '\n\n' : '';
-  cm.replaceSelection(prefix + snippet + '\n');
-  cm.focus();
+  const textarea = document.getElementById('desc-textarea');
+  const start = textarea.selectionStart || 0;
+  const end = textarea.selectionEnd || 0;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+  const prefix = before.trim() ? '\n\n' : '';
+  const insert = prefix + snippet + '\n';
+
+  textarea.value = before + insert + after;
+  const cursor = start + insert.length;
+  textarea.focus();
+  textarea.setSelectionRange(cursor, cursor);
 }
 
 // ── Upload file .md ──
@@ -431,9 +381,10 @@ document.getElementById('md-file-input').addEventListener('change', function() {
   const reader = new FileReader();
   reader.onload = e => {
     const content = e.target.result;
-    const mdBtn = document.querySelector('[data-desc-mode="md"]');
-    if (_descMode !== 'md' && mdBtn) setDescMode('md', mdBtn);
-    ensureMde().value(content);
+    const textarea = document.getElementById('desc-textarea');
+    textarea.value = content;
+    textarea.focus();
+    textarea.setSelectionRange(content.length, content.length);
     // Highlight nút upload để báo thành công
     const btn = document.getElementById('md-upload-btn');
     btn.style.borderColor = 'rgba(74,222,128,0.5)';
@@ -445,15 +396,6 @@ document.getElementById('md-file-input').addEventListener('change', function() {
   };
   reader.readAsText(file, 'UTF-8');
   this.value = ''; // reset để có thể upload lại cùng file
-});
-
-// Trước khi submit — đồng bộ giá trị MD vào hidden input
-document.getElementById('frmAdd').addEventListener('submit', () => {
-  if (_descMode === 'md' && _mde) {
-    document.getElementById('desc-md-value').value = _mde.value();
-    // Xóa name của plain textarea để không gửi trùng
-    document.getElementById('desc-textarea').removeAttribute('name');
-  }
 });
 
 // ── Upload poster → ImgBB ──
