@@ -2,11 +2,14 @@
 .ps-page {
   min-height: calc(100vh - 120px);
   background: #f8f7f4;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 40px 16px;
 }
 .ps-card {
-  width: 100%; max-width: 480px;
+  width: 100%;
+  max-width: 480px;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 40px rgba(26,31,46,0.10);
@@ -19,31 +22,42 @@
   color: #fff;
 }
 .ps-icon-wrap {
-  width: 72px; height: 72px;
+  width: 72px;
+  height: 72px;
   background: rgba(255,255,255,0.18);
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto 16px;
   font-size: 32px;
   animation: ps-pop 0.5s ease;
 }
 @keyframes ps-pop {
   from { transform: scale(0.5); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
 }
 .ps-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.ps-sub   { font-size: 14px; opacity: 0.92; }
+.ps-sub { font-size: 14px; opacity: 0.92; }
 
 .ps-body { padding: 28px; }
 
 .ps-course-row {
-  display: flex; align-items: center; gap: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   padding: 14px;
   background: #f8f7f4;
   border-radius: 10px;
   margin-bottom: 20px;
 }
-.ps-poster { width: 64px; height: 42px; border-radius: 6px; object-fit: cover; flex: 0 0 auto; }
+.ps-poster {
+  width: 64px;
+  height: 42px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
 .ps-course-name { font-size: 14px; font-weight: 700; color: #1a1f2e; }
 .ps-course-meta { font-size: 12px; color: #718096; margin-top: 2px; }
 
@@ -53,20 +67,27 @@
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 20px;
-  display: flex; gap: 10px; align-items: flex-start;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
 }
 .ps-info-box i { color: #3b6fd4; margin-top: 2px; flex: 0 0 auto; }
 .ps-info-box div { font-size: 13px; color: #4a5568; line-height: 1.6; }
 
 .ps-actions {
-  display: flex; gap: 10px;
+  display: flex;
+  gap: 10px;
 }
 .ps-btn {
   flex: 1;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   height: 44px;
   border-radius: 10px;
-  font-size: 14px; font-weight: 700;
+  font-size: 14px;
+  font-weight: 700;
   text-decoration: none;
   transition: opacity 0.15s, background 0.15s;
 }
@@ -86,20 +107,20 @@
 <div class="ps-page">
   <div class="ps-card">
     <div class="ps-header">
-      <div class="ps-icon-wrap">✓</div>
+      <div class="ps-icon-wrap"><i class="fas fa-check"></i></div>
       <div class="ps-title">Đăng ký thành công!</div>
       <div class="ps-sub">
         <% if (isFree) { %>
           Bạn đã đăng ký miễn phí khóa học này
         <% } else { %>
-          Đã thanh toán <%= amount.toLocaleString('vi-VN') %>₫ thành công
+          Đã thanh toán <%= (Number(amount) || 0).toLocaleString('vi-VN') %>đ thành công
         <% } %>
       </div>
     </div>
 
     <div class="ps-body">
       <div class="ps-course-row">
-        <img class="ps-poster" src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" />
+        <img class="ps-poster" src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= course.name %>" />
         <div style="flex:1;min-width:0">
           <div class="ps-course-name"><%= course.name %></div>
           <div class="ps-course-meta"><%= course.idCourseTopic ? course.idCourseTopic.name : '' %></div>
@@ -109,7 +130,7 @@
       <div class="ps-info-box">
         <i class="fas fa-info-circle"></i>
         <div>
-          <strong>Tiếp theo:</strong> Quản lý sẽ phân giảng viên và xếp bạn vào lớp học phù hợp. Bạn sẽ nhận được thông báo khi được thêm vào lớp.
+          <strong>Tiếp theo:</strong> quản lý sẽ phân giảng viên và xếp bạn vào lớp học phù hợp. Bạn sẽ nhận được thông báo khi được thêm vào lớp.
         </div>
       </div>
 

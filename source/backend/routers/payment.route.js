@@ -1,292 +1,352 @@
-const express      = require('express');
-const Router       = express.Router();
-const { PayOS }    = require('@payos/node');
-const Course       = require('../models/Course.model');
+const express = require('express');
+const { PayOS } = require('@payos/node');
+
+const Router = express.Router();
+
+const Course = require('../models/Course.model');
 const CourseCategory = require('../models/CourseCategory.model');
-const CourseTopic  = require('../models/CourseTopic.model');
-const LocalUser    = require('../models/LocalUser.model');
+const CourseTopic = require('../models/CourseTopic.model');
+const LocalUser = require('../models/LocalUser.model');
+const PaymentOrder = require('../models/PaymentOrder.model');
 const { ensureAuthenticated } = require('../config/auth.config');
-
-const safeArray = (v) => Array.isArray(v) ? v : [];
-
-// Lazy init payOS — chỉ tạo khi có đủ credentials
-let _payos = null;
-function getPayOS() {
-    if (!_payos) {
-        if (!process.env.PAYOS_CLIENT_ID || !process.env.PAYOS_API_KEY || !process.env.PAYOS_CHECKSUM_KEY) {
-            throw new Error('PayOS credentials chưa được cấu hình trong .env');
-        }
-        _payos = new PayOS(
-            process.env.PAYOS_CLIENT_ID,
-            process.env.PAYOS_API_KEY,
-            process.env.PAYOS_CHECKSUM_KEY
-        );
-    }
-    return _payos;
-}
 
 const APP_URL = process.env.APP_URL || 'http://localhost:8000';
 
-const renderNotFound   = (res) => res.status(404).render('./error/404', { layout: false });
+const safeArray = (value) => Array.isArray(value) ? value : [];
+const renderNotFound = (res) => res.status(404).render('./error/404', { layout: false });
 const renderServerError = (res) => res.status(500).render('./error/500', { layout: false });
 
-// ── Trang checkout ──
-Router.get('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
-    const course = await Course.findOne({ name: req.params.nameCourse });
-    if (!course) return renderNotFound(res);
-
-    // Kiểm tra đã mua chưa
-    const alreadyPaid = safeArray(req.user.purchasedCourses)
-        .some(p => p.idCourse && p.idCourse.toString() === course._id.toString());
-    if (alreadyPaid) return res.redirect('/my-courses');
-
-    // Khóa học liên hệ riêng — không thanh toán online
-    if (course.priceType === 'contact') {
-        return res.render('./payment/contact', {
-            isAuthenticated: req.isAuthenticated(),
-            course,
-            user: req.user
-        });
+let payosClient = null;
+function getPayOS() {
+  if (!payosClient) {
+    if (!process.env.PAYOS_CLIENT_ID || !process.env.PAYOS_API_KEY || !process.env.PAYOS_CHECKSUM_KEY) {
+      throw new Error('PayOS credentials chưa được cấu hình trong .env');
     }
 
-    return res.render('./payment/checkout', {
-        isAuthenticated: req.isAuthenticated(),
-        course,
-        user: req.user
-    });});
-
-// ── Tạo link thanh toán payOS ──
-Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
-    const course = await Course.findOne({ name: req.params.nameCourse });
-    if (!course) return renderNotFound(res);
-
-    // Mã đơn hàng: timestamp + userId (đảm bảo unique, số nguyên)
-    const orderCode = Number(String(Date.now()).slice(-8) + String(req.user._id).slice(-4).replace(/[^0-9]/g, '0'));
-
-    const { discountCode } = req.body;
-    let finalAmount = course.tuition;
-    let appliedDiscount = null;
-
-    // Áp dụng mã giảm giá nếu có
-    if (discountCode) {
-        const dc = (course.discountCodes || []).find(d =>
-            d.active && d.code === discountCode.trim().toUpperCase() &&
-            (!d.expiresAt || new Date() < new Date(d.expiresAt)) &&
-            (d.maxUses === 0 || d.usedCount < d.maxUses)
-        );
-        if (dc) {
-            finalAmount = Math.round(finalAmount * (1 - dc.percent / 100));
-            appliedDiscount = dc;
-        }
-    }
-
-    // ── Bypass payOS nếu giá = 0 ──
-    if (finalAmount === 0) {
-        const purchasedCourses = safeArray(req.user.purchasedCourses);
-        const alreadyPaid = purchasedCourses.some(p =>
-            p.idCourse && p.idCourse.toString() === course._id.toString()
-        );
-
-        if (!alreadyPaid) {
-            await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
-
-            // Populate lại course để có topic
-            await course.populate('idCourseTopic');
-            const courseTopicId    = course.idCourseTopic?._id;
-            const courseCategoryId = course.idCourseTopic?.idCourseCategory;
-            await Promise.all([
-                courseTopicId    ? CourseTopic.updateOne({ _id: courseTopicId },    { $inc: { numberOfSignUp: 1 } }) : null,
-                courseCategoryId ? CourseCategory.updateOne({ _id: courseCategoryId }, { $inc: { numberOfSignUp: 1 } }) : null
-            ].filter(Boolean));
-
-            purchasedCourses.push({
-                idCourse:      course._id,
-                learnedVideos: [],
-                enrolledAt:    new Date(),
-                lastLearnedAt: null
-            });
-
-            const idCourses = safeArray(req.user.idCourses);
-            if (!idCourses.some(id => id.toString() === course._id.toString())) {
-                idCourses.push(course._id);
-            }
-
-            // Tăng usedCount mã giảm giá
-            if (appliedDiscount) {
-                appliedDiscount.usedCount = (appliedDiscount.usedCount || 0) + 1;
-                await course.save();
-            }
-
-            const updated = await LocalUser.findByIdAndUpdate(
-                req.user._id,
-                { $set: { purchasedCourses, idCourses } },
-                { new: true }
-            );
-
-            await new Promise((resolve, reject) => {
-                req.logIn(updated, err => err ? reject(err) : resolve());
-            });
-        }
-
-        // Render trang success
-        await course.populate('idCourseTopic');
-        return res.render('./payment/success', {
-            isAuthenticated: req.isAuthenticated(),
-            user: req.user,
-            course,
-            isFree: true,
-            amount: 0
-        });
-    }
-
-    // payOS yêu cầu tối thiểu 1000 VNĐ
-    if (finalAmount < 1000) finalAmount = 1000;
-
-    const encodedName = encodeURIComponent(course.name);
-    const paymentData = {
-        orderCode,
-        amount:      finalAmount,
-        description: `Khoa hoc ${course.name}`.slice(0, 25), // max 25 ký tự
-        items: [{
-            name:     course.name.slice(0, 50),
-            quantity: 1,
-            price:    finalAmount
-        }],
-        returnUrl: `${APP_URL}/payment/${encodedName}/success?orderCode=${orderCode}`,
-        cancelUrl: `${APP_URL}/payment/${encodedName}/cancel`
-    };
-
-    try {
-        const paymentLink = await getPayOS().createPaymentLink(paymentData);
-        // Lưu orderCode vào session để verify sau
-        req.session.pendingPayment = {
-            orderCode,
-            courseId:   course._id.toString(),
-            courseName: course.name,
-            amount:     finalAmount
-        };
-        return res.redirect(paymentLink.checkoutUrl);
-    } catch (err) {
-        console.error('[PayOS create error]', err.message);
-        return renderServerError(res);
-    }
-});
-
-// ── Callback sau khi thanh toán thành công ──
-Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
-    const { orderCode, status } = req.query;
-
-    // payOS trả về status=PAID khi thành công
-    if (status !== 'PAID') {
-        req.flash && req.flash('error_msg', 'Thanh toán chưa hoàn tất');
-        return res.redirect('/');
-    }
-
-    // Verify với payOS API
-    let paymentInfo;
-    try {
-        paymentInfo = await getPayOS().getPaymentLinkInformation(orderCode);
-    } catch (err) {
-        console.error('[PayOS verify error]', err.message);
-        req.flash && req.flash('error_msg', 'Không thể xác minh thanh toán');
-        return res.redirect('/');
-    }
-
-    if (paymentInfo.status !== 'PAID') {
-        req.flash && req.flash('error_msg', 'Giao dịch chưa được xác nhận');
-        return res.redirect('/');
-    }
-
-    const course = await Course.findOne({ name: req.params.nameCourse }).populate('idCourseTopic');
-    if (!course) return renderNotFound(res);
-
-    // Enroll
-    const purchasedCourses = safeArray(req.user.purchasedCourses);
-    const alreadyPaid = purchasedCourses.some(p =>
-        p.idCourse && p.idCourse.toString() === course._id.toString()
-    );
-
-    if (!alreadyPaid) {
-        await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
-
-        const courseTopicId    = course.idCourseTopic?._id;
-        const courseCategoryId = course.idCourseTopic?.idCourseCategory;
-        await Promise.all([
-            courseTopicId    ? CourseTopic.updateOne({ _id: courseTopicId },    { $inc: { numberOfSignUp: 1 } }) : null,
-            courseCategoryId ? CourseCategory.updateOne({ _id: courseCategoryId }, { $inc: { numberOfSignUp: 1 } }) : null
-        ].filter(Boolean));
-
-        purchasedCourses.push({
-            idCourse:      course._id,
-            learnedVideos: [],
-            enrolledAt:    new Date(),
-            lastLearnedAt: null
-        });
-        req.user.purchasedCourses = purchasedCourses;
-
-        const idCourses = safeArray(req.user.idCourses);
-        if (!idCourses.some(id => id.toString() === course._id.toString())) {
-            idCourses.push(course._id);
-            req.user.idCourses = idCourses;
-        }
-
-        // Tăng usedCount mã giảm giá nếu có
-        const pending = req.session.pendingPayment;
-        if (pending && pending.amount < course.tuition) {
-            // Tìm mã đã dùng và tăng counter
-            const dc = (course.discountCodes || []).find(d =>
-                d.active && (d.maxUses === 0 || d.usedCount < d.maxUses)
-            );
-            if (dc) {
-                dc.usedCount = (dc.usedCount || 0) + 1;
-                await course.save();
-            }
-        }
-
-        const updated = await LocalUser.findByIdAndUpdate(
-            req.user._id,
-            { $set: { purchasedCourses: req.user.purchasedCourses, idCourses: req.user.idCourses } },
-            { new: true }
-        );
-
-        await new Promise((resolve, reject) => {
-            req.logIn(updated, err => err ? reject(err) : resolve());
-        });
-    }
-
-    req.session.pendingPayment = null;
-    return res.render('./payment/success', {
-        isAuthenticated: req.isAuthenticated(),
-        user: req.user,
-        course,
-        isFree: false,
-        amount: paymentInfo.amount || course.tuition
+    payosClient = new PayOS({
+      clientId: process.env.PAYOS_CLIENT_ID,
+      apiKey: process.env.PAYOS_API_KEY,
+      checksumKey: process.env.PAYOS_CHECKSUM_KEY,
+      partnerCode: process.env.PAYOS_PARTNER_CODE || undefined
     });
-});
+  }
 
-// ── Webhook từ payOS (server-to-server) ──
-Router.post('/webhook', express.json(), async (req, res) => {
-    try {
-        const webhookData = getPayOS().verifyPaymentWebhookData(req.body);
-        console.log('[PayOS webhook]', webhookData);
-        // Xử lý thêm nếu cần (ghi log, gửi email...)
-        return res.json({ success: true });
-    } catch (err) {
-        console.error('[PayOS webhook error]', err.message);
-        return res.status(400).json({ success: false });
+  return payosClient;
+}
+
+function normalizeOrderCode(value) {
+  const orderCode = Number(value);
+  return Number.isSafeInteger(orderCode) && orderCode > 0 ? orderCode : null;
+}
+
+async function generateOrderCode() {
+  for (let i = 0; i < 5; i++) {
+    const suffix = Math.floor(100 + Math.random() * 900);
+    const orderCode = Number(`${Date.now()}${suffix}`);
+    const exists = await PaymentOrder.exists({ orderCode });
+    if (!exists) return orderCode;
+  }
+
+  throw new Error('Cannot generate unique payment order code');
+}
+
+function getValidDiscount(course, discountCode) {
+  const code = (discountCode || '').trim().toUpperCase();
+  if (!code) return null;
+
+  return safeArray(course.discountCodes).find((discount) => {
+    return discount.active
+      && discount.code === code
+      && (!discount.expiresAt || new Date() < new Date(discount.expiresAt))
+      && ((Number(discount.maxUses) || 0) === 0 || (Number(discount.usedCount) || 0) < Number(discount.maxUses));
+  }) || null;
+}
+
+function buildPaymentAmount(course, discountCode) {
+  const originalAmount = Math.max(0, Number(course.tuition) || 0);
+  const discount = getValidDiscount(course, discountCode);
+  const discountPercent = discount ? Math.max(0, Math.min(100, Number(discount.percent) || 0)) : 0;
+  const discountedAmount = Math.round(originalAmount * (1 - discountPercent / 100));
+
+  return {
+    originalAmount,
+    amount: Math.max(0, discountedAmount),
+    discountCode: discount ? discount.code : '',
+    discountPercent
+  };
+}
+
+function getPaymentDescription(course) {
+  return `Khoa hoc ${course.name}`.replace(/\s+/g, ' ').slice(0, 25);
+}
+
+async function refreshLoggedInUser(req, userId) {
+  const updated = await LocalUser.findById(userId);
+  if (!updated) return null;
+
+  await new Promise((resolve, reject) => {
+    req.logIn(updated, (error) => error ? reject(error) : resolve());
+  });
+
+  return updated;
+}
+
+async function enrollCourseOnce(order) {
+  const course = await Course.findById(order.idCourse).populate('idCourseTopic');
+  if (!course) {
+    throw new Error('Course not found for paid order');
+  }
+
+  const updateResult = await LocalUser.updateOne(
+    {
+      _id: order.idUser,
+      'purchasedCourses.idCourse': { $ne: course._id }
+    },
+    {
+      $push: {
+        purchasedCourses: {
+          idCourse: course._id,
+          learnedVideos: [],
+          enrolledAt: new Date(),
+          lastLearnedAt: null
+        }
+      },
+      $addToSet: {
+        idCourses: course._id
+      }
     }
+  );
+
+  const didEnroll = Boolean(updateResult.modifiedCount || updateResult.nModified);
+  if (!didEnroll) {
+    return course;
+  }
+
+  await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
+
+  const courseTopicId = course.idCourseTopic && course.idCourseTopic._id;
+  const courseCategoryId = course.idCourseTopic && course.idCourseTopic.idCourseCategory;
+  await Promise.all([
+    courseTopicId ? CourseTopic.updateOne({ _id: courseTopicId }, { $inc: { numberOfSignUp: 1 } }) : null,
+    courseCategoryId ? CourseCategory.updateOne({ _id: courseCategoryId }, { $inc: { numberOfSignUp: 1 } }) : null
+  ].filter(Boolean));
+
+  if (order.discountCode) {
+    await Course.updateOne(
+      { _id: course._id, 'discountCodes.code': order.discountCode },
+      { $inc: { 'discountCodes.$.usedCount': 1 } }
+    );
+  }
+
+  return course;
+}
+
+async function completePaidOrder(orderCode, providerData = null) {
+  const order = await PaymentOrder.findOne({ orderCode });
+  if (!order) {
+    return { order: null, course: null, completed: false };
+  }
+
+  if (order.status === 'paid') {
+    const course = await Course.findById(order.idCourse).populate('idCourseTopic');
+    return { order, course, completed: false };
+  }
+
+  const course = await enrollCourseOnce(order);
+
+  order.status = 'paid';
+  order.paidAt = order.paidAt || new Date();
+  order.rawProviderData = providerData || order.rawProviderData;
+  await order.save();
+
+  return { order, course, completed: true };
+}
+
+async function markOrderCancelled(orderCode, userId) {
+  if (!orderCode) return null;
+
+  const order = await PaymentOrder.findOne({
+    orderCode,
+    idUser: userId,
+    status: 'pending'
+  });
+
+  if (!order) return null;
+
+  try {
+    await getPayOS().paymentRequests.cancel(orderCode, 'User cancelled payment');
+  } catch (error) {
+    console.warn('[PayOS cancel warning]', error.message);
+  }
+
+  order.status = 'cancelled';
+  order.cancelledAt = new Date();
+  await order.save();
+
+  return order;
+}
+
+Router.get('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
+  const course = await Course.findOne({ name: req.params.nameCourse });
+  if (!course) return renderNotFound(res);
+
+  const alreadyPaid = safeArray(req.user.purchasedCourses)
+    .some((item) => item.idCourse && item.idCourse.toString() === course._id.toString());
+  if (alreadyPaid) return res.redirect('/my-courses');
+
+  if (course.priceType === 'contact') {
+    return res.render('./payment/contact', {
+      isAuthenticated: req.isAuthenticated(),
+      course,
+      user: req.user
+    });
+  }
+
+  return res.render('./payment/checkout', {
+    isAuthenticated: req.isAuthenticated(),
+    course,
+    user: req.user
+  });
 });
 
-// ── Hủy thanh toán ──
-Router.get('/:nameCourse/cancel', ensureAuthenticated, (req, res) => {
-    req.session.pendingPayment = null;
-    req.flash && req.flash('error_msg', 'Bạn đã hủy thanh toán');
-    return res.redirect('/course/' + encodeURIComponent(req.params.nameCourse));
+Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
+  const course = await Course.findOne({ name: req.params.nameCourse });
+  if (!course) return renderNotFound(res);
+
+  const alreadyPaid = safeArray(req.user.purchasedCourses)
+    .some((item) => item.idCourse && item.idCourse.toString() === course._id.toString());
+  if (alreadyPaid) return res.redirect('/my-courses');
+
+  if (course.priceType === 'contact') {
+    return res.redirect(`/payment/${encodeURIComponent(course.name)}/checkout`);
+  }
+
+  const pricing = buildPaymentAmount(course, req.body.discountCode);
+  const orderCode = await generateOrderCode();
+
+  const order = await PaymentOrder.create({
+    orderCode,
+    provider: pricing.amount === 0 ? 'free' : 'payos',
+    idUser: req.user._id,
+    idCourse: course._id,
+    courseName: course.name,
+    originalAmount: pricing.originalAmount,
+    amount: pricing.amount,
+    discountCode: pricing.discountCode,
+    discountPercent: pricing.discountPercent
+  });
+
+  if (pricing.amount === 0) {
+    const result = await completePaidOrder(orderCode, { freeDiscount: true });
+    await refreshLoggedInUser(req, req.user._id);
+    return res.render('./payment/success', {
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user,
+      course: result.course || course,
+      isFree: true,
+      amount: 0
+    });
+  }
+
+  const payosAmount = pricing.amount;
+
+  const encodedName = encodeURIComponent(course.name);
+  const paymentData = {
+    orderCode,
+    amount: payosAmount,
+    description: getPaymentDescription(course),
+    items: [{
+      name: course.name.slice(0, 50),
+      quantity: 1,
+      price: payosAmount
+    }],
+    buyerName: req.user.name || req.user.username || undefined,
+    buyerEmail: req.user.email || undefined,
+    returnUrl: `${APP_URL}/payment/${encodedName}/success?orderCode=${orderCode}`,
+    cancelUrl: `${APP_URL}/payment/${encodedName}/cancel?orderCode=${orderCode}`
+  };
+
+  try {
+    const paymentLink = await getPayOS().paymentRequests.create(paymentData);
+    order.paymentLinkId = paymentLink.paymentLinkId || '';
+    order.checkoutUrl = paymentLink.checkoutUrl || '';
+    order.rawProviderData = paymentLink;
+    await order.save();
+
+    return res.redirect(paymentLink.checkoutUrl);
+  } catch (error) {
+    console.error('[PayOS create error]', error.message);
+    order.status = 'failed';
+    order.rawProviderData = { message: error.message };
+    await order.save();
+    return renderServerError(res);
+  }
 });
 
-// ── Legacy fail route ──
+Router.get('/:nameCourse/success', ensureAuthenticated, async (req, res) => {
+  const orderCode = normalizeOrderCode(req.query.orderCode);
+  if (!orderCode) {
+    req.flash && req.flash('error_msg', 'Thiếu mã đơn hàng thanh toán');
+    return res.redirect('/');
+  }
+
+  let paymentInfo;
+  try {
+    paymentInfo = await getPayOS().paymentRequests.get(orderCode);
+  } catch (error) {
+    console.error('[PayOS verify error]', error.message);
+    req.flash && req.flash('error_msg', 'Không thể xác minh thanh toán');
+    return res.redirect('/');
+  }
+
+  if (!paymentInfo || paymentInfo.status !== 'PAID') {
+    req.flash && req.flash('error_msg', 'Giao dịch chưa được xác nhận');
+    return res.redirect(`/payment/${encodeURIComponent(req.params.nameCourse)}/checkout`);
+  }
+
+  const result = await completePaidOrder(orderCode, paymentInfo);
+  if (!result.order || result.order.idUser.toString() !== req.user._id.toString()) {
+    req.flash && req.flash('error_msg', 'Đơn hàng không hợp lệ');
+    return res.redirect('/');
+  }
+
+  await refreshLoggedInUser(req, req.user._id);
+
+  return res.render('./payment/success', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
+    course: result.course,
+    isFree: result.order.amount === 0,
+    amount: paymentInfo.amount || result.order.amount
+  });
+});
+
+Router.post('/webhook', express.json(), async (req, res) => {
+  try {
+    const webhookData = await getPayOS().webhooks.verify(req.body);
+    console.log('[PayOS webhook]', webhookData);
+
+    if (webhookData && webhookData.code === '00') {
+      await completePaidOrder(Number(webhookData.orderCode), webhookData);
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('[PayOS webhook error]', error.message);
+    return res.status(400).json({ success: false });
+  }
+});
+
+Router.get('/:nameCourse/cancel', ensureAuthenticated, async (req, res) => {
+  const orderCode = normalizeOrderCode(req.query.orderCode);
+  await markOrderCancelled(orderCode, req.user._id);
+
+  req.flash && req.flash('error_msg', 'Bạn đã hủy thanh toán');
+  return res.redirect('/course/' + encodeURIComponent(req.params.nameCourse));
+});
+
 Router.get('/:nameCourse/fail', ensureAuthenticated, (req, res) => {
-    return res.redirect('/my-courses');
+  return res.redirect('/my-courses');
 });
 
 module.exports = Router;

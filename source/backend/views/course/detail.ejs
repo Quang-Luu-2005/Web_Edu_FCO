@@ -743,7 +743,7 @@
           </p>
           <div class="course-actions">
             <% if (!isPaid) { %>
-            <a href="/payment/<%= course.name %>/checkout" class="btn btn-outline-warning course-action-btn">
+            <a href="/payment/<%= encodeURIComponent(course.name) %>/checkout" class="btn btn-outline-warning course-action-btn">
               <i class="fas fa-wallet"></i>
               <span>Mua luôn</span>
             </a>
@@ -1361,7 +1361,7 @@
         window.location.reload(true);
       } else {
         alert("Bạn hãy mua khóa học trước khi đánh giá");
-        window.location.replace(`/payment/${nameCourse}/checkout`);
+        window.location.replace(`/payment/${encodeURIComponent(nameCourse)}/checkout`);
       }
     } else {
       window.location.replace("/users/login");

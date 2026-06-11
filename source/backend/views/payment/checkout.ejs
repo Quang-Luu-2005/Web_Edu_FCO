@@ -23,12 +23,16 @@
   gap: 16px;
 }
 .pay-poster {
-  width: 72px; height: 48px;
-  border-radius: 8px; object-fit: cover;
+  width: 72px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
   flex: 0 0 auto;
 }
 .pay-course-name {
-  font-size: 15px; font-weight: 700; color: #f1f5f9;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
   line-height: 1.4;
 }
 .pay-body { padding: 24px 28px; }
@@ -48,7 +52,7 @@
 .pay-total-label { font-size: 15px; font-weight: 700; color: #1a1f2e; }
 
 .pay-discount-wrap {
-  margin: 16px 0;
+  margin: 16px 0 6px;
   display: flex;
   gap: 8px;
 }
@@ -127,7 +131,6 @@
 
 <div class="pay-page">
   <div class="pay-card">
-    <!-- Header -->
     <div class="pay-header">
       <img class="pay-poster" src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= course.name %>" />
       <div>
@@ -136,27 +139,23 @@
       </div>
     </div>
 
-    <!-- Body -->
     <div class="pay-body">
       <form action="/payment/<%= encodeURIComponent(course.name) %>/checkout" method="POST" id="payForm">
-
-        <!-- Chi tiết giá -->
         <div style="margin-bottom:8px">
           <div class="pay-row">
             <span class="pay-row-label">Giá gốc</span>
-            <span class="pay-row-value"><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫</span>
+            <span class="pay-row-value"><%= (Number(course.tuition) || 0).toLocaleString('vi-VN') %>đ</span>
           </div>
           <div class="pay-row" id="discount-row" style="display:none">
             <span class="pay-row-label">Giảm giá</span>
-            <span class="pay-row-value" style="color:#16a34a" id="discount-amount">-0₫</span>
+            <span class="pay-row-value" style="color:#16a34a" id="discount-amount">-0đ</span>
           </div>
           <div class="pay-row">
             <span class="pay-total-label">Tổng thanh toán</span>
-            <span class="pay-total" id="total-display"><%= (course.tuition || 0).toLocaleString('vi-VN') %>₫</span>
+            <span class="pay-total" id="total-display"><%= (Number(course.tuition) || 0).toLocaleString('vi-VN') %>đ</span>
           </div>
         </div>
 
-        <!-- Mã giảm giá -->
         <% if (course.discountCodes && course.discountCodes.some(d => d.active)) { %>
         <div>
           <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Mã giảm giá</div>
@@ -168,7 +167,6 @@
         </div>
         <% } %>
 
-        <!-- Thông tin chuyển khoản -->
         <div class="pay-info-box" id="pay-info-box">
           <i class="fas fa-info-circle"></i>
           <div id="pay-info-text">
@@ -190,59 +188,84 @@
 </div>
 
 <script>
-const ORIGINAL_PRICE = <%= course.tuition %>;
-const DISCOUNTS = <%- JSON.stringify((course.discountCodes || []).filter(d => d.active).map(d => ({ code: d.code, percent: d.percent, maxUses: d.maxUses, usedCount: d.usedCount, expiresAt: d.expiresAt }))) %>;
+const ORIGINAL_PRICE = <%= Number(course.tuition) || 0 %>;
+const DISCOUNTS = <%- JSON.stringify((course.discountCodes || []).filter(d => d.active).map(d => ({
+  code: d.code,
+  percent: Number(d.percent) || 0,
+  maxUses: Number(d.maxUses) || 0,
+  usedCount: Number(d.usedCount) || 0,
+  expiresAt: d.expiresAt
+}))) %>;
+
+function formatVnd(value) {
+  return Number(value || 0).toLocaleString('vi-VN') + 'đ';
+}
 
 function applyDiscount() {
-  const code = document.getElementById('discount-input').value.trim().toUpperCase();
+  const inputEl = document.getElementById('discount-input');
   const msgEl = document.getElementById('discount-msg');
   const discountRow = document.getElementById('discount-row');
   const discountAmountEl = document.getElementById('discount-amount');
   const totalEl = document.getElementById('total-display');
+  const code = inputEl.value.trim().toUpperCase();
 
-  if (!code) { msgEl.textContent = 'Vui lòng nhập mã'; msgEl.className = 'pay-discount-msg err'; return; }
+  if (!code) {
+    msgEl.textContent = 'Vui lòng nhập mã';
+    msgEl.className = 'pay-discount-msg err';
+    return;
+  }
 
-  const dc = DISCOUNTS.find(d => d.code === code);
-  if (!dc) {
-    msgEl.textContent = 'Mã không hợp lệ'; msgEl.className = 'pay-discount-msg err';
-    discountRow.style.display='none';
-    totalEl.textContent = ORIGINAL_PRICE.toLocaleString('vi-VN') + '₫';
+  const discount = DISCOUNTS.find(d => d.code === code);
+  if (!discount) {
+    msgEl.textContent = 'Mã không hợp lệ';
+    msgEl.className = 'pay-discount-msg err';
+    discountRow.style.display = 'none';
+    totalEl.textContent = formatVnd(ORIGINAL_PRICE);
     updateSubmitButton(ORIGINAL_PRICE);
     return;
   }
-  if (dc.expiresAt && new Date() > new Date(dc.expiresAt)) { msgEl.textContent = 'Mã đã hết hạn'; msgEl.className = 'pay-discount-msg err'; return; }
-  if (dc.maxUses > 0 && dc.usedCount >= dc.maxUses) { msgEl.textContent = 'Mã đã hết lượt sử dụng'; msgEl.className = 'pay-discount-msg err'; return; }
 
-  const discounted = Math.round(ORIGINAL_PRICE * dc.percent / 100);
-  const final = ORIGINAL_PRICE - discounted;
-  discountAmountEl.textContent = '-' + discounted.toLocaleString('vi-VN') + '₫';
-  totalEl.textContent = final.toLocaleString('vi-VN') + '₫';
+  if (discount.expiresAt && new Date() > new Date(discount.expiresAt)) {
+    msgEl.textContent = 'Mã đã hết hạn';
+    msgEl.className = 'pay-discount-msg err';
+    return;
+  }
+
+  if (discount.maxUses > 0 && discount.usedCount >= discount.maxUses) {
+    msgEl.textContent = 'Mã đã hết lượt sử dụng';
+    msgEl.className = 'pay-discount-msg err';
+    return;
+  }
+
+  const discountAmount = Math.round(ORIGINAL_PRICE * discount.percent / 100);
+  const finalAmount = Math.max(0, ORIGINAL_PRICE - discountAmount);
+
+  discountAmountEl.textContent = '-' + formatVnd(discountAmount);
+  totalEl.textContent = formatVnd(finalAmount);
   discountRow.style.display = '';
-  msgEl.textContent = `✓ Giảm ${dc.percent}% — tiết kiệm ${discounted.toLocaleString('vi-VN')}₫`;
+  msgEl.textContent = `Giảm ${discount.percent}% - tiết kiệm ${formatVnd(discountAmount)}`;
   msgEl.className = 'pay-discount-msg ok';
-
-  // Cập nhật nút và box info theo giá cuối
-  updateSubmitButton(final);
+  updateSubmitButton(finalAmount);
 }
 
-function updateSubmitButton(finalPrice) {
-  const btn       = document.getElementById('pay-submit-btn');
-  const text      = document.getElementById('pay-submit-text');
-  const icon      = document.getElementById('pay-submit-icon');
-  const infoBox   = document.getElementById('pay-info-box');
-  const infoText  = document.getElementById('pay-info-text');
+function updateSubmitButton(finalAmount) {
+  const btn = document.getElementById('pay-submit-btn');
+  const text = document.getElementById('pay-submit-text');
+  const icon = document.getElementById('pay-submit-icon');
+  const infoBox = document.getElementById('pay-info-box');
+  const infoText = document.getElementById('pay-info-text');
 
-  if (finalPrice === 0) {
+  if (finalAmount === 0) {
     text.textContent = 'Đăng ký miễn phí';
-    icon.className   = 'fas fa-check-circle';
+    icon.className = 'fas fa-check-circle';
     btn.style.background = 'linear-gradient(90deg, #16a34a, #22c55e)';
-    infoText.innerHTML = '<strong>Mã giảm 100%</strong> — bạn sẽ được đăng ký khóa học miễn phí, không cần thanh toán.';
+    infoText.innerHTML = '<strong>Mã giảm 100%</strong> - bạn sẽ được đăng ký khóa học miễn phí, không cần thanh toán.';
     infoBox.style.background = '#dcfce7';
     infoBox.style.borderColor = 'rgba(22,163,74,0.25)';
     infoBox.style.color = '#15803d';
   } else {
     text.textContent = 'Thanh toán chuyển khoản';
-    icon.className   = 'fas fa-university';
+    icon.className = 'fas fa-university';
     btn.style.background = 'linear-gradient(90deg, #1a1f2e, #3b6fd4)';
     infoText.innerHTML = 'Bạn sẽ được chuyển đến trang thanh toán <strong>PayOS</strong> để thực hiện chuyển khoản ngân hàng. Giao dịch được xác minh tự động.';
     infoBox.style.background = '';
@@ -251,7 +274,13 @@ function updateSubmitButton(finalPrice) {
   }
 }
 
-document.getElementById('discount-input') && document.getElementById('discount-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
-});
+const discountInput = document.getElementById('discount-input');
+if (discountInput) {
+  discountInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      applyDiscount();
+    }
+  });
+}
 </script>

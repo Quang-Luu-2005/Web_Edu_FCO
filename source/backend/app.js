@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+require('express-async-errors');
 
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
