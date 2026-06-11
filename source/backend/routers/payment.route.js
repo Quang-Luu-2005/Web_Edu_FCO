@@ -9,8 +9,7 @@ const CourseTopic = require('../models/CourseTopic.model');
 const LocalUser = require('../models/LocalUser.model');
 const PaymentOrder = require('../models/PaymentOrder.model');
 const { ensureAuthenticated } = require('../config/auth.config');
-
-const APP_URL = process.env.APP_URL || 'http://localhost:8000';
+const { getPublicAppUrl } = require('../utils/publicAppUrl');
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 const renderNotFound = (res) => res.status(404).render('./error/404', { layout: false });
@@ -250,6 +249,7 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
 
   const payosAmount = pricing.amount;
 
+  const baseUrl = getPublicAppUrl(req);
   const encodedName = encodeURIComponent(course.name);
   const paymentData = {
     orderCode,
@@ -262,8 +262,8 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
     }],
     buyerName: req.user.name || req.user.username || undefined,
     buyerEmail: req.user.email || undefined,
-    returnUrl: `${APP_URL}/payment/${encodedName}/success?orderCode=${orderCode}`,
-    cancelUrl: `${APP_URL}/payment/${encodedName}/cancel?orderCode=${orderCode}`
+    returnUrl: `${baseUrl}/payment/${encodedName}/success?orderCode=${orderCode}`,
+    cancelUrl: `${baseUrl}/payment/${encodedName}/cancel?orderCode=${orderCode}`
   };
 
   try {

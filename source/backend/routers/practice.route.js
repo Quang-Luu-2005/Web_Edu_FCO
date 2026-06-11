@@ -4,6 +4,7 @@ const { PayOS } = require('@payos/node');
 const PracticeClass = require('../models/PracticeClass.model');
 const LocalUser     = require('../models/LocalUser.model');
 const { ensureAuthenticated } = require('../config/auth.config');
+const { getPublicAppUrl } = require('../utils/publicAppUrl');
 const {
   is2MStudent,
   getUser2MCourses,
@@ -11,8 +12,6 @@ const {
   getRankLabel,
   RANK_LEVELS
 } = require('../config/practice.config');
-
-const APP_URL = process.env.APP_URL || 'http://localhost:8000';
 
 let _payos = null;
 function getPayOS() {
@@ -450,6 +449,7 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
 
   const amount = en.amount || cls.pricePerSession || 50000;
   const orderCode = Number(String(Date.now()).slice(-8) + String(req.user._id).slice(-4).replace(/[^0-9]/g, '0'));
+  const baseUrl = getPublicAppUrl(req);
 
   en.paymentStatus = 'pending';
   en.orderCode     = orderCode;
@@ -465,8 +465,8 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
       quantity: 1,
       price:    amount
     }],
-    returnUrl: `${APP_URL}/practice/${cls._id}/sessions/${session._id}/success?orderCode=${orderCode}`,
-    cancelUrl: `${APP_URL}/practice/${cls._id}/sessions/${session._id}/cancel?orderCode=${orderCode}`
+    returnUrl: `${baseUrl}/practice/${cls._id}/sessions/${session._id}/success?orderCode=${orderCode}`,
+    cancelUrl: `${baseUrl}/practice/${cls._id}/sessions/${session._id}/cancel?orderCode=${orderCode}`
   };
 
   try {
