@@ -1,0 +1,112 @@
+<style>
+.ph-page { min-height: calc(100vh - 120px); background: #f8f7f4; padding: 40px 0 64px; }
+.ph-wrap { width: 88%; max-width: 1120px; margin: 0 auto; }
+.ph-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.ph-title { margin:0; font-size:26px; font-weight:800; color:#111827; }
+.ph-sub { margin-top:4px; font-size:14px; color:#6b7280; }
+.ph-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; box-shadow:0 8px 28px rgba(17,24,39,0.06); }
+.ph-table { width:100%; border-collapse:collapse; }
+.ph-table th { padding:13px 16px; background:#fafafa; color:#6b7280; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
+.ph-table td { padding:15px 16px; border-bottom:1px solid #f1f5f9; vertical-align:middle; color:#374151; font-size:14px; }
+.ph-table tr:last-child td { border-bottom:none; }
+.ph-course { display:flex; align-items:center; gap:12px; min-width:220px; }
+.ph-poster { width:70px; height:44px; border-radius:8px; object-fit:cover; background:#e5e7eb; }
+.ph-course-name { font-weight:800; color:#111827; line-height:1.35; }
+.ph-course-meta { margin-top:2px; color:#9ca3af; font-size:12px; }
+.ph-money { font-weight:800; color:#111827; white-space:nowrap; }
+.ph-date { white-space:nowrap; color:#4b5563; }
+.ph-date-sub { margin-top:2px; font-size:12px; color:#9ca3af; }
+.ph-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; }
+.ph-paid { background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; }
+.ph-pending { background:#fef9c3; color:#a16207; border:1px solid #fde68a; }
+.ph-cancelled { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+.ph-failed { background:#f3f4f6; color:#4b5563; border:1px solid #e5e7eb; }
+.ph-empty { padding:64px 24px; text-align:center; color:#9ca3af; }
+.ph-empty i { display:block; font-size:42px; margin-bottom:14px; color:#cbd5e1; }
+.ph-actions a { display:inline-flex; align-items:center; gap:8px; padding:9px 14px; border-radius:10px; background:#111827; color:#fff; font-size:13px; font-weight:800; text-decoration:none; }
+.ph-actions a:hover { background:#2563eb; color:#fff; text-decoration:none; }
+@media (max-width: 820px) {
+  .ph-table { min-width:860px; }
+  .ph-card { overflow-x:auto; }
+  .ph-header { align-items:flex-start; flex-direction:column; }
+}
+</style>
+
+<div class="ph-page">
+  <div class="ph-wrap">
+    <div class="ph-header">
+      <div>
+        <h1 class="ph-title">Lịch sử thanh toán</h1>
+        <div class="ph-sub"><%= orders.length %> giao dịch khóa học</div>
+      </div>
+      <div class="ph-actions">
+        <a href="/my-courses"><i class="fas fa-book-open"></i> Khóa học của tôi</a>
+      </div>
+    </div>
+
+    <div class="ph-card">
+      <% if (orders.length > 0) { %>
+      <table class="ph-table">
+        <thead>
+          <tr>
+            <th>Khóa học</th>
+            <th>Mã đơn</th>
+            <th>Loại</th>
+            <th>Số tiền</th>
+            <th>Trạng thái</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => {
+            const course = order.idCourse || {};
+            const isHour = (order.courseType || course.courseType) === 'hour';
+            const amount = Number(order.amount) || 0;
+            const statusMap = {
+              paid: ['ph-paid', 'Đã thanh toán', 'fa-check-circle'],
+              pending: ['ph-pending', 'Đang chờ', 'fa-clock'],
+              cancelled: ['ph-cancelled', 'Đã hủy', 'fa-ban'],
+              failed: ['ph-failed', 'Thất bại', 'fa-exclamation-circle']
+            };
+            const status = statusMap[order.status] || statusMap.failed;
+            const paidOrCreated = order.paidAt || order.createdAt;
+            const dt = paidOrCreated ? new Date(paidOrCreated) : null;
+          %>
+          <tr>
+            <td>
+              <div class="ph-course">
+                <img class="ph-poster" src="<%= course.poster || 'https://i.ibb.co/wr2CLVVd/default-poster.png' %>" alt="<%= order.courseName %>">
+                <div>
+                  <div class="ph-course-name"><%= order.courseName %></div>
+                  <div class="ph-course-meta">
+                    <%= isHour ? ((order.hoursPurchased || 0) + ' giờ / lượt mua') : 'Khóa theo buổi' %>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>#<%= order.orderCode %></td>
+            <td><%= order.provider === 'free' ? 'Miễn phí' : 'PayOS' %></td>
+            <td class="ph-money"><%= amount.toLocaleString('vi-VN') %>đ</td>
+            <td><span class="ph-badge <%= status[0] %>"><i class="fas <%= status[2] %>"></i> <%= status[1] %></span></td>
+            <td>
+              <% if (dt) { %>
+              <div class="ph-date"><%= dt.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' }) %></div>
+              <div class="ph-date-sub"><%= dt.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) %></div>
+              <% } else { %>
+              —
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <% } else { %>
+      <div class="ph-empty">
+        <i class="fas fa-receipt"></i>
+        <div style="font-size:18px;font-weight:800;color:#4b5563;margin-bottom:6px">Chưa có giao dịch nào</div>
+        <div>Các lần mua khóa học của bạn sẽ xuất hiện ở đây.</div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>

@@ -128,6 +128,11 @@ const CourseSchema = mongoose.Schema({
         enum: ['fixed', 'contact'],
         default: 'fixed'
     },
+    courseType: {
+        type: String,
+        enum: ['session', 'hour'],
+        default: 'session'
+    },
     idCourseTopic: {
         type: mongoose.Schema.ObjectId,
         ref: 'coursetopics'
@@ -146,6 +151,10 @@ const CourseSchema = mongoose.Schema({
     },
     // Số buổi học dự kiến của khóa
     totalSessions: {
+        type: Number,
+        default: 0
+    },
+    totalHours: {
         type: Number,
         default: 0
     },

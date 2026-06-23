@@ -120,7 +120,17 @@ const CourseSchema = mongoose.Schema({
     },
     tuition: {
         type: Number,
-        default: 10 //USD
+        default: 500000
+    },
+    priceType: {
+        type: String,
+        enum: ['fixed', 'contact'],
+        default: 'fixed'
+    },
+    courseType: {
+        type: String,
+        enum: ['session', 'hour'],
+        default: 'session'
     },
     idCourseTopic: {
         type: mongoose.Schema.ObjectId,
@@ -150,6 +160,10 @@ const CourseSchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+    totalHours: {
+        type: Number,
+        default: 0
+    },
     previewIndex: {
         type: [Number],
         default: []
@@ -165,6 +179,26 @@ const CourseSchema = mongoose.Schema({
     status: {
         type: Boolean,
         default: true,
+    },
+    discountCodes: {
+        type: [{
+            code:       { type: String, required: true },
+            percent:    { type: Number, default: 0 },
+            maxUses:    { type: Number, default: 0 },
+            usedCount:  { type: Number, default: 0 },
+            expiresAt:  { type: Date,   default: null },
+            active:     { type: Boolean, default: true }
+        }],
+        default: []
+    },
+    sessions: {
+        type: [{
+            title:      { type: String, default: '' },
+            link:       { type: String, default: '' },
+            date:       { type: Date,   default: null },
+            note:       { type: String, default: '' }
+        }],
+        default: []
     },
 });
 

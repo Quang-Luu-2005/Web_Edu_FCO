@@ -118,23 +118,57 @@ Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
   // Lấy tất cả lớp mà user là thành viên
   const myClasses = await CourseClass.find({
     'students.idUser': req.user._id
-  }).select('idCourse name sessions status');
+  }).select('idCourse name sessions status createdAt')
+    .sort({ createdAt: -1 });
 
   // Map từ courseId → class user thuộc về
   const classByCourseId = {};
   myClasses.forEach(cls => {
-    if (cls.idCourse) classByCourseId[cls.idCourse.toString()] = cls;
+    if (!cls.idCourse) return;
+    const key = cls.idCourse.toString();
+    if (!classByCourseId[key] || classByCourseId[key].status === 'completed') {
+      classByCourseId[key] = cls;
+    }
   });
 
   // Build danh sách kèm meta
-  const items = [];
+  const purchaseGroups = new Map();
   for (const pc of purchasedCourses) {
+    if (!pc.idCourse) continue;
+    const key = pc.idCourse.toString();
+    const current = purchaseGroups.get(key) || {
+      idCourse: pc.idCourse,
+      purchaseCount: 0,
+      totalPurchasedHours: 0,
+      enrolledAt: pc.enrolledAt || null,
+      lastLearnedAt: pc.lastLearnedAt || null,
+      learnedVideos: safeArray(pc.learnedVideos)
+    };
+
+    current.purchaseCount += 1;
+    current.totalPurchasedHours += Number(pc.hoursPurchased) || 0;
+    if (pc.enrolledAt && (!current.enrolledAt || new Date(pc.enrolledAt) > new Date(current.enrolledAt))) {
+      current.enrolledAt = pc.enrolledAt;
+    }
+    if (pc.lastLearnedAt && (!current.lastLearnedAt || new Date(pc.lastLearnedAt) > new Date(current.lastLearnedAt))) {
+      current.lastLearnedAt = pc.lastLearnedAt;
+    }
+    purchaseGroups.set(key, current);
+  }
+
+  const items = [];
+  for (const pc of purchaseGroups.values()) {
     const course = await Course.findOne({ _id: pc.idCourse })
       .populate("idLecturer")
       .populate("idCourseTopic");
     if (!course) continue;
 
     const myClass = classByCourseId[course._id.toString()];
+    const userClassesForCourse = myClasses.filter(cls => cls.idCourse && cls.idCourse.toString() === course._id.toString());
+    const activeClass = userClassesForCourse.some(cls => !['completed', 'cancelled'].includes(cls.status));
+    const completedClassCount = userClassesForCourse.filter(cls => cls.status === 'completed').length;
+    const canPurchaseAgain = course.courseType === 'hour'
+      || (!activeClass && completedClassCount >= (pc.purchaseCount || 1));
 
     // Tổng buổi: ưu tiên course.totalSessions, fallback theo sessions của lớp
     const totalSessions = course.totalSessions
@@ -168,6 +202,9 @@ Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
       className:      myClass ? myClass.name : null,
       enrolledAt:     pc.enrolledAt    || null,
       lastLearnedAt:  pc.lastLearnedAt || null,
+      purchaseCount:  pc.purchaseCount || 1,
+      totalPurchasedHours: pc.totalPurchasedHours || 0,
+      canPurchaseAgain,
     });
   }
 

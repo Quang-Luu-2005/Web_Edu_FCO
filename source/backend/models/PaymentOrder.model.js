@@ -30,6 +30,15 @@ const PaymentOrderSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  courseType: {
+    type: String,
+    enum: ['session', 'hour'],
+    default: 'session'
+  },
+  hoursPurchased: {
+    type: Number,
+    default: 0
+  },
   originalAmount: {
     type: Number,
     default: 0
@@ -71,6 +80,7 @@ const PaymentOrderSchema = mongoose.Schema({
 });
 
 PaymentOrderSchema.index({ idUser: 1, idCourse: 1, status: 1 });
+PaymentOrderSchema.index({ idUser: 1, createdAt: -1 });
 
 const PaymentOrder = mongoose.models.paymentorders || mongoose.model('paymentorders', PaymentOrderSchema);
 

@@ -742,10 +742,10 @@
             >
           </p>
           <div class="course-actions">
-            <% if (!isPaid) { %>
+            <% if (!isPaid || canPurchaseAgain) { %>
             <a href="/payment/<%= encodeURIComponent(course.name) %>/checkout" class="btn btn-outline-warning course-action-btn">
               <i class="fas fa-wallet"></i>
-              <span>Mua luôn</span>
+              <span><%= isPaid ? (course.courseType === 'hour' ? 'Mua thêm giờ' : 'Đăng ký học lại') : 'Mua luôn' %></span>
             </a>
             <% } %>
             <button id="wish-list" type="button" class="btn btn-outline-light course-action-btn">

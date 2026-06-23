@@ -313,7 +313,10 @@
 
             <!-- Lớp của tôi -->
             <td>
-              <% if (item.className) { %>
+              <% if (item.course.courseType === 'hour') { %>
+              <div style="font-size:13px;font-weight:600;color:#1a1f2e"><%= item.totalPurchasedHours %> giờ đã mua</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px"><%= item.purchaseCount %> lượt mua</div>
+              <% } else if (item.className) { %>
               <div style="font-size:13px;font-weight:600;color:#1a1f2e"><%= item.className %></div>
               <div style="font-size:11px;color:#9ca3af;margin-top:2px"><%= item.totalVideos %> buổi học</div>
               <% } else { %>
@@ -329,7 +332,15 @@
 
             <!-- Action -->
             <td>
-              <% if (item.classId) { %>
+              <% if (item.course.courseType === 'hour') { %>
+              <a href="/payment/<%= encodeURIComponent(item.course.name) %>/checkout" class="mc-btn-go">
+                <i class="fas fa-plus"></i> Mua thêm giờ
+              </a>
+              <% } else if (item.canPurchaseAgain) { %>
+              <a href="/payment/<%= encodeURIComponent(item.course.name) %>/checkout" class="mc-btn-go">
+                <i class="fas fa-redo"></i> Học lại
+              </a>
+              <% } else if (item.classId) { %>
               <a href="/classes/my-classes/<%= item.classId %>" class="mc-btn-go">
                 <i class="fas fa-play"></i> Vào lớp
               </a>

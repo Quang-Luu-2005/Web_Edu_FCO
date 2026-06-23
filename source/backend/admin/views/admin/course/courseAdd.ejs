@@ -277,6 +277,20 @@
           </div>
 
           <!-- Ô nhập giá -->
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px">Loại khóa học</div>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid #2563eb;background:#0f172a;white-space:nowrap;flex:1;justify-content:center" id="lbl-course-session">
+                <input type="radio" name="courseType" value="session" checked onchange="toggleCourseType(this.value)" style="width:13px;height:13px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">📅 Theo buổi</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.10);background:#0f172a;white-space:nowrap;flex:1;justify-content:center" id="lbl-course-hour">
+                <input type="radio" name="courseType" value="hour" onchange="toggleCourseType(this.value)" style="width:13px;height:13px;accent-color:#2563eb;flex-shrink:0" />
+                <span style="font-size:12px;font-weight:600;color:#e2e8f0">⏱️ Theo giờ</span>
+              </label>
+            </div>
+          </div>
+
           <div id="price-input-wrap">
             <div class="adm-field">
               <label>Giá (VNĐ) <span style="color:#f87171">*</span></label>
@@ -290,10 +304,16 @@
             Học viên sẽ thấy nút "Liên hệ" thay vì giá tiền.
           </div>
 
-          <div class="adm-field" style="margin-top:8px">
+          <div class="adm-field" id="total-sessions-wrap" style="margin-top:8px">
             <label>Số buổi học dự kiến</label>
             <input type="number" name="totalSessions" value="0" min="0" placeholder="VD: 12" />
             <div style="font-size:11px;color:#64748b;line-height:1.5">Dùng để tính tiến độ học của học viên</div>
+          </div>
+
+          <div class="adm-field" id="total-hours-wrap" style="display:none;margin-top:8px">
+            <label>Số giờ học dự kiến</label>
+            <input type="number" name="totalHours" value="0" min="0" step="0.5" placeholder="VD: 24" />
+            <div style="font-size:11px;color:#64748b;line-height:1.5">Dùng cho khóa học tính theo giờ học</div>
           </div>
 
           <!-- Mã giảm giá -->
@@ -346,6 +366,25 @@ function togglePriceType(val) {
     tuitionInput.setAttribute('required', '');
     lblFixed.style.borderColor   = '#2563eb';
     lblContact.style.borderColor = 'rgba(255,255,255,0.10)';
+  }
+}
+
+function toggleCourseType(val) {
+  const sessionWrap = document.getElementById('total-sessions-wrap');
+  const hourWrap = document.getElementById('total-hours-wrap');
+  const lblSession = document.getElementById('lbl-course-session');
+  const lblHour = document.getElementById('lbl-course-hour');
+
+  if (val === 'hour') {
+    sessionWrap.style.display = 'none';
+    hourWrap.style.display = '';
+    lblHour.style.borderColor = '#2563eb';
+    lblSession.style.borderColor = 'rgba(255,255,255,0.10)';
+  } else {
+    sessionWrap.style.display = '';
+    hourWrap.style.display = 'none';
+    lblSession.style.borderColor = '#2563eb';
+    lblHour.style.borderColor = 'rgba(255,255,255,0.10)';
   }
 }
 const MD_SNIPPETS = {

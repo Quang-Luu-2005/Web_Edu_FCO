@@ -8,6 +8,7 @@ const CourseCategory = require('../models/CourseCategory.model');
 const CourseTopic = require('../models/CourseTopic.model');
 const LocalUser = require('../models/LocalUser.model');
 const PaymentOrder = require('../models/PaymentOrder.model');
+const CourseClass = require('../models/CourseClass.model');
 const { ensureAuthenticated } = require('../config/auth.config');
 const { getPublicAppUrl } = require('../utils/publicAppUrl');
 
@@ -79,6 +80,38 @@ function getPaymentDescription(course) {
   return `Khoa hoc ${course.name}`.replace(/\s+/g, ' ').slice(0, 25);
 }
 
+async function canPurchaseCourse(user, course) {
+  if (!user || !course) {
+    return false;
+  }
+
+  if (course.courseType === 'hour') {
+    return true;
+  }
+
+  const courseId = course._id.toString();
+  const purchaseCount = safeArray(user.purchasedCourses)
+    .filter((item) => item.idCourse && item.idCourse.toString() === courseId)
+    .length;
+
+  if (purchaseCount === 0) {
+    return true;
+  }
+
+  const classes = await CourseClass.find({
+    idCourse: course._id,
+    'students.idUser': user._id
+  }).select('status');
+
+  const activeClass = classes.some((cls) => !['completed', 'cancelled'].includes(cls.status));
+  if (activeClass) {
+    return false;
+  }
+
+  const completedCount = classes.filter((cls) => cls.status === 'completed').length;
+  return completedCount >= purchaseCount;
+}
+
 async function refreshLoggedInUser(req, userId) {
   const updated = await LocalUser.findById(userId);
   if (!updated) return null;
@@ -90,21 +123,20 @@ async function refreshLoggedInUser(req, userId) {
   return updated;
 }
 
-async function enrollCourseOnce(order) {
+async function enrollCoursePurchase(order) {
   const course = await Course.findById(order.idCourse).populate('idCourseTopic');
   if (!course) {
     throw new Error('Course not found for paid order');
   }
 
   const updateResult = await LocalUser.updateOne(
-    {
-      _id: order.idUser,
-      'purchasedCourses.idCourse': { $ne: course._id }
-    },
+    { _id: order.idUser },
     {
       $push: {
         purchasedCourses: {
           idCourse: course._id,
+          courseType: course.courseType === 'hour' ? 'hour' : 'session',
+          hoursPurchased: course.courseType === 'hour' ? (Number(course.totalHours) || 0) : 0,
           learnedVideos: [],
           enrolledAt: new Date(),
           lastLearnedAt: null
@@ -151,7 +183,7 @@ async function completePaidOrder(orderCode, providerData = null) {
     return { order, course, completed: false };
   }
 
-  const course = await enrollCourseOnce(order);
+  const course = await enrollCoursePurchase(order);
 
   order.status = 'paid';
   order.paidAt = order.paidAt || new Date();
@@ -185,13 +217,26 @@ async function markOrderCancelled(orderCode, userId) {
   return order;
 }
 
+Router.get('/history', ensureAuthenticated, async (req, res) => {
+  const orders = await PaymentOrder.find({ idUser: req.user._id })
+    .populate('idCourse', 'name poster courseType totalHours')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.render('./payment/history', {
+    isAuthenticated: req.isAuthenticated(),
+    user: req.user,
+    orders
+  });
+});
+
 Router.get('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
   const course = await Course.findOne({ name: req.params.nameCourse });
   if (!course) return renderNotFound(res);
 
-  const alreadyPaid = safeArray(req.user.purchasedCourses)
-    .some((item) => item.idCourse && item.idCourse.toString() === course._id.toString());
-  if (alreadyPaid) return res.redirect('/my-courses');
+  if (!(await canPurchaseCourse(req.user, course))) {
+    return res.redirect('/my-courses');
+  }
 
   if (course.priceType === 'contact') {
     return res.render('./payment/contact', {
@@ -212,9 +257,9 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
   const course = await Course.findOne({ name: req.params.nameCourse });
   if (!course) return renderNotFound(res);
 
-  const alreadyPaid = safeArray(req.user.purchasedCourses)
-    .some((item) => item.idCourse && item.idCourse.toString() === course._id.toString());
-  if (alreadyPaid) return res.redirect('/my-courses');
+  if (!(await canPurchaseCourse(req.user, course))) {
+    return res.redirect('/my-courses');
+  }
 
   if (course.priceType === 'contact') {
     return res.redirect(`/payment/${encodeURIComponent(course.name)}/checkout`);
@@ -229,6 +274,8 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
     idUser: req.user._id,
     idCourse: course._id,
     courseName: course.name,
+    courseType: course.courseType === 'hour' ? 'hour' : 'session',
+    hoursPurchased: course.courseType === 'hour' ? (Number(course.totalHours) || 0) : 0,
     originalAmount: pricing.originalAmount,
     amount: pricing.amount,
     discountCode: pricing.discountCode,

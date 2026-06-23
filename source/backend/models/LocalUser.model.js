@@ -80,6 +80,15 @@ const LocalUserSchema = mongoose.Schema({
                 type: mongoose.Schema.ObjectId,
                 ref: 'courses'
             },
+            courseType: {
+                type: String,
+                enum: ['session', 'hour'],
+                default: 'session'
+            },
+            hoursPurchased: {
+                type: Number,
+                default: 0
+            },
             learnedVideos: [{
                 type: Number
             }],

@@ -545,8 +545,9 @@ router.get("/course/courseEdit",ensureAuthenticated, async function (req, res) {
 });
 
 router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
-  const { name, lecture_id, category, description, tuition, id, image, status, totalSessions } = req.body;
+  const { name, lecture_id, category, description, tuition, id, image, status, totalSessions, totalHours } = req.body;
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
+  const courseType = req.body.courseType === 'hour' ? 'hour' : 'session';
 
   // Parse sessions
   const sessions = [];
@@ -591,11 +592,13 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
     c.description   = description || '';
     c.tuition       = priceType === 'contact' ? 0 : (Number(tuition) || c.tuition);
     c.priceType     = priceType;
+    c.courseType    = courseType;
     c.poster        = image || c.poster;
     c.status        = status === '1' || status === true;
     c.sessions      = sessions;
     c.discountCodes = discountCodes;
-    c.totalSessions = Number(totalSessions) || 0;
+    c.totalSessions = courseType === 'session' ? (Number(totalSessions) || 0) : 0;
+    c.totalHours    = courseType === 'hour' ? (Number(totalHours) || 0) : 0;
     c.save();
     res.redirect("/admin/course/coursesList");
   });
@@ -613,6 +616,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
   // Ưu tiên markdown nếu có
   const finalDescription = req.body.description_md || description || '';
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
+  const courseType = req.body.courseType === 'hour' ? 'hour' : 'session';
   const finalName = (name || '').toString().trim();
 
   if (!finalName) {
@@ -644,10 +648,12 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
     description:   finalDescription,
     tuition:       priceType === 'contact' ? 0 : (Number(tuition) || 500000),
     priceType,
+    courseType,
     poster:        req.body.image || '',
     status:        status === '1' || status === true,
     discountCodes,
-    totalSessions: Number(req.body.totalSessions) || 0,
+    totalSessions: courseType === 'session' ? (Number(req.body.totalSessions) || 0) : 0,
+    totalHours:    courseType === 'hour' ? (Number(req.body.totalHours) || 0) : 0,
   });
 
   try {
@@ -898,24 +904,36 @@ router.get('/course/students', ensureAuthenticated, async (req, res) => {
     'purchasedCourses.idCourse': courseId
   }, 'name username email avatar purchasedCourses');
 
-  const students = allStudents.map(u => {
-    const pc = u.purchasedCourses.find(p => p.idCourse && p.idCourse.toString() === courseId.toString());
-    return { user: u, enrolledAt: pc ? pc.enrolledAt : null };
-  });
-
   // Tìm các lớp của khóa này
   const classes = await CourseClass.find({ idCourse: courseId })
     .populate('idLecturer', 'name avatar')
     .sort({ createdAt: -1 });
 
   // Tìm các user đã có trong lớp nào đó
-  const inClassUserIds = new Set();
+  const classStatsByUserId = {};
   classes.forEach(cls => {
-    cls.students.forEach(s => inClassUserIds.add(s.idUser.toString()));
+    cls.students.forEach(s => {
+      const userId = s.idUser.toString();
+      const stats = classStatsByUserId[userId] || { completed: 0, active: 0 };
+      if (cls.status === 'completed') stats.completed += 1;
+      else if (cls.status !== 'cancelled') stats.active += 1;
+      classStatsByUserId[userId] = stats;
+    });
+  });
+
+  const students = allStudents.map(u => {
+    const purchases = u.purchasedCourses.filter(p => p.idCourse && p.idCourse.toString() === courseId.toString());
+    const latest = purchases.reduce((latestPc, pc) => {
+      if (!latestPc) return pc;
+      return new Date(pc.enrolledAt || 0) > new Date(latestPc.enrolledAt || 0) ? pc : latestPc;
+    }, null);
+    const stats = classStatsByUserId[u._id.toString()] || { completed: 0, active: 0 };
+    const pendingClassSlots = Math.max(0, purchases.length - stats.completed - stats.active);
+    return { user: u, enrolledAt: latest ? latest.enrolledAt : null, purchaseCount: purchases.length, pendingClassSlots };
   });
 
   // Học viên chưa được xếp lớp
-  const unassigned = students.filter(s => !inClassUserIds.has(s.user._id.toString()));
+  const unassigned = students.filter(s => s.pendingClassSlots > 0);
 
   res.locals.layout = false;
   res.render('admin/course/courseStudents', {
