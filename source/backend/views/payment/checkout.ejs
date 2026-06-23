@@ -157,14 +157,16 @@
         </div>
 
         <% const activeDiscountCodes = (course.discountCodes || []).filter(d => d.active); %>
+        <% if (activeDiscountCodes.length) { %>
         <div>
           <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Mã giảm giá</div>
           <div class="pay-discount-wrap">
-            <input type="text" class="pay-discount-input" id="discount-input" name="discountCode" placeholder="Nhập mã..." maxlength="20" oninput="this.value=this.value.toUpperCase()" <%= activeDiscountCodes.length ? '' : 'disabled' %> />
-            <button type="button" class="pay-discount-btn" onclick="applyDiscount()" <%= activeDiscountCodes.length ? '' : 'disabled' %>>Áp dụng</button>
+            <input type="text" class="pay-discount-input" id="discount-input" name="discountCode" placeholder="Nhập mã..." maxlength="20" oninput="this.value=this.value.toUpperCase()" />
+            <button type="button" class="pay-discount-btn" onclick="applyDiscount()">Áp dụng</button>
           </div>
-          <div class="pay-discount-msg <%= activeDiscountCodes.length ? '' : 'err' %>" id="discount-msg"><%= activeDiscountCodes.length ? '' : 'Khóa học này chưa được cấu hình mã giảm giá.' %></div>
+          <div class="pay-discount-msg" id="discount-msg"></div>
         </div>
+        <% } %>
 
         <div class="pay-info-box" id="pay-info-box">
           <i class="fas fa-info-circle"></i>
