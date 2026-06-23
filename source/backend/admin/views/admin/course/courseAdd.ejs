@@ -515,7 +515,7 @@ function addDiscount() {
     <div id="dc-${i}" style="display:grid;grid-template-columns:1fr 60px 60px 24px;gap:6px;align-items:center">
       <input type="text"   name="discountCodes[${i}][code]"    placeholder="SALE20" style="${inp};text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
       <div style="position:relative">
-        <input type="number" name="discountCodes[${i}][percent]" placeholder="0" min="1" max="100" style="${inp};padding-right:18px" />
+        <input type="number" name="discountCodes[${i}][percent]" placeholder="%" min="1" max="100" required style="${inp};padding-right:18px" />
         <span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;color:#64748b;pointer-events:none">%</span>
       </div>
       <input type="number" name="discountCodes[${i}][maxUses]" placeholder="∞" min="0" style="${inp}" title="0 = không giới hạn" />

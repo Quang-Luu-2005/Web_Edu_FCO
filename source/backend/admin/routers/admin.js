@@ -575,9 +575,9 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
       if (dc.code && dc.code.trim()) {
         discountCodes.push({
           code:      dc.code.trim().toUpperCase(),
-          percent:   Number(dc.percent) || 0,
+          percent:   Math.min(100, Math.max(1, Number(dc.percent) || 1)),
           maxUses:   Number(dc.maxUses) || 0,
-          expiresAt: dc.expiresAt ? new Date(dc.expiresAt) : null,
+          expiresAt: dc.expiresAt ? new Date(dc.expiresAt + 'T23:59:59.999+07:00') : null,
           active:    true
         });
       }
@@ -633,9 +633,9 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
       if (dc.code && dc.code.trim()) {
         discountCodes.push({
           code:      dc.code.trim().toUpperCase(),
-          percent:   Number(dc.percent) || 0,
+          percent:   Math.min(100, Math.max(1, Number(dc.percent) || 1)),
           maxUses:   Number(dc.maxUses) || 0,
-          expiresAt: dc.expiresAt ? new Date(dc.expiresAt) : null,
+          expiresAt: dc.expiresAt ? new Date(dc.expiresAt + 'T23:59:59.999+07:00') : null,
           active:    true
         });
       }

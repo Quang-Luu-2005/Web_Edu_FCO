@@ -156,16 +156,15 @@
           </div>
         </div>
 
-        <% if (course.discountCodes && course.discountCodes.some(d => d.active)) { %>
+        <% const activeDiscountCodes = (course.discountCodes || []).filter(d => d.active); %>
         <div>
           <div style="font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Mã giảm giá</div>
           <div class="pay-discount-wrap">
-            <input type="text" class="pay-discount-input" id="discount-input" name="discountCode" placeholder="Nhập mã..." maxlength="20" oninput="this.value=this.value.toUpperCase()" />
-            <button type="button" class="pay-discount-btn" onclick="applyDiscount()">Áp dụng</button>
+            <input type="text" class="pay-discount-input" id="discount-input" name="discountCode" placeholder="Nhập mã..." maxlength="20" oninput="this.value=this.value.toUpperCase()" <%= activeDiscountCodes.length ? '' : 'disabled' %> />
+            <button type="button" class="pay-discount-btn" onclick="applyDiscount()" <%= activeDiscountCodes.length ? '' : 'disabled' %>>Áp dụng</button>
           </div>
-          <div class="pay-discount-msg" id="discount-msg"></div>
+          <div class="pay-discount-msg <%= activeDiscountCodes.length ? '' : 'err' %>" id="discount-msg"><%= activeDiscountCodes.length ? '' : 'Khóa học này chưa được cấu hình mã giảm giá.' %></div>
         </div>
-        <% } %>
 
         <div class="pay-info-box" id="pay-info-box">
           <i class="fas fa-info-circle"></i>
@@ -189,7 +188,7 @@
 
 <script>
 const ORIGINAL_PRICE = <%= Number(course.tuition) || 0 %>;
-const DISCOUNTS = <%- JSON.stringify((course.discountCodes || []).filter(d => d.active).map(d => ({
+const DISCOUNTS = <%- JSON.stringify(activeDiscountCodes.map(d => ({
   code: d.code,
   percent: Number(d.percent) || 0,
   maxUses: Number(d.maxUses) || 0,
@@ -199,6 +198,18 @@ const DISCOUNTS = <%- JSON.stringify((course.discountCodes || []).filter(d => d.
 
 function formatVnd(value) {
   return Number(value || 0).toLocaleString('vi-VN') + 'đ';
+}
+
+function getDiscountExpiryEnd(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date(0);
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    16, 59, 59, 999
+  ));
 }
 
 function applyDiscount() {
@@ -225,7 +236,7 @@ function applyDiscount() {
     return;
   }
 
-  if (discount.expiresAt && new Date() > new Date(discount.expiresAt)) {
+  if (discount.expiresAt && new Date() > getDiscountExpiryEnd(discount.expiresAt)) {
     msgEl.textContent = 'Mã đã hết hạn';
     msgEl.className = 'pay-discount-msg err';
     return;

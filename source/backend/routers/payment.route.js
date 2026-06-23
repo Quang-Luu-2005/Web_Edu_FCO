@@ -16,6 +16,20 @@ const safeArray = (value) => Array.isArray(value) ? value : [];
 const renderNotFound = (res) => res.status(404).render('./error/404', { layout: false });
 const renderServerError = (res) => res.status(500).render('./error/500', { layout: false });
 
+function isDiscountExpired(expiresAt) {
+  if (!expiresAt) return false;
+  const date = new Date(expiresAt);
+  if (Number.isNaN(date.getTime())) return true;
+
+  const endOfDayVietnam = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    16, 59, 59, 999
+  ));
+  return new Date() > endOfDayVietnam;
+}
+
 let payosClient = null;
 function getPayOS() {
   if (!payosClient) {
@@ -57,7 +71,7 @@ function getValidDiscount(course, discountCode) {
   return safeArray(course.discountCodes).find((discount) => {
     return discount.active
       && discount.code === code
-      && (!discount.expiresAt || new Date() < new Date(discount.expiresAt))
+      && !isDiscountExpired(discount.expiresAt)
       && ((Number(discount.maxUses) || 0) === 0 || (Number(discount.usedCount) || 0) < Number(discount.maxUses));
   }) || null;
 }

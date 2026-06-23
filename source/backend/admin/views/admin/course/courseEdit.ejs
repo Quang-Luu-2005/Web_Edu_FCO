@@ -226,7 +226,7 @@
               </span>
               <% } %>
             </div>
-            <input type="number" name="discountCodes[<%= i %>][percent]" value="<%= dc.percent %>" class="dc-input" min="1" max="100" />
+            <input type="number" name="discountCodes[<%= i %>][percent]" value="<%= dc.percent %>" class="dc-input" min="1" max="100" required />
             <input type="number" name="discountCodes[<%= i %>][maxUses]" value="<%= dc.maxUses %>" class="dc-input" min="0" title="0 = không giới hạn" />
             <!-- Đã dùng — readonly -->
             <div style="height:34px;padding:0 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;color:<%= isExhausted ? '#f87171' : '#94a3b8' %>;font-weight:600">
@@ -311,7 +311,7 @@ function addDiscount() {
       <div style="position:relative">
         <input type="text" name="discountCodes[${i}][code]" placeholder="SALE20" class="dc-input" oninput="this.value=this.value.toUpperCase()" />
       </div>
-      <input type="number" name="discountCodes[${i}][percent]"   placeholder="%"       class="dc-input" min="1" max="100" />
+      <input type="number" name="discountCodes[${i}][percent]"   placeholder="%"       class="dc-input" min="1" max="100" required />
       <input type="number" name="discountCodes[${i}][maxUses]"   placeholder="0=∞"     class="dc-input" min="0" title="0 = không giới hạn" />
       <div style="height:34px;padding:0 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#475569">0</div>
       <input type="date"   name="discountCodes[${i}][expiresAt]"                        class="dc-input" />
