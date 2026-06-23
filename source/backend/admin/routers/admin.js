@@ -548,6 +548,7 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
   const { name, lecture_id, category, description, tuition, id, image, status, totalSessions, totalHours } = req.body;
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
   const courseType = req.body.courseType === 'hour' ? 'hour' : 'session';
+  const isPracticePrerequisite = req.body.isPracticePrerequisite === '1' || req.body.isPracticePrerequisite === 'on';
 
   // Parse sessions
   const sessions = [];
@@ -593,6 +594,7 @@ router.post("/course/courseEdit", ensureAuthenticated, async (req, res) => {
     c.tuition       = priceType === 'contact' ? 0 : (Number(tuition) || c.tuition);
     c.priceType     = priceType;
     c.courseType    = courseType;
+    c.isPracticePrerequisite = isPracticePrerequisite;
     c.poster        = image || c.poster;
     c.status        = status === '1' || status === true;
     c.sessions      = sessions;
@@ -617,6 +619,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
   const finalDescription = req.body.description_md || description || '';
   const priceType = req.body.priceType === 'contact' ? 'contact' : 'fixed';
   const courseType = req.body.courseType === 'hour' ? 'hour' : 'session';
+  const isPracticePrerequisite = req.body.isPracticePrerequisite === '1' || req.body.isPracticePrerequisite === 'on';
   const finalName = (name || '').toString().trim();
 
   if (!finalName) {
@@ -649,6 +652,7 @@ router.post("/course/courseAdd",ensureAuthenticated,async function (req, res) {
     tuition:       priceType === 'contact' ? 0 : (Number(tuition) || 500000),
     priceType,
     courseType,
+    isPracticePrerequisite,
     poster:        req.body.image || '',
     status:        status === '1' || status === true,
     discountCodes,

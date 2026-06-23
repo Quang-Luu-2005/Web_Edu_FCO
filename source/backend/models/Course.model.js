@@ -133,6 +133,10 @@ const CourseSchema = mongoose.Schema({
         enum: ['session', 'hour'],
         default: 'session'
     },
+    isPracticePrerequisite: {
+        type: Boolean,
+        default: false
+    },
     idCourseTopic: {
         type: mongoose.Schema.ObjectId,
         ref: 'coursetopics'

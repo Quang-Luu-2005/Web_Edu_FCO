@@ -36,8 +36,8 @@ async function getUser2MCourses(user) {
   if (courseIds.length === 0) return [];
 
   const courses = await Course.find(
-    { _id: { $in: courseIds }, tuition: TWO_MILLION },
-    'name tuition poster'
+    { _id: { $in: courseIds }, isPracticePrerequisite: true },
+    'name tuition poster isPracticePrerequisite'
   );
   return courses;
 }

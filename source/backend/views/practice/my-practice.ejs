@@ -117,7 +117,7 @@ function renderItem(it) {
   }
 
   // Zalo link — chỉ hiện cho người đã được chọn
-  const zalo = (['paid', 'free', 'approved'].includes(ps) && s.zaloGroupLink) ? `
+  const zalo = (['paid', 'free'].includes(ps) && s.zaloGroupLink) ? `
     <div class="mp-zalo">
       <i class="fab fa-facebook-messenger" style="color:#3b6fd4"></i>
       <span>Group Zalo: <a href="${s.zaloGroupLink}" target="_blank" rel="noopener">${s.zaloGroupLink}</a></span>
