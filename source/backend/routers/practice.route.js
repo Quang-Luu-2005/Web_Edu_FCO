@@ -208,8 +208,21 @@ Router.get('/:id/sessions/:sid/bracket', ensureAuthenticated, async (req, res) =
     return res.redirect('/practice/' + cls._id);
   }
 
-  // Quyền xem zalo: chỉ user đã được duyệt (paid/free/approved)
-  const canSeeZalo = ['paid', 'free', 'approved'].includes(myEn.paymentStatus);
+  const userIsStudent = await isPracticeStudent(req.user);
+  if (userIsStudent && myEn.paymentStatus === 'approved') {
+    myEn.type = myEn.type === '2M' ? '2M' : 'student';
+    myEn.paymentStatus = 'free';
+    myEn.amount = 0;
+    myEn.orderCode = null;
+    myEn.reviewedAt = myEn.reviewedAt || new Date();
+    await cls.save();
+  }
+
+  // Quyền xem Zalo: chỉ người đã hoàn tất quyền tham gia mới được thấy.
+  // - paid: người trả phí đã thanh toán xong
+  // - free: học viên được miễn phí sau khi admin duyệt
+  // Không bao gồm approved vì trạng thái này với người trả phí là "đã duyệt nhưng chưa thanh toán".
+  const canSeeZalo = ['paid', 'free'].includes(myEn.paymentStatus);
   const isApproved = canSeeZalo;
 
   return res.render('./practice/bracket', {

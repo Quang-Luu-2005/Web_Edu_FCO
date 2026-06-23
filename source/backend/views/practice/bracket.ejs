@@ -53,8 +53,10 @@ const sStatus = session.status;
 let statusEl = '';
 if (sStatus === 'cancelled') {
   statusEl = `<div class="br-status br-status-no"><i class="fas fa-ban"></i> Buổi này đã bị hủy</div>`;
-} else if (['paid','free','approved'].includes(ps)) {
+} else if (['paid','free'].includes(ps)) {
   statusEl = `<div class="br-status br-status-yes"><i class="fas fa-check-circle"></i> Bạn đã được chọn vào buổi này</div>`;
+} else if (ps === 'approved') {
+  statusEl = `<div class="br-status br-status-wait"><i class="fas fa-credit-card"></i> Bạn đã được duyệt — vui lòng thanh toán để hoàn tất đăng ký</div>`;
 } else if (ps === 'rejected') {
   statusEl = `<div class="br-status br-status-no"><i class="fas fa-times-circle"></i> Bạn không được chọn vào buổi này</div>`;
 } else if (ps === 'requested') {
@@ -153,11 +155,13 @@ function renderPlayer(p) {
       </div>
     <% } %>
 
-    <% if (['requested','rejected'].includes(ps)) { %>
+    <% if (['requested','approved','rejected'].includes(ps)) { %>
     <div class="br-info-box">
       <i class="fas fa-info-circle"></i>
       <% if (ps === 'requested') { %>
-        Yêu cầu đăng ký của bạn đang chờ admin duyệt. Sau khi được chọn, bạn sẽ thấy link group Zalo và có thể tham gia buổi đấu.
+        Yêu cầu đăng ký của bạn đang chờ admin duyệt. Sau khi được chọn và hoàn tất điều kiện tham gia, bạn sẽ thấy link group Zalo.
+      <% } else if (ps === 'approved') { %>
+        Bạn đã được admin duyệt nhưng chưa hoàn tất thanh toán, nên link group Zalo sẽ được ẩn cho đến khi thanh toán xong.
       <% } else { %>
         Bạn không được chọn vào buổi này. Có thể do số lượng đăng ký vượt quá chỗ. Bạn vẫn có thể đăng ký các buổi khác của lớp.
       <% } %>
