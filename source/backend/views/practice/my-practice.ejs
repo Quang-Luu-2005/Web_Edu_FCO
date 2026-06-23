@@ -97,7 +97,7 @@ function renderItem(it) {
   if (s.status === 'cancelled') badge = '<span class="mp-badge mp-badge-cancelled">Đã hủy</span>';
   else if (s.status === 'done') badge = '<span class="mp-badge mp-badge-done">✓ Đã kết thúc</span>';
   else if (ps === 'requested') badge = '<span class="mp-badge mp-badge-requested"><i class="fas fa-hourglass-half"></i> Chờ admin duyệt</span>';
-  else if (ps === 'approved' && en.type === '2M') badge = '<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt</span>';
+  else if (ps === 'approved' && (userIsPracticeStudent || ['2M', 'student'].includes(en.type))) badge = '<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt</span>';
   else if (ps === 'approved') badge = `<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt — cần thanh toán ${en.amount.toLocaleString('vi-VN')}đ</span>`;
   else if (ps === 'pending') badge = '<span class="mp-badge mp-badge-pending"><i class="fas fa-spinner"></i> Đang xử lý thanh toán</span>';
   else if (ps === 'free') badge = '<span class="mp-badge mp-badge-approved"><i class="fas fa-check-circle"></i> Đã duyệt</span>';
@@ -137,7 +137,7 @@ function renderItem(it) {
   if (s.meetLink && (ps === 'paid' || ps === 'free') && s.status === 'scheduled' && !isPast) {
     cta += `<a href="${s.meetLink}" target="_blank" class="mp-meet-btn"><i class="fas fa-video"></i> Tham gia</a>`;
   }
-  if (ps === 'approved' && en.type === 'paid') {
+  if (ps === 'approved' && en.type === 'paid' && !userIsPracticeStudent) {
     cta += `<form action="/practice/${it.classId}/sessions/${s._id}/pay" method="POST" style="margin:0">
       <button type="submit" class="mp-pay-btn"><i class="fas fa-credit-card"></i> Thanh toán ${en.amount.toLocaleString('vi-VN')}đ</button>
     </form>`;
@@ -220,10 +220,10 @@ const myClasses = Object.values(classMap);
   <div class="mp-wrap">
     <a class="mp-back" href="/practice"><i class="fas fa-arrow-left"></i> Quay lại danh sách lớp thực hành</a>
     <h1 class="mp-title">Buổi thực hành của tôi</h1>
-    <% if (userIs2M) { %>
+    <% if (userIsPracticeStudent) { %>
       <div class="mp-sub">
-        <i class="fas fa-crown" style="color:#f59e0b"></i>
-        Bạn là học viên khóa 2M — học miễn phí, lịch do admin sắp xếp.
+        <i class="fas fa-user-graduate" style="color:#f59e0b"></i>
+        Bạn là học viên — buổi thực hành được miễn phí sau khi admin duyệt.
       </div>
     <% } else { %>
       <div class="mp-sub">Tổng số yêu cầu/đăng ký: <strong style="color:#1a1f2e"><%= items.length %></strong></div>

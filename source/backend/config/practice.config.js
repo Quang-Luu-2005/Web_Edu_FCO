@@ -47,6 +47,12 @@ async function is2MStudent(user) {
   return courses.length > 0;
 }
 
+async function isPracticeStudent(user) {
+  if (!user) return false;
+  if (user.role === 'user') return true;
+  return is2MStudent(user);
+}
+
 module.exports = {
   TWO_MILLION,
   RANK_LEVELS,
@@ -54,5 +60,6 @@ module.exports = {
   getRankLabel,
   isProfileCompleteForPractice,
   getUser2MCourses,
-  is2MStudent
+  is2MStudent,
+  isPracticeStudent
 };

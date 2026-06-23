@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const EnrollmentSchema = new mongoose.Schema({
   idUser:        { type: mongoose.Schema.ObjectId, ref: 'localusers', required: true },
-  type:          { type: String, enum: ['2M', 'paid'], required: true },
+  type:          { type: String, enum: ['2M', 'student', 'paid'], required: true },
   paymentStatus: { type: String, enum: ['requested', 'approved', 'paid', 'free', 'rejected', 'cancelled', 'pending'], default: 'requested' },
   orderCode:     { type: Number, default: null },
   amount:        { type: Number, default: 0 },

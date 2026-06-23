@@ -1,8 +1,8 @@
 {
+  "model": "claude-my-combo",
   "env": {
-    "ANTHROPIC_BASE_URL": "http://localhost:9000",
-    "ANTHROPIC_AUTH_TOKEN": "123456",
-    "CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY": "1"
-  },
-  "model": "claude-sonnet-4.6"
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:20128/v1",
+    "ANTHROPIC_AUTH_TOKEN": "sk-0cfc09b31fc481ac-fkwtv7-3d8e4115",
+    "ANTHROPIC_API_KEY": ""
+  }
 }

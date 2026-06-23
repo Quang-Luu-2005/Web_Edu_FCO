@@ -191,6 +191,7 @@
                 <div class="req-name-line">
                   <%= req.idUser ? (req.idUser.name || req.idUser.username) : '—' %>
                   <% if (req.type === '2M') { %><span class="req-type-2m" style="margin-left:6px"><i class="fas fa-crown"></i> 2M</span>
+                  <% } else if (req.type === 'student') { %><span class="req-type-2m" style="margin-left:6px"><i class="fas fa-user-graduate"></i> Học viên miễn phí</span>
                   <% } else { %><span class="req-type-paid" style="margin-left:6px">Trả phí <%= req.amount.toLocaleString('vi-VN') %>đ</span><% } %>
                 </div>
                 <div class="req-email"><%= req.idUser ? req.idUser.email : '' %></div>
@@ -242,6 +243,8 @@
             </div>
             <% if (en.type === '2M') { %>
               <span class="enroll-type-2m"><i class="fas fa-crown"></i> 2M</span>
+            <% } else if (en.type === 'student' || en.paymentStatus === 'free') { %>
+              <span class="enroll-type-2m"><i class="fas fa-user-graduate"></i> Học viên miễn phí</span>
             <% } else if (en.paymentStatus === 'paid') { %>
               <span class="enroll-type-paid"><i class="fas fa-check-circle"></i> Đã trả <%= en.amount.toLocaleString('vi-VN') %>đ</span>
             <% } else if (en.paymentStatus === 'approved') { %>

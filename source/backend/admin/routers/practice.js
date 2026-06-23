@@ -5,6 +5,7 @@ const LocalUser     = require('../../models/LocalUser.model');
 const { ensureAuthenticated } = require('../config/auth_admin');
 const {
   is2MStudent,
+  isPracticeStudent,
   getUser2MCourses,
   getRankLabel,
   RANK_LEVELS
@@ -308,18 +309,24 @@ router.post('/:id/sessions/:sid/approve', ensureAuthenticated, express.json(), a
     return res.json({ ok: false, msg: 'Yêu cầu này không ở trạng thái chờ duyệt' });
   }
 
+  const enrolledUser = await LocalUser.findById(userId);
+  if (!enrolledUser) return res.json({ ok: false, msg: 'Không tìm thấy người dùng' });
+  const isStudent = await isPracticeStudent(enrolledUser);
+
   // Check chỗ
   const activeCount = s.enrollments.filter(e => ['paid', 'free', 'approved'].includes(e.paymentStatus)).length;
   if (activeCount >= cls.maxStudentsPerSession) {
     return res.json({ ok: false, msg: `Buổi học đã đủ ${cls.maxStudentsPerSession} học viên` });
   }
 
-  en.paymentStatus = en.type === '2M' ? 'free' : 'approved';
+  en.type = en.type === '2M' ? '2M' : (isStudent ? 'student' : 'paid');
+  en.paymentStatus = isStudent ? 'free' : 'approved';
+  en.amount = isStudent ? 0 : (en.amount || cls.pricePerSession || 50000);
   en.reviewedAt = new Date();
   if (typeof adminNote === 'string') en.adminNote = adminNote.trim().slice(0, 300);
   await cls.save();
 
-  return res.json({ ok: true, paymentStatus: en.paymentStatus });
+  return res.json({ ok: true, paymentStatus: en.paymentStatus, type: en.type, amount: en.amount });
 });
 
 // ── Admin: từ chối yêu cầu ──

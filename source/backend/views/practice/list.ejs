@@ -38,14 +38,14 @@
       <h1><i class="fas fa-futbol"></i> Lớp thực hành</h1>
       <p>Rèn luyện kỹ năng trực tiếp với huấn luyện viên — đăng ký tham gia các buổi thực hành theo lịch.</p>
       <div class="pl-pricing">
-        <% if (userIs2M) { %>
+        <% if (userIsPracticeStudent) { %>
           <div class="pl-tag">
-            <i class="fas fa-crown" style="color:#fde68a"></i>
-            Bạn là <strong>học viên khóa 2M</strong> — học miễn phí, không giới hạn buổi
+            <i class="fas fa-user-graduate" style="color:#fde68a"></i>
+            Bạn là <strong>học viên</strong> — được miễn phí khi tham gia buổi thực hành
           </div>
           <div class="pl-tag">
             <i class="fas fa-info-circle"></i>
-            Lịch học sẽ do admin sắp xếp
+            Yêu cầu vẫn sẽ được admin xem xét trước khi xếp lịch
           </div>
         <% } else { %>
           <div class="pl-tag">

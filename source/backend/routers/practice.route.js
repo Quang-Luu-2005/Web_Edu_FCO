@@ -7,6 +7,7 @@ const { ensureAuthenticated } = require('../config/auth.config');
 const { getPublicAppUrl } = require('../utils/publicAppUrl');
 const {
   is2MStudent,
+  isPracticeStudent,
   getUser2MCourses,
   isProfileCompleteForPractice,
   getRankLabel,
@@ -56,9 +57,11 @@ Router.get('/', async (req, res) => {
     .sort({ createdAt: -1 });
 
   let userIs2M = false;
+  let userIsPracticeStudent = false;
   let userActivity = {}; // { classId: { selected, pending, following } }
   if (req.isAuthenticated() && req.user) {
     userIs2M = await is2MStudent(req.user);
+    userIsPracticeStudent = await isPracticeStudent(req.user);
     const uid = req.user._id.toString();
     classes.forEach(cls => {
       let selected = 0, pending = 0;
@@ -80,6 +83,7 @@ Router.get('/', async (req, res) => {
     user: req.user,
     classes,
     userIs2M,
+    userIsPracticeStudent,
     userActivity
   });
 });
@@ -118,12 +122,14 @@ Router.get('/my', ensureAuthenticated, async (req, res) => {
   });
 
   const userIs2M = await is2MStudent(req.user);
+  const userIsPracticeStudent = await isPracticeStudent(req.user);
 
   return res.render('./practice/my-practice', {
     isAuthenticated: req.isAuthenticated(),
     user: req.user,
     items,
     userIs2M,
+    userIsPracticeStudent,
     getRankLabel
   });
 });
@@ -230,11 +236,13 @@ Router.get('/:id', async (req, res) => {
   if (!cls) return renderNotFound(res);
 
   let userIs2M = false;
+  let userIsPracticeStudent = false;
   let userId = null;
   let profileComplete = false;
   let isFollowing = false;
   if (req.isAuthenticated() && req.user) {
     userIs2M = await is2MStudent(req.user);
+    userIsPracticeStudent = await isPracticeStudent(req.user);
     userId = req.user._id.toString();
     profileComplete = isProfileCompleteForPractice(req.user);
     isFollowing = (cls.followers || []).some(f => f && f.toString() === userId);
@@ -283,6 +291,7 @@ Router.get('/:id', async (req, res) => {
     upcomingSessions,
     pastSessions,
     userIs2M,
+    userIsPracticeStudent,
     userId,
     userSessionState,
     profileComplete,
@@ -332,6 +341,7 @@ Router.post('/:id/sessions/:sid/register', ensureAuthenticated, express.json(), 
   }
 
   const userIs2M = await is2MStudent(req.user);
+  const userIsStudent = await isPracticeStudent(req.user);
   const userId = req.user._id;
   const userIdStr = userId.toString();
 
@@ -342,10 +352,10 @@ Router.post('/:id/sessions/:sid/register', ensureAuthenticated, express.json(), 
 
   const enrollment = {
     idUser:        userId,
-    type:          userIs2M ? '2M' : 'paid',
+    type:          userIs2M ? '2M' : (userIsStudent ? 'student' : 'paid'),
     paymentStatus: 'requested',
     orderCode:     null,
-    amount:        userIs2M ? 0 : (cls.pricePerSession || 50000),
+    amount:        userIsStudent ? 0 : (cls.pricePerSession || 50000),
     enrolledAt:    new Date(),
     snapshotZaloPhone:  req.user.zaloPhone || '',
     snapshotInGameName: req.user.inGameName || '',
@@ -383,6 +393,7 @@ Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res
   }
 
   const userIs2M = await is2MStudent(req.user);
+  const userIsStudent = await isPracticeStudent(req.user);
   const userId = req.user._id;
   const userIdStr = userId.toString();
   const created = [];
@@ -401,10 +412,10 @@ Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res
 
     const enrollment = {
       idUser: userId,
-      type: userIs2M ? '2M' : 'paid',
+      type: userIs2M ? '2M' : (userIsStudent ? 'student' : 'paid'),
       paymentStatus: 'requested',
       orderCode: null,
-      amount: userIs2M ? 0 : (cls.pricePerSession || 50000),
+      amount: userIsStudent ? 0 : (cls.pricePerSession || 50000),
       enrolledAt: new Date(),
       snapshotZaloPhone: req.user.zaloPhone || '',
       snapshotInGameName: req.user.inGameName || '',
@@ -438,8 +449,16 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
     req.flash && req.flash('error_msg', 'Bạn chưa đăng ký buổi này');
     return res.redirect('/practice/my');
   }
-  if (en.type !== 'paid') {
-    req.flash && req.flash('error_msg', 'Buổi này không cần thanh toán');
+
+  const userIsStudent = await isPracticeStudent(req.user);
+  if (userIsStudent || en.type !== 'paid' || Number(en.amount) <= 0) {
+    en.type = en.type === '2M' ? '2M' : 'student';
+    en.paymentStatus = 'free';
+    en.amount = 0;
+    en.orderCode = null;
+    en.reviewedAt = en.reviewedAt || new Date();
+    await cls.save();
+    req.flash && req.flash('success_msg', 'Bạn là học viên nên buổi này không cần thanh toán');
     return res.redirect('/practice/my');
   }
   if (en.paymentStatus !== 'approved') {
