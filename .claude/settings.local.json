@@ -4,7 +4,8 @@
       "Bash(node --check source/backend/config/practice.config.js)",
       "Bash(node --check source/backend/models/PracticeClass.model.js)",
       "Bash(node --check source/backend/routers/practice.route.js)",
-      "Bash(node --check source/backend/views/practice/bracket.ejs)"
+      "Bash(node --check source/backend/views/practice/bracket.ejs)",
+      "PowerShell(git check-ignore -v .vscode/settings.json .kiro/specs/admin-login-fix/design.md .claude/settings.json source/backend/.vscode/settings.json source/backend/.env source/backend/.env.example .gitignore)"
     ]
   }
 }
