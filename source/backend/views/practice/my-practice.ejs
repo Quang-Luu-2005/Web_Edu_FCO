@@ -142,6 +142,12 @@ function renderItem(it) {
       <button type="submit" class="mp-pay-btn"><i class="fas fa-credit-card"></i> Thanh toán ${en.amount.toLocaleString('vi-VN')}đ</button>
     </form>`;
   }
+  if (ps === 'pending' && en.type === 'paid' && !userIsPracticeStudent) {
+    cta += `<form action="/practice/${it.classId}/sessions/${s._id}/pay" method="POST" style="margin:0">
+      <button type="submit" class="mp-pay-btn"><i class="fas fa-redo"></i> Thanh toán lại</button>
+    </form>`;
+    cta += `<button class="mp-cancel-btn" onclick="cancelPracticePayment('${it.classId}','${s._id}')">Hủy thanh toán</button>`;
+  }
   // Bracket button — hiện cho mọi enrollment chưa bị từ chối/hủy (xem nhánh đấu kể cả đang chờ duyệt)
   if (!['cancelled'].includes(ps) && s.status !== 'cancelled') {
     cta += `<a href="/practice/${it.classId}/sessions/${s._id}/bracket" class="mp-bracket-btn"><i class="fas fa-sitemap"></i> Xem nhánh đấu</a>`;
@@ -330,6 +336,20 @@ async function withdraw(classId, sessionId) {
     const json = await res.json();
     if (json.ok) location.reload();
     else alert(json.msg || 'Không thể hủy yêu cầu');
+  } catch(e) {
+    alert('Lỗi kết nối');
+  }
+}
+
+async function cancelPracticePayment(classId, sessionId) {
+  if (!confirm('Hủy lần thanh toán đang xử lý và quay lại trạng thái chờ thanh toán?')) return;
+  try {
+    const res = await fetch('/practice/' + classId + '/sessions/' + sessionId + '/payment-cancel', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    });
+    const json = await res.json();
+    if (json.ok) location.reload();
+    else alert(json.msg || 'Không thể hủy thanh toán');
   } catch(e) {
     alert('Lỗi kết nối');
   }

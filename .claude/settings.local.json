@@ -25,7 +25,9 @@
       "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show e4b1f01:source/backend/routers/payment.route.js)",
       "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show e4b1f01:source/backend/app.js)",
       "WebSearch",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show 62e6982:source/backend/config/mail.config.js)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show 2df998e:source/backend/config/mail.config.js)"
     ]
   }
 }

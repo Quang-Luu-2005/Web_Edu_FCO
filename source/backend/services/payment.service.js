@@ -180,6 +180,39 @@ async function completePaidOrder(orderCode, providerData = null) {
   return { order, course, completed: true };
 }
 
+async function findLatestPendingOrder({ userId, courseId }) {
+  if (!userId || !courseId) return null;
+
+  return PaymentOrder.findOne({
+    idUser: userId,
+    idCourse: courseId,
+    status: 'pending'
+  }).sort({ createdAt: -1 });
+}
+
+async function cancelPendingOrders({ userId, courseId, reason = 'Cancelled before creating a new payment order' }) {
+  if (!userId || !courseId) return 0;
+
+  const orders = await PaymentOrder.find({
+    idUser: userId,
+    idCourse: courseId,
+    status: 'pending'
+  });
+
+  if (orders.length === 0) {
+    return 0;
+  }
+
+  await Promise.all(orders.map(async (order) => {
+    order.status = 'cancelled';
+    order.cancelledAt = new Date();
+    order.rawProviderData = order.rawProviderData || { message: reason };
+    await order.save();
+  }));
+
+  return orders.length;
+}
+
 async function markOrderCancelled({ orderCode, userId, cancelPayment }) {
   if (!orderCode) return null;
 
@@ -209,8 +242,10 @@ async function markOrderCancelled({ orderCode, userId, cancelPayment }) {
 module.exports = {
   buildPaymentAmount,
   canPurchaseCourse,
+  cancelPendingOrders,
   completePaidOrder,
   enrollCoursePurchase,
+  findLatestPendingOrder,
   generateOrderCode,
   getPaymentDescription,
   getValidDiscount,

@@ -55,6 +55,7 @@
             <th>Số tiền</th>
             <th>Trạng thái</th>
             <th>Thời gian</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -94,6 +95,20 @@
               <div class="ph-date-sub"><%= dt.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' }) %></div>
               <% } else { %>
               —
+              <% } %>
+            </td>
+            <td>
+              <% if (order.status === 'pending' && order.checkoutUrl) { %>
+                <div class="ph-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+                  <a href="<%= order.checkoutUrl %>" target="_blank" rel="noopener"><i class="fas fa-redo"></i> Tiếp tục</a>
+                  <a href="/payment/<%= encodeURIComponent(order.courseName) %>/cancel?orderCode=<%= order.orderCode %>" style="background:#fff;color:#b91c1c;border:1px solid #fecaca"><i class="fas fa-times"></i> Hủy</a>
+                </div>
+              <% } else if (order.status === 'failed' || order.status === 'cancelled') { %>
+                <div class="ph-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+                  <a href="/course/<%= encodeURIComponent(order.courseName) %>"><i class="fas fa-arrow-left"></i> Quay lại khóa học</a>
+                </div>
+              <% } else { %>
+                —
               <% } %>
             </td>
           </tr>

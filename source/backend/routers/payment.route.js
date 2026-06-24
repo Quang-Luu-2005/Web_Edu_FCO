@@ -7,7 +7,9 @@ const Course = require('../models/Course.model');
 const {
   buildPaymentAmount,
   canPurchaseCourse,
+  cancelPendingOrders,
   completePaidOrder,
+  findLatestPendingOrder,
   generateOrderCode,
   getPaymentDescription,
   markOrderCancelled,
@@ -89,6 +91,21 @@ Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
   }
 
   const pricing = buildPaymentAmount(course, req.body.discountCode);
+
+  if (pricing.amount > 0) {
+    const pendingOrder = await findLatestPendingOrder({ userId: req.user._id, courseId: course._id });
+    if (pendingOrder && pendingOrder.checkoutUrl) {
+      return res.redirect(pendingOrder.checkoutUrl);
+    }
+    if (pendingOrder) {
+      await cancelPendingOrders({
+        userId: req.user._id,
+        courseId: course._id,
+        reason: 'Pending order expired before restarting checkout'
+      });
+    }
+  }
+
   const orderCode = await generateOrderCode();
 
   const order = await PaymentOrder.create({
@@ -219,7 +236,17 @@ Router.get('/:nameCourse/cancel', ensureAuthenticated, async (req, res) => {
   return res.redirect('/course/' + encodeURIComponent(req.params.nameCourse));
 });
 
-Router.get('/:nameCourse/fail', ensureAuthenticated, (req, res) => {
+Router.get('/:nameCourse/fail', ensureAuthenticated, async (req, res) => {
+  const course = await Course.findOne({ name: req.params.nameCourse });
+  if (course) {
+    await cancelPendingOrders({
+      userId: req.user._id,
+      courseId: course._id,
+      reason: 'Checkout failed before completion'
+    });
+  }
+
+  req.flash && req.flash('error_msg', 'Thanh toán chưa hoàn tất');
   return res.redirect('/my-courses');
 });
 

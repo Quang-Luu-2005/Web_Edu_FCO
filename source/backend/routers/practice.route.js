@@ -32,6 +32,18 @@ function getPayOS() {
 const renderNotFound    = (res) => res.status(404).render('./error/404', { layout: false });
 const renderServerError = (res) => res.status(500).render('./error/500', { layout: false });
 
+function findUserEnrollment(session, userId) {
+  const userIdStr = userId && userId.toString();
+  return (session.enrollments || []).find(e => e.idUser && e.idUser.toString() === userIdStr);
+}
+
+function rollbackPendingPracticePayment(en) {
+  if (!en || en.paymentStatus !== 'pending') return false;
+  en.paymentStatus = 'approved';
+  en.orderCode = null;
+  return true;
+}
+
 // Helper: build start of ISO week (Monday) for grouping — timezone-safe (local components)
 function weekKeyOf(date) {
   const d = new Date(date);
@@ -456,8 +468,7 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
   const session = cls.sessions.id(req.params.sid);
   if (!session) return renderNotFound(res);
 
-  const userIdStr = req.user._id.toString();
-  const en = session.enrollments.find(e => e.idUser && e.idUser.toString() === userIdStr);
+  const en = findUserEnrollment(session, req.user._id);
   if (!en) {
     req.flash && req.flash('error_msg', 'Bạn chưa đăng ký buổi này');
     return res.redirect('/practice/my');
@@ -474,13 +485,15 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
     req.flash && req.flash('success_msg', 'Bạn là học viên nên buổi này không cần thanh toán');
     return res.redirect('/practice/my');
   }
-  if (en.paymentStatus !== 'approved') {
+  if (!['approved', 'pending'].includes(en.paymentStatus)) {
     req.flash && req.flash('error_msg', 'Yêu cầu chưa được admin duyệt');
     return res.redirect('/practice/my');
   }
 
   const amount = en.amount || cls.pricePerSession || 50000;
-  const orderCode = Number(String(Date.now()).slice(-8) + String(req.user._id).slice(-4).replace(/[^0-9]/g, '0'));
+  const orderCode = en.paymentStatus === 'pending' && en.orderCode
+    ? Number(en.orderCode)
+    : Number(String(Date.now()).slice(-8) + String(req.user._id).slice(-4).replace(/[^0-9]/g, '0'));
   const baseUrl = getPublicAppUrl(req);
 
   en.paymentStatus = 'pending';
@@ -512,18 +525,17 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
     return res.redirect(paymentLink.checkoutUrl);
   } catch (err) {
     console.error('[PracticePayOS create error]', err.message);
-    return renderServerError(res);
+    rollbackPendingPracticePayment(en);
+    await cls.save();
+    req.session.pendingPracticePayment = null;
+    req.flash && req.flash('error_msg', 'Không tạo được link thanh toán. Vui lòng thử lại.');
+    return res.redirect('/practice/my');
   }
 });
 
 // ── Callback PayOS thành công ──
 Router.get('/:id/sessions/:sid/success', ensureAuthenticated, async (req, res) => {
-  const { orderCode, status } = req.query;
-
-  if (status !== 'PAID') {
-    req.flash && req.flash('error_msg', 'Thanh toán chưa hoàn tất');
-    return res.redirect('/practice/' + req.params.id);
-  }
+  const { orderCode } = req.query;
 
   let paymentInfo;
   try {
@@ -534,7 +546,7 @@ Router.get('/:id/sessions/:sid/success', ensureAuthenticated, async (req, res) =
     return res.redirect('/practice/' + req.params.id);
   }
 
-  if (paymentInfo.status !== 'PAID') {
+  if (!paymentInfo || paymentInfo.status !== 'PAID') {
     req.flash && req.flash('error_msg', 'Giao dịch chưa được xác nhận');
     return res.redirect('/practice/' + req.params.id);
   }
@@ -573,15 +585,8 @@ Router.get('/:id/sessions/:sid/cancel', ensureAuthenticated, async (req, res) =>
   if (cls) {
     const session = cls.sessions.id(req.params.sid);
     if (session) {
-      const userIdStr = req.user._id.toString();
-      const en = session.enrollments.find(e =>
-        e.idUser && e.idUser.toString() === userIdStr &&
-        Number(e.orderCode) === Number(orderCode) &&
-        e.paymentStatus === 'pending'
-      );
-      if (en) {
-        en.paymentStatus = 'approved';
-        en.orderCode = null;
+      const en = findUserEnrollment(session, req.user._id);
+      if (en && Number(en.orderCode) === Number(orderCode) && rollbackPendingPracticePayment(en)) {
         await cls.save();
       }
     }
@@ -590,6 +595,23 @@ Router.get('/:id/sessions/:sid/cancel', ensureAuthenticated, async (req, res) =>
   req.session.pendingPracticePayment = null;
   req.flash && req.flash('error_msg', 'Bạn đã hủy thanh toán');
   return res.redirect('/practice/my');
+});
+
+Router.post('/:id/sessions/:sid/payment-cancel', ensureAuthenticated, express.json(), async (req, res) => {
+  const cls = await PracticeClass.findById(req.params.id);
+  if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
+  const session = cls.sessions.id(req.params.sid);
+  if (!session) return res.json({ ok: false, msg: 'Không tìm thấy buổi học' });
+
+  const en = findUserEnrollment(session, req.user._id);
+  if (!en) return res.json({ ok: false, msg: 'Bạn chưa đăng ký buổi này' });
+  if (!rollbackPendingPracticePayment(en)) {
+    return res.json({ ok: false, msg: 'Buổi này không ở trạng thái chờ thanh toán' });
+  }
+
+  await cls.save();
+  req.session.pendingPracticePayment = null;
+  return res.json({ ok: true });
 });
 
 // ── User hủy yêu cầu đang ở trạng thái requested/approved ──
