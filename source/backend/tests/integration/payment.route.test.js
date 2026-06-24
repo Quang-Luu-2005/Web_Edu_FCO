@@ -96,6 +96,7 @@ describe('payment.route', () => {
   });
 
   test('POST /payment/:nameCourse/checkout marks order failed when PayOS create fails', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const course = await Course.create({
       name: 'Paid Course',
       tuition: 500000,
@@ -110,6 +111,7 @@ describe('payment.route', () => {
 
     expect(response.status).toBe(500);
     expect(response.body.view).toBe('./error/500');
+    expect(errorSpy).toHaveBeenCalledWith('[PayOS create error]', 'PayOS unavailable');
 
     const order = await PaymentOrder.findOne({ courseName: course.name }).lean();
     expect(order).toBeTruthy();
@@ -119,6 +121,7 @@ describe('payment.route', () => {
   });
 
   test('POST /payment/webhook completes pending paid order', async () => {
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const course = await Course.create({
       name: 'Webhook Course',
       tuition: 450000,
