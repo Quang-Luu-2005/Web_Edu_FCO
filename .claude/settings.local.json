@@ -14,7 +14,10 @@
       "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests/integration\")",
       "PowerShell(npm install --prefix \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend\")",
       "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" test)",
-      "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" install)"
+      "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" install)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' diff -- source/backend/views/payment/contact.ejs source/backend/routers/payment.route.js source/backend/app.js source/backend/views source/backend/public)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' status --short)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' diff --name-status HEAD)"
     ]
   }
 }
