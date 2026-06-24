@@ -17,7 +17,15 @@
       "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" install)",
       "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' diff -- source/backend/views/payment/contact.ejs source/backend/routers/payment.route.js source/backend/app.js source/backend/views source/backend/public)",
       "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' status --short)",
-      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' diff --name-status HEAD)"
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_c2d12a80-c80-3' diff --name-status HEAD)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' log --oneline -- source/backend/app.js source/backend/createApp.js source/backend/config/mail.config.js source/backend/routers/payment.route.js source/backend/middlewares/paypal.mdw.js source/backend/middlewares/cloudinary.mdw.js source/backend/middlewares/dbLocal.mdw.js source/backend/middlewares/session.mdw.js source/backend/utils/publicAppUrl.js)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show --stat --summary 93630db -- source/backend)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' diff e4b1f01 93630db -- source/backend/app.js source/backend/createApp.js source/backend/config/mail.config.js source/backend/routers/payment.route.js source/backend/middlewares/paypal.mdw.js source/backend/middlewares/cloudinary.mdw.js source/backend/middlewares/dbLocal.mdw.js source/backend/middlewares/session.mdw.js source/backend/utils/publicAppUrl.js source/backend/routers/users.route.js)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' log --oneline -- source/backend/config/mail.config.js)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show e4b1f01:source/backend/routers/payment.route.js)",
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show e4b1f01:source/backend/app.js)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)"
     ]
   }
 }

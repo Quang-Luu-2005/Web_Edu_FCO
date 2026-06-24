@@ -82,22 +82,30 @@ const sendWithSmtp = async ({ to, subject, html }) => {
 };
 
 const sendMail = async (payload) => {
-  if (process.env.RESEND_API_KEY) {
+  const mailProvider = (process.env.MAIL_PROVIDER || '').trim().toLowerCase();
+  const hasSmtp = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+
+  if (mailProvider === 'resend') {
+    return sendWithResend(payload);
+  }
+
+  if (mailProvider === 'smtp' || hasSmtp) {
     try {
-      return await sendWithResend(payload);
-    } catch (resendError) {
-      if (isResendSandboxError(resendError)) {
-        throw resendError;
+      return await sendWithSmtp(payload);
+    } catch (smtpError) {
+      if (SMTP_FALLBACK_ENABLED && hasResend) {
+        console.warn('[Mail] SMTP failed, falling back to Resend:', smtpError.message);
+        return sendWithResend(payload);
       }
-
-      if (SMTP_FALLBACK_ENABLED && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        console.warn('[Mail] Resend failed, falling back to SMTP:', resendError.message);
-        return sendWithSmtp(payload);
-      }
-
-      throw resendError;
+      throw smtpError;
     }
   }
+
+  if (hasResend) {
+    return sendWithResend(payload);
+  }
+
   return sendWithSmtp(payload);
 };
 
