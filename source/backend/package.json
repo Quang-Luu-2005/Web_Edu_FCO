@@ -5,6 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage --runInBand",
     "import:database": "node scripts/import-database.js",
     "import:database:dry": "node scripts/import-database.js --dry-run"
   },
@@ -36,5 +39,11 @@
     "resend": "^6.12.3",
     "sanitize-html": "^2.17.4",
     "video.js": "^7.10.2"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^8.16.1",
+    "supertest": "^6.3.4"
   }
 }

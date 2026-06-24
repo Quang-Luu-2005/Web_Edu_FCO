@@ -649,12 +649,18 @@ Router.post("/wish-list-change", ensureAuthenticated, async (req, res) => {
   const index = wishList.findIndex((id) => id.toString() === courseID.toString());
   const added = index === -1;
 
-  if (added) wishList.push(courseID);
-  else       wishList.splice(index, 1);
+  const nextWishList = added
+    ? [...wishList, courseID]
+    : wishList.filter((id) => id.toString() !== courseID.toString());
 
   try {
-    await req.user.save();
-    return res.json({ ok: true, added, count: wishList.length });
+    await LocalUser.findByIdAndUpdate(
+      req.user._id,
+      { $set: { idWishList: nextWishList } },
+      { new: true }
+    );
+    req.user.idWishList = nextWishList;
+    return res.json({ ok: true, added, count: nextWishList.length });
   } catch (e) {
     console.error('wish-list-change error:', e.message);
     return res.json({ ok: false, msg: 'Lỗi lưu dữ liệu' });

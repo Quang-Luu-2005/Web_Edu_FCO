@@ -5,7 +5,16 @@
       "Bash(node --check source/backend/models/PracticeClass.model.js)",
       "Bash(node --check source/backend/routers/practice.route.js)",
       "Bash(node --check source/backend/views/practice/bracket.ejs)",
-      "PowerShell(git check-ignore -v .vscode/settings.json .kiro/specs/admin-login-fix/design.md .claude/settings.json source/backend/.vscode/settings.json source/backend/.env source/backend/.env.example .gitignore)"
+      "PowerShell(git check-ignore -v .vscode/settings.json .kiro/specs/admin-login-fix/design.md .claude/settings.json source/backend/.vscode/settings.json source/backend/.env source/backend/.env.example .gitignore)",
+      "PowerShell(npm install --package-lock-only --prefix \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests/setup\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests/helpers\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests/unit\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend/tests/integration\")",
+      "PowerShell(npm install --prefix \"d:/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_44a04200-e60-2/source/backend\")",
+      "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" test)",
+      "PowerShell(npm --prefix \"d:\\\\Job\\\\ThanhMan\\\\Web_Edu_FCO\\\\source\\\\backend\" install)"
     ]
   }
 }

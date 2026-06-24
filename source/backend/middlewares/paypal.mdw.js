@@ -1,6 +1,9 @@
 const paypal = require('paypal-rest-sdk');
 
 module.exports = function () {
-  // Passport Config
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
   require("../config/paypal.config")(paypal);
 };

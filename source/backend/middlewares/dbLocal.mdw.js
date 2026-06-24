@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
 
-module.exports = function(app) {
-    const uri = require('../config/key.config').MongoLocal;
-    let retryTimer = null;
-    let isConnecting = false;
+let listenersRegistered = false;
 
+function registerModels() {
     // Register models before connecting so populate() can resolve schemas.
     require('../models/LocalUser.model');
     require('../models/Lecturer.model');
@@ -12,14 +10,26 @@ module.exports = function(app) {
     require('../models/Course.model');
     require('../models/CourseClass.model');
     require('../models/SupportTicket.model');
+}
 
+module.exports = function(app, runtimeOptions = {}) {
+    const uri = require('../config/key.config').MongoLocal;
+    const shouldConnectDb = runtimeOptions.connectDb !== false && process.env.NODE_ENV !== 'test';
+    let retryTimer = null;
+    let isConnecting = false;
+
+    registerModels();
     mongoose.set('useCreateIndex', true);
 
+    if (!shouldConnectDb) {
+        return;
+    }
+
     const options = {
-        useNewUrlParser:    true,
+        useNewUrlParser: true,
         useUnifiedTopology: true,
-        useFindAndModify:   false,
-        useCreateIndex:     true,
+        useFindAndModify: false,
+        useCreateIndex: true,
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
     };
@@ -53,18 +63,22 @@ module.exports = function(app) {
         }
     };
 
-    mongoose.connection.on('connected', () => {
-        console.log('[DB] MongoDB connected');
-    });
+    if (!listenersRegistered) {
+        mongoose.connection.on('connected', () => {
+            console.log('[DB] MongoDB connected');
+        });
 
-    mongoose.connection.on('disconnected', () => {
-        console.warn('[DB] MongoDB disconnected - retrying...');
-        scheduleReconnect();
-    });
+        mongoose.connection.on('disconnected', () => {
+            console.warn('[DB] MongoDB disconnected - retrying...');
+            scheduleReconnect();
+        });
 
-    mongoose.connection.on('error', err => {
-        console.error('[DB] MongoDB error:', err.message);
-    });
+        mongoose.connection.on('error', err => {
+            console.error('[DB] MongoDB error:', err.message);
+        });
+
+        listenersRegistered = true;
+    }
 
     connect();
 };

@@ -3,10 +3,11 @@ const MongoDBStoreFactory = require('connect-mongodb-session');
 
 module.exports = function(app) {
     const uri = require('../config/key.config').MongoLocal;
+    const isTest = process.env.NODE_ENV === 'test';
     const MongoDBStore = MongoDBStoreFactory(session);
 
     let store;
-    if (uri) {
+    if (!isTest && uri) {
         store = new MongoDBStore({
             uri,
             collection: 'sessions',
@@ -21,7 +22,7 @@ module.exports = function(app) {
         store.on('error', err => {
             console.error('[Session] Mongo store error:', err.message);
         });
-    } else {
+    } else if (!uri && !isTest) {
         console.warn('[Session] Missing MONGO_URI, falling back to MemoryStore.');
     }
 
