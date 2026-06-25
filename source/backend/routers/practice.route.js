@@ -20,11 +20,12 @@ function getPayOS() {
     if (!process.env.PAYOS_CLIENT_ID || !process.env.PAYOS_API_KEY || !process.env.PAYOS_CHECKSUM_KEY) {
       throw new Error('PayOS credentials chưa được cấu hình trong .env');
     }
-    _payos = new PayOS(
-      process.env.PAYOS_CLIENT_ID,
-      process.env.PAYOS_API_KEY,
-      process.env.PAYOS_CHECKSUM_KEY
-    );
+    _payos = new PayOS({
+      clientId: process.env.PAYOS_CLIENT_ID,
+      apiKey: process.env.PAYOS_API_KEY,
+      checksumKey: process.env.PAYOS_CHECKSUM_KEY,
+      partnerCode: process.env.PAYOS_PARTNER_CODE || undefined
+    });
   }
   return _payos;
 }
@@ -515,7 +516,7 @@ Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
   };
 
   try {
-    const paymentLink = await getPayOS().createPaymentLink(paymentData);
+    const paymentLink = await getPayOS().paymentRequests.create(paymentData);
     req.session.pendingPracticePayment = {
       orderCode,
       classId:   cls._id.toString(),
@@ -539,7 +540,7 @@ Router.get('/:id/sessions/:sid/success', ensureAuthenticated, async (req, res) =
 
   let paymentInfo;
   try {
-    paymentInfo = await getPayOS().getPaymentLinkInformation(orderCode);
+    paymentInfo = await getPayOS().paymentRequests.get(Number(orderCode));
   } catch (err) {
     console.error('[PracticePayOS verify error]', err.message);
     req.flash && req.flash('error_msg', 'Không thể xác minh thanh toán');

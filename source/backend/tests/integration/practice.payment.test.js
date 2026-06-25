@@ -1,10 +1,12 @@
-const mockCreatePaymentLink = jest.fn();
-const mockGetPaymentLinkInformation = jest.fn();
+const mockCreatePayment = jest.fn();
+const mockGetPayment = jest.fn();
 
 jest.mock('@payos/node', () => ({
   PayOS: jest.fn().mockImplementation(() => ({
-    createPaymentLink: mockCreatePaymentLink,
-    getPaymentLinkInformation: mockGetPaymentLinkInformation,
+    paymentRequests: {
+      create: mockCreatePayment,
+      get: mockGetPayment,
+    },
   })),
 }));
 
@@ -28,8 +30,8 @@ describe('practice payment recovery', () => {
   });
 
   beforeEach(async () => {
-    mockCreatePaymentLink.mockReset();
-    mockGetPaymentLinkInformation.mockReset();
+    mockCreatePayment.mockReset();
+    mockGetPayment.mockReset();
 
     const user = await LocalUser.create({
       username: 'practicepayer',
@@ -77,7 +79,7 @@ describe('practice payment recovery', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const cls = await createApprovedPracticeClass();
     const sid = cls.sessions[0]._id.toString();
-    mockCreatePaymentLink.mockRejectedValue(new Error('PayOS unavailable'));
+    mockCreatePayment.mockRejectedValue(new Error('PayOS unavailable'));
 
     const response = await request(app)
       .post(`/practice/${cls._id}/sessions/${sid}/pay`);
@@ -103,7 +105,7 @@ describe('practice payment recovery', () => {
         }
       }
     );
-    mockCreatePaymentLink.mockResolvedValue({ checkoutUrl: 'https://payos.test/retry' });
+    mockCreatePayment.mockResolvedValue({ checkoutUrl: 'https://payos.test/retry' });
 
     const response = await request(app)
       .post(`/practice/${cls._id}/sessions/${sid}/pay`);
