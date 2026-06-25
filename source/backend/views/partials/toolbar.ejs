@@ -203,7 +203,7 @@
       const icon = isYes ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
       const title = isYes ? 'Bạn đã được chọn' : 'Yêu cầu bị từ chối';
       const sub = `${escapeHtml(n.sessionTitle || 'Buổi thực hành')} — ${escapeHtml(n.className || '')}`;
-      const href = `/practice/${n.classId}/sessions/${n.sessionId}/bracket`;
+      const href = `/practice/my`;
       return `<a class="bell-item ${cls}" href="${href}">
         <div class="bell-title">${icon} ${title}</div>
         <div class="bell-sub">${sub}</div>

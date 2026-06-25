@@ -95,6 +95,68 @@ describe('payment.route', () => {
     expect(user.idCourses).toHaveLength(1);
   });
 
+  test('POST /payment/:nameCourse/checkout redirects to existing pending checkout URL', async () => {
+    const course = await Course.create({
+      name: 'Resume Course',
+      tuition: 500000,
+      courseType: 'session',
+      priceType: 'fixed',
+    });
+    await PaymentOrder.create({
+      orderCode: 2222,
+      provider: 'payos',
+      status: 'pending',
+      idUser: currentUserId,
+      idCourse: course._id,
+      courseName: course.name,
+      amount: 500000,
+      checkoutUrl: 'https://payos.test/existing',
+    });
+
+    const response = await request(app)
+      .post(`/payment/${encodeURIComponent(course.name)}/checkout`)
+      .send({});
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('https://payos.test/existing');
+    expect(await PaymentOrder.countDocuments({ courseName: course.name })).toBe(1);
+  });
+
+  test('POST /payment/:nameCourse/checkout cancels stale pending order without checkout URL before creating new one', async () => {
+    const course = await Course.create({
+      name: 'Stale Pending Course',
+      tuition: 500000,
+      courseType: 'session',
+      priceType: 'fixed',
+    });
+    await PaymentOrder.create({
+      orderCode: 3333,
+      provider: 'payos',
+      status: 'pending',
+      idUser: currentUserId,
+      idCourse: course._id,
+      courseName: course.name,
+      amount: 500000,
+    });
+    mockCreatePayment.mockResolvedValue({
+      paymentLinkId: 'plink_1',
+      checkoutUrl: 'https://payos.test/new',
+    });
+
+    const response = await request(app)
+      .post(`/payment/${encodeURIComponent(course.name)}/checkout`)
+      .send({});
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('https://payos.test/new');
+
+    const orders = await PaymentOrder.find({ courseName: course.name }).sort({ createdAt: 1 }).lean();
+    expect(orders).toHaveLength(2);
+    expect(orders[0].status).toBe('cancelled');
+    expect(orders[1].status).toBe('pending');
+    expect(orders[1].checkoutUrl).toBe('https://payos.test/new');
+  });
+
   test('POST /payment/:nameCourse/checkout marks order failed when PayOS create fails', async () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const course = await Course.create({
@@ -118,6 +180,32 @@ describe('payment.route', () => {
     expect(order.provider).toBe('payos');
     expect(order.status).toBe('failed');
     expect(order.rawProviderData).toEqual({ message: 'PayOS unavailable' });
+  });
+
+  test('GET /payment/:nameCourse/cancel marks pending order cancelled', async () => {
+    const course = await Course.create({
+      name: 'Cancel Course',
+      tuition: 500000,
+      courseType: 'session',
+      priceType: 'fixed',
+    });
+    await PaymentOrder.create({
+      orderCode: 4444,
+      provider: 'payos',
+      status: 'pending',
+      idUser: currentUserId,
+      idCourse: course._id,
+      courseName: course.name,
+      amount: 500000,
+    });
+    mockCancelPayment.mockResolvedValue(true);
+
+    const response = await request(app)
+      .get(`/payment/${encodeURIComponent(course.name)}/cancel?orderCode=4444`);
+
+    expect(response.status).toBe(302);
+    const order = await PaymentOrder.findOne({ orderCode: 4444 }).lean();
+    expect(order.status).toBe('cancelled');
   });
 
   test('POST /payment/webhook completes pending paid order', async () => {
