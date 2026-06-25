@@ -14,6 +14,10 @@ const renderNotFound = (res) => res.status(404).render("./error/404", {
   layout: false,
 });
 
+Router.get("/", (req, res) => {
+  return res.redirect("/courses/search");
+});
+
 // Course list from user search
 Router.get("/search", async (req, res) => {
   const queryString = (req.query.queryString || "").trim();
