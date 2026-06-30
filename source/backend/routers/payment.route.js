@@ -18,6 +18,7 @@ const {
 } = require('../services/payment.service');
 const { ensureAuthenticated } = require('../config/auth.config');
 const { getPublicAppUrl } = require('../utils/publicAppUrl');
+const { paymentLimiter } = require('../middlewares/rateLimit.mdw');
 
 const renderNotFound = (res) => res.status(404).render('./error/404', { layout: false });
 const renderServerError = (res) => res.status(500).render('./error/500', { layout: false });
@@ -77,7 +78,7 @@ Router.get('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
   });
 });
 
-Router.post('/:nameCourse/checkout', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/checkout', ensureAuthenticated, paymentLimiter, async (req, res) => {
   const PaymentOrder = require('../models/PaymentOrder.model');
   const course = await Course.findOne({ name: req.params.nameCourse });
   if (!course) return renderNotFound(res);

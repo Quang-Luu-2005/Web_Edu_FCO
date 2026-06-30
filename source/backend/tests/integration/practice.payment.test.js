@@ -15,7 +15,7 @@ const LocalUser = require('../../models/LocalUser.model');
 const PracticeClass = require('../../models/PracticeClass.model');
 const practiceRouter = require('../../routers/practice.route');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
-const { createRouterApp } = require('../helpers/routerApp');
+const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
 
 describe('practice payment recovery', () => {
   let currentUserId;
@@ -49,6 +49,7 @@ describe('practice payment recovery', () => {
 
   afterEach(async () => {
     currentUserId = null;
+    await resetAllRateLimits();
     await clearTestDb();
   });
 

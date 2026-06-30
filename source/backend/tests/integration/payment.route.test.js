@@ -22,7 +22,7 @@ const Course = require('../../models/Course.model');
 const PaymentOrder = require('../../models/PaymentOrder.model');
 const paymentRouter = require('../../routers/payment.route');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
-const { createRouterApp } = require('../helpers/routerApp');
+const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
 
 describe('payment.route', () => {
   let currentUserId;
@@ -54,6 +54,7 @@ describe('payment.route', () => {
 
   afterEach(async () => {
     currentUserId = null;
+    await resetAllRateLimits();
     await clearTestDb();
   });
 

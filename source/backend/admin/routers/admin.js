@@ -30,6 +30,13 @@ const {
   ensureAuthenticated,
   forwardAuthenticated
 } = require("../config/auth_admin");
+const {
+  adminWriteLimiter,
+  limitMutatingMethods,
+} = require('../../middlewares/rateLimit.mdw');
+
+router.use(limitMutatingMethods(adminWriteLimiter));
+
 
 const normalizeLearnItems = (value) => {
   if (Array.isArray(value)) {

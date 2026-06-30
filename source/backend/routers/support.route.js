@@ -2,8 +2,9 @@ const express = require('express');
 
 const router = express.Router();
 const SupportTicket = require('../models/SupportTicket.model');
+const { supportLimiter } = require('../middlewares/rateLimit.mdw');
 
-router.post('/', async (req, res) => {
+router.post('/', supportLimiter, async (req, res) => {
   const pageUrl = (req.body.pageUrl || req.get('Referer') || '').toString().trim();
   const errorType = (req.body.errorType || 'unknown').toString().trim();
   const message = (req.body.message || 'User requested support from an error page').toString().trim();

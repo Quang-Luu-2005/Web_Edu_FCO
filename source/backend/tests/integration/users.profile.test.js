@@ -4,7 +4,7 @@ const LocalUser = require('../../models/LocalUser.model');
 const Course = require('../../models/Course.model');
 const usersRouter = require('../../routers/users.route');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
-const { createRouterApp } = require('../helpers/routerApp');
+const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
 
 describe('users profile routes', () => {
   let currentUserId;
@@ -31,6 +31,7 @@ describe('users profile routes', () => {
 
   afterEach(async () => {
     currentUserId = null;
+    await resetAllRateLimits();
     await clearTestDb();
   });
 
@@ -87,5 +88,37 @@ describe('users profile routes', () => {
       .post('/users/wish-list-change')
       .send({ courseID: course._id.toString() });
     expect(removeResponse.body).toEqual({ ok: true, added: false, count: 0 });
+  });
+
+  test('POST /users/:nameCourse/updateLearnedVideo is rate limited after repeated updates', async () => {
+    const course = await Course.create({ name: 'Progress Course' });
+    await LocalUser.findByIdAndUpdate(currentUserId, {
+      $set: {
+        purchasedCourses: [{
+          idCourse: course._id,
+          courseType: 'hour',
+          learnedVideos: [],
+        }],
+      },
+    });
+
+    for (let i = 0; i < 10; i++) {
+      const response = await request(app)
+        .post(`/users/${encodeURIComponent(course.name)}/updateLearnedVideo`)
+        .send({ videoIndex: i });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toBe(true);
+    }
+
+    const blocked = await request(app)
+      .post(`/users/${encodeURIComponent(course.name)}/updateLearnedVideo`)
+      .send({ videoIndex: 10 });
+
+    expect(blocked.status).toBe(429);
+    expect(blocked.body).toEqual({
+      ok: false,
+      msg: 'Bạn thao tác quá nhanh. Vui lòng chậm lại một chút.',
+    });
   });
 });

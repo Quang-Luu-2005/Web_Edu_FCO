@@ -16,6 +16,10 @@ const { renderCourseDescription } = require('../utils/courseDescriptionRenderer'
 const {
     ensureAuthenticated
 } = require('../config/auth.config');
+const {
+    reviewLimiter,
+    interactionLimiter,
+} = require('../middlewares/rateLimit.mdw');
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
@@ -354,7 +358,7 @@ Router.get('/:nameCourse', async (req, res) => {
     });
 });
 
-Router.post('/:nameCourse/evaluate', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/evaluate', ensureAuthenticated, interactionLimiter, async (req, res) => {
     const evaluationPoint = Number(req.body.evaluationPoint);
 
     if (!Number.isFinite(evaluationPoint)) {
@@ -392,7 +396,7 @@ Router.post('/:nameCourse/evaluate', ensureAuthenticated, async (req, res) => {
     return res.json(true);
 });
 
-Router.post('/:nameCourse/review', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/review', ensureAuthenticated, reviewLimiter, async (req, res) => {
     const course = await Course.findOne({
         name: req.params.nameCourse
     });
@@ -426,7 +430,7 @@ Router.post('/:nameCourse/review', ensureAuthenticated, async (req, res) => {
     return res.json(true);
 });
 
-Router.post('/:nameCourse/review/:reviewId/reply', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/review/:reviewId/reply', ensureAuthenticated, reviewLimiter, async (req, res) => {
     const course = await Course.findOne({
         name: req.params.nameCourse
     });
@@ -460,7 +464,7 @@ Router.post('/:nameCourse/review/:reviewId/reply', ensureAuthenticated, async (r
     return res.json(true);
 });
 
-Router.post('/:nameCourse/review/:reviewId/react', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/review/:reviewId/react', ensureAuthenticated, interactionLimiter, async (req, res) => {
     const course = await Course.findOne({
         name: req.params.nameCourse
     });
@@ -486,7 +490,7 @@ Router.post('/:nameCourse/review/:reviewId/react', ensureAuthenticated, async (r
     return res.json(true);
 });
 
-Router.post('/:nameCourse/review/:reviewId/report', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/review/:reviewId/report', ensureAuthenticated, reviewLimiter, async (req, res) => {
     const course = await Course.findOne({
         name: req.params.nameCourse
     });
@@ -511,7 +515,7 @@ Router.post('/:nameCourse/review/:reviewId/report', ensureAuthenticated, async (
     return res.json(true);
 });
 
-Router.post('/:nameCourse/review/:reviewId/delete', ensureAuthenticated, async (req, res) => {
+Router.post('/:nameCourse/review/:reviewId/delete', ensureAuthenticated, reviewLimiter, async (req, res) => {
     if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json(false);
     }

@@ -6,6 +6,11 @@ const LocalUser     = require('../models/LocalUser.model');
 const { ensureAuthenticated } = require('../config/auth.config');
 const { getPublicAppUrl } = require('../utils/publicAppUrl');
 const {
+  paymentLimiter,
+  interactionLimiter,
+  enrollmentLimiter,
+} = require('../middlewares/rateLimit.mdw');
+const {
   is2MStudent,
   isPracticeStudent,
   getUser2MCourses,
@@ -178,7 +183,7 @@ Router.get('/notifications', ensureAuthenticated, async (req, res) => {
 });
 
 // ── Notifications: mark all as seen ──
-Router.post('/notifications/seen', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/notifications/seen', ensureAuthenticated, interactionLimiter, express.json(), async (req, res) => {
   const userId = req.user._id.toString();
   const classes = await PracticeClass.find({ 'sessions.enrollments.idUser': req.user._id });
 
@@ -329,7 +334,7 @@ Router.get('/:id', async (req, res) => {
 });
 
 // ── Toggle follow lớp ──
-Router.post('/:id/follow', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/:id/follow', ensureAuthenticated, interactionLimiter, express.json(), async (req, res) => {
   const cls = await PracticeClass.findById(req.params.id);
   if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
 
@@ -347,7 +352,7 @@ Router.post('/:id/follow', ensureAuthenticated, express.json(), async (req, res)
 });
 
 // ── User đăng ký 1 buổi cụ thể ──
-Router.post('/:id/sessions/:sid/register', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/:id/sessions/:sid/register', ensureAuthenticated, enrollmentLimiter, express.json(), async (req, res) => {
   if (!isProfileCompleteForPractice(req.user)) {
     return res.json({ ok: false, msg: 'Vui lòng cập nhật đầy đủ SĐT Zalo, tên trong game và mức rank trước khi đăng ký', code: 'PROFILE_INCOMPLETE' });
   }
@@ -404,7 +409,7 @@ Router.post('/:id/sessions/:sid/register', ensureAuthenticated, express.json(), 
 });
 
 // ── Backwards-compat: /request vẫn hoạt động (đăng ký nhiều buổi 1 lúc) ──
-Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/:id/request', ensureAuthenticated, enrollmentLimiter, express.json(), async (req, res) => {
   const { sessionIds } = req.body;
   if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
     return res.json({ ok: false, msg: 'Vui lòng chọn ít nhất 1 buổi' });
@@ -463,7 +468,7 @@ Router.post('/:id/request', ensureAuthenticated, express.json(), async (req, res
 });
 
 // ── User thanh toán cho buổi đã được approved (chỉ paid type) ──
-Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, async (req, res) => {
+Router.post('/:id/sessions/:sid/pay', ensureAuthenticated, paymentLimiter, async (req, res) => {
   const cls = await PracticeClass.findById(req.params.id);
   if (!cls) return renderNotFound(res);
   const session = cls.sessions.id(req.params.sid);
@@ -598,7 +603,7 @@ Router.get('/:id/sessions/:sid/cancel', ensureAuthenticated, async (req, res) =>
   return res.redirect('/practice/my');
 });
 
-Router.post('/:id/sessions/:sid/payment-cancel', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/:id/sessions/:sid/payment-cancel', ensureAuthenticated, interactionLimiter, express.json(), async (req, res) => {
   const cls = await PracticeClass.findById(req.params.id);
   if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
   const session = cls.sessions.id(req.params.sid);
@@ -616,7 +621,7 @@ Router.post('/:id/sessions/:sid/payment-cancel', ensureAuthenticated, express.js
 });
 
 // ── User hủy yêu cầu đang ở trạng thái requested/approved ──
-Router.post('/:id/sessions/:sid/withdraw', ensureAuthenticated, express.json(), async (req, res) => {
+Router.post('/:id/sessions/:sid/withdraw', ensureAuthenticated, enrollmentLimiter, express.json(), async (req, res) => {
   const cls = await PracticeClass.findById(req.params.id);
   if (!cls) return res.json({ ok: false });
   const session = cls.sessions.id(req.params.sid);

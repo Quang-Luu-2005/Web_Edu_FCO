@@ -27,7 +27,9 @@
       "WebSearch",
       "WebFetch(domain:www.npmjs.com)",
       "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show 62e6982:source/backend/config/mail.config.js)",
-      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show 2df998e:source/backend/config/mail.config.js)"
+      "Bash(git -C '/d/Job/ThanhMan/Web_Edu_FCO/.claude/worktrees/wf_825db3c5-b68-1' show 2df998e:source/backend/config/mail.config.js)",
+      "PowerShell(node -e \"const erl=require\\('express-rate-limit'\\); console.log\\(Object.keys\\(erl\\)\\); console.log\\(typeof erl.rateLimit, typeof erl.ipKeyGenerator\\);\")",
+      "PowerShell(node -e \"const erl=require\\('./source/backend/node_modules/express-rate-limit'\\); console.log\\(Object.keys\\(erl\\)\\); console.log\\(typeof erl.rateLimit, typeof erl.ipKeyGenerator\\);\")"
     ]
   }
 }

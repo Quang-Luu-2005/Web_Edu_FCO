@@ -8,6 +8,12 @@ const {
   ensureAuthenticated,
   forwardAuthenticated,
 } = require("../config/auth.config");
+const {
+  authLimiter,
+  otpLimiter,
+  userWriteLimiter,
+  interactionLimiter,
+} = require('../middlewares/rateLimit.mdw');
 
 const LocalUser = require("../models/LocalUser.model");
 
@@ -84,7 +90,7 @@ Router.get("/register", forwardAuthenticated, (req, res) => {
   renderRegister(req, res);
 });
 
-Router.post("/register", async function (req, res) {
+Router.post("/register", authLimiter, async function (req, res) {
   const username = normalizeUsername(req.body.username);
   const email = normalizeEmail(req.body.email);
   const { password, password2, gender } = req.body;
@@ -305,7 +311,7 @@ Router.post("/register-legacy-disabled", async function (req, res) {
   }
 });
 
-Router.post("/otp", async (req, res) => {
+Router.post("/otp", otpLimiter, async (req, res) => {
   const otpNumber = req.body.otpNumber;
   const localUser = await LocalUser.findOne({
     email: req.session.currentEmail,
@@ -352,7 +358,7 @@ Router.post("/otp", async (req, res) => {
   }
 });
 
-Router.post("/login", (req, res, next) => {
+Router.post("/login", authLimiter, (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
       return next(err);
@@ -366,95 +372,6 @@ Router.post("/login", (req, res, next) => {
             msg: info.message || "Vui lòng nhập OTP để đăng nhập"
           }],
           otpExpires: info.otpExpires
-        });
-      }
-
-      return renderLogin(req, res, {
-        errors: [{
-          msg: (info && info.message) || "Invalid account"
-        }]
-      });
-    }
-
-    req.logIn(user, (loginErr) => {
-      if (loginErr) {
-        return next(loginErr);
-      }
-
-      return res.redirect(getLandingPath(user));
-    });
-  })(req, res, next);
-});
-
-// legacy handler below
-Router.post("/otp", async (req, res) => {
-  const otpNumber = req.body.otpNumber;
-  const localUser = await LocalUser.findOne({
-    email: req.session.currentEmail,
-  });
-
-  if (!localUser) {
-    return res.render("./user/otp", {
-      errors: [{ msg: "Phiên hết hạn, vui lòng đăng ký lại" }],
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user
-    });
-  }
-
-  // Kiểm tra timeout 2 phút
-  if (!localUser.otpExpires || new Date() > localUser.otpExpires) {
-    // Xóa user chưa xác thực để cho phép đăng ký lại
-    await LocalUser.deleteOne({ _id: localUser._id });
-    req.session.currentEmail = undefined;
-    return res.render("./user/otp", {
-      errors: [{ msg: "Mã OTP đã hết hạn (2 phút). Vui lòng đăng ký lại." }],
-      expired: true,
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user
-    });
-  }
-
-  if (otpNumber == localUser.otpNumber) {
-    localUser.isAuth = true;
-    localUser.otpNumber = undefined;
-    localUser.otpExpires = undefined;
-    await localUser.save();
-
-    req.session.currentEmail = undefined;
-
-    req.logIn(localUser, (err) => {
-      if (err) {
-        req.flash("success_msg", "Xác nhận thành công! Vui lòng đăng nhập.");
-        return res.redirect("/users/login");
-      }
-      req.flash("success_msg", "Chào mừng đến với MansterClass!");
-      return res.redirect("/");
-    });
-  } else {
-    res.render("./user/otp", {
-      errors: [{ msg: "Mã OTP không đúng, vui lòng thử lại" }],
-      otpExpires: localUser.otpExpires,
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user
-    });
-  }
-});
-
-Router.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      return next(err);
-    }
-
-    if (!user) {
-      if (info && info.needsOtp) {
-        req.session.currentEmail = info.email || req.body.email;
-        return res.render("./user/otp", {
-          errors: [{
-            msg: info.message || "Please fill correct OTP to login"
-          }],
-          isAuthenticated: req.isAuthenticated(),
-          user: req.user
         });
       }
 
@@ -492,7 +409,7 @@ Router.get("/account", ensureAuthenticated, (req, res) => {
   });
 });
 
-Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res) => {
+Router.post("/updateInfor", ensureAuthenticated, userWriteLimiter, express.json(), async (req, res) => {
   let { name, gender, description, oldPassword, newPassword, confPassword, zaloPhone, inGameName, rank } = req.body;
   let errors = [];
 
@@ -578,7 +495,7 @@ Router.post("/updateInfor", ensureAuthenticated, express.json(), async (req, res
 });
 
 //Upload avatar — nhận URL từ ImgBB (upload thẳng từ browser)
-Router.post("/updateAvatar", ensureAuthenticated, express.json(), async (req, res) => {
+Router.post("/updateAvatar", ensureAuthenticated, userWriteLimiter, express.json(), async (req, res) => {
   const { avatarUrl } = req.body;
   if (!avatarUrl || typeof avatarUrl !== 'string' || !avatarUrl.startsWith('http')) {
     return res.json(false);
@@ -602,7 +519,7 @@ Router.post("/updateAvatar", ensureAuthenticated, express.json(), async (req, re
 
 const VerificationRequest = require('../models/VerificationRequest.model');
 
-Router.post("/verify-student", ensureAuthenticated, express.json(), async (req, res) => {
+Router.post("/verify-student", ensureAuthenticated, userWriteLimiter, express.json(), async (req, res) => {
   const { proofImageUrl, note } = req.body;
 
   if (!proofImageUrl || typeof proofImageUrl !== 'string' || !proofImageUrl.startsWith('http')) {
@@ -637,7 +554,7 @@ Router.get("/verify-student/status", ensureAuthenticated, async (req, res) => {
   return res.json({ request: latest || null });
 }); 
 
-Router.post("/wish-list-change", ensureAuthenticated, async (req, res) => {
+Router.post("/wish-list-change", ensureAuthenticated, interactionLimiter, async (req, res) => {
   const courseID = req.body.courseID;
   const wishList = safeArray(req.user.idWishList);
   req.user.idWishList = wishList;
@@ -667,7 +584,7 @@ Router.post("/wish-list-change", ensureAuthenticated, async (req, res) => {
   }
 });
 
-Router.post("/:nameCourse/updateLearnedVideo", ensureAuthenticated, async (req, res) => {
+Router.post("/:nameCourse/updateLearnedVideo", ensureAuthenticated, interactionLimiter, async (req, res) => {
   const videoIndex = Number(req.body.videoIndex);
   const course = await Course.findOne({
     name: req.params.nameCourse,

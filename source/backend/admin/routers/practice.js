@@ -4,12 +4,18 @@ const PracticeClass = require('../../models/PracticeClass.model');
 const LocalUser     = require('../../models/LocalUser.model');
 const { ensureAuthenticated } = require('../config/auth_admin');
 const {
+  adminWriteLimiter,
+  limitMutatingMethods,
+} = require('../../middlewares/rateLimit.mdw');
+const {
   is2MStudent,
   isPracticeStudent,
   getUser2MCourses,
   getRankLabel,
   RANK_LEVELS
 } = require('../../config/practice.config');
+
+router.use(limitMutatingMethods(adminWriteLimiter));
 
 // ── Danh sách lớp thực hành ──
 router.get('/', ensureAuthenticated, async (req, res) => {

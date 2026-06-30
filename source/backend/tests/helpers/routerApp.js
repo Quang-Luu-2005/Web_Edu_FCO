@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const { resetAllRateLimits } = require('../../middlewares/rateLimit.mdw');
 
 function createRouterApp(router, options = {}) {
   const {
@@ -49,4 +50,5 @@ function createRouterApp(router, options = {}) {
 
 module.exports = {
   createRouterApp,
+  resetAllRateLimits,
 };

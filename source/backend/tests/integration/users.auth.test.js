@@ -9,7 +9,7 @@ const LocalUser = require('../../models/LocalUser.model');
 const usersRouter = require('../../routers/users.route');
 const { sendOtpMail } = require('../../config/mail.config');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
-const { createRouterApp } = require('../helpers/routerApp');
+const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
 
 describe('users auth routes', () => {
   let app;
@@ -21,6 +21,7 @@ describe('users auth routes', () => {
 
   afterEach(async () => {
     sendOtpMail.mockClear();
+    await resetAllRateLimits();
     await clearTestDb();
   });
 
@@ -84,6 +85,33 @@ describe('users auth routes', () => {
     const pending = await LocalUser.findOne({ email: 'new@example.com' }).lean();
     expect(pending).toBeTruthy();
     expect(pending.isAuth).toBe(false);
+  });
+
+  test('POST /users/register is rate limited after repeated attempts', async () => {
+    const agent = request.agent(app);
+
+    for (let i = 0; i < 3; i++) {
+      await agent
+        .post('/users/register')
+        .send({
+          username: `limiteduser${i}`,
+          email: `limited${i}@example.com`,
+          password: 'secret123',
+          password2: 'secret123',
+        });
+    }
+
+    const response = await agent
+      .post('/users/register')
+      .send({
+        username: 'limiteduser4',
+        email: 'limited4@example.com',
+        password: 'secret123',
+        password2: 'secret123',
+      });
+
+    expect(response.status).toBe(429);
+    expect(response.text).toContain('Bạn thử đăng nhập hoặc đăng ký quá nhiều lần');
   });
 
   test('POST /users/otp rejects wrong code and verifies correct code', async () => {

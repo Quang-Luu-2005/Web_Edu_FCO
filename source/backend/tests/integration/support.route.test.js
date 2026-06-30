@@ -2,7 +2,7 @@ const request = require('supertest');
 const SupportTicket = require('../../models/SupportTicket.model');
 const supportRouter = require('../../routers/support.route');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
-const { createRouterApp } = require('../helpers/routerApp');
+const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
 
 describe('support.route', () => {
   let app;
@@ -13,6 +13,7 @@ describe('support.route', () => {
   });
 
   afterEach(async () => {
+    await resetAllRateLimits();
     await clearTestDb();
   });
 
