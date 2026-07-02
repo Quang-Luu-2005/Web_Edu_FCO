@@ -1,119 +1,215 @@
-# Web Courses CTT2
-- Đồ án môn học - Phát triển ứng dụng website
-- Team up cùng mấy nhóc CTT2
-    -   | Name                | Mssv     |
-        |---------------------|----------|
-        | Võ Thế Minh         | 18120211 |
-        | Mai Ngọc Tú         | 18120253 |
-        | Phạm Tống Bình Minh | 18120210 |
+# MansterClass
 
-- Thông tin liên hệ: minhthevo123@gmail.com
+> Ứng dụng web học trực tuyến xây dựng bằng Node.js/Express, hỗ trợ khóa học, thanh toán, lớp học và lớp thực hành.
 
-## Mô tả đề tài
-- Mục tiêu đề tài: Một ứng dụng website giúp người sử dụng có thể mua và học các khóa học trực tuyến. Cùng với đó làn những giảng viên có thể tạo và quản lý khóa học của mình
-- Môi trường sử dụng: Web browser
-- 4 actors chính: Guest, Người dùng, Giảng viên, Admin
-- Dữ cần quản lý: Thông tin người dùng, thông tin của giảng viên, thông tin của admin, thông tin của khóa học
-- Chức năng của Guest:
-    - Đăng ký tài khoản
-    - Hệ thống menu
-    - Trang chủ
-    - Xem danh sách khóa học
-    - Tìm kiếm khóa học
-    - Xem chi tiết khóa học 
-- Chức năng của Người dùng:
-    - Toàn bộ chức năng của Guest
-    - Lưu khóa học vào danh sách yêu thích
-    - Quản lý hồ sơ cá nhân
-    - Tham gia khóa học
-    - Đánh giá & phản hồi khóa học
-    - Xem nội dung bài giảng
-- Chức năng của Giảng viên:
-    - Toàn bộ chức năng của Guest
-    - Đăng khóa học
-    - Bổ sung thông tin, bài giảng cho khóa học
-    - Quản lý hồ sơ cá nhân
-- Chức năng của Admin
-    - Quản lý lĩnh vực category
-    - Quản lý khóa học
-    - Quản lý danh sách học viên, giảng viên
-- Các tính năng chung cho phân hệ Người dùng, Giảng viên, Admin
-    - Đăng nhập/đăng xuất
-    - Cập nhật thông tin cá nhân
-    - Đổi mật khẩu
-- Chi tiết truy cập: [https://hackmd.io/@nndkhoa9/web-online-academy](https://hackmd.io/@nndkhoa9/web-online-academy)
+## Tổng quan
 
-## Clone về máy và chạy thử
-- Yêu cầu công nghệ để chạy thử Web server
-    - Cài đặt NodeJs
-    - Cài đặt MongoDB Local(Có thể cài đặt thêm MongoDBCompass một GUI giúp tương tác với data) hoặc sử dụng MongoDB Atlas
-        - Tạo database `WEBCTT2`(Xem trong file `./source/backend/config/key.config.js` để biết thêm chi tiết)
-        - Tạo các collection có tên trùng với tên file trong thư mục `./source/database`
-        - Import `*.json` tương ứng vào các collection vừa tạo
-    - Đi tới đường dẫn `./source/backend` và gõ lệnh npm install(Tự động cài đặt các package cần thiết để chạy server)
-- Khởi chạy server trang web
-    - Khởi chạy backend chung cho Guest, Người dùng, Giảng viên, Admin
-        - Đi tới đường dẫn `./source/backend`
-        - Chạy lệnh `npm start`
-        - Lúc này sẽ có một thông báo xuất hiện trên console cho biết số port mà server đang lắng nghe người dùng connect (cụ thể là port 8000 và có thể được đổi lại trong file app.js)
-        - Mở trình duyệt và truy cập vào đường dẫn http://localhost:8000
-        - Admin dùng chung port, vào `/admin/login`
+Repo hiện chứa mã nguồn backend và giao diện EJS của một hệ thống học trực tuyến. Dự án có các khu vực chính:
 
-## Công nghệ được sử dụng trong đồ án
-- Phía font-end
-    - Sử dụng HTML/CSS/JS/JQuery để code giao diện(Các mẫu giao diện được tham khảo từ [https://bootsnipp.com/](https://bootsnipp.com
-    "bootsnipp")
-    - Sử dụng view-engine ejs(Cho phép người dùng thêm code JS vào đoạn code HTML) 
-- Phía backend
-    - Quản lý server: `NodeJS express`
-    - Xác thực tài khoản: `PassportJS`
-    - Xử lý lỗi: `Error handler` 
-    - Quản lý phiên đăng nhập: `express-session` 
-    - Các API được sử dụng trong đồ án:
-        - Xác thực tài khoản bằng gmail: `Google API`, `node-mailer`
-        - Quản lý hóa đơn + Thanh toán: `PayPal/rest/API` (tuy nhiên, việc thanh toán chỉ được thực hiện bằng tài khoản `sandbox`)
-        - Upload và lưu trữ ảnh đại diện: sử dụng API `Bootstrap File Input` - Tác giả Krajee
-        - Lưu trữ hình ảnh, bài giảng sử dụng `Cloudinary API`
-        - Xem video bài giảng: `Video-Js`
+- khu public cho khách và người học
+- khu quản trị cho admin/giảng viên
+- dữ liệu mẫu dạng JSON để import vào MongoDB
+- bộ test unit/integration cho các luồng quan trọng
 
-## **Demo**
-### Phân hệ người dùng
-- **Giao diện trang chủ**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295430/webctt2/readme/home_page_aymjlz.png
-    "homepage")
+## Tính năng chính
 
-- **Giao diện chi tiết khóa học**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295430/webctt2/readme/detail_rph8vz.png)
+### 1. Khách và người học
 
-- **Giao diện thanh toán khóa học**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295429/webctt2/readme/hoadon_wl9pzr.png)
+- Xem trang chủ với các nhóm khóa học nổi bật, xem nhiều và mới nhất
+- Tìm kiếm khóa học, lọc theo danh mục và chủ đề
+- Đăng ký tài khoản, xác thực OTP qua email, đăng nhập và đăng xuất
+- Xem chi tiết khóa học, mô tả nội dung, wishlist và tiến độ học
+- Đánh giá khóa học, viết review, trả lời, reaction và report nội dung
+- Quản lý hồ sơ cá nhân, cập nhật thông tin, avatar và mật khẩu
+- Gửi yêu cầu xác minh để chuyển từ tài khoản `guest` sang học viên
+- Xem danh sách khóa học đã mua và lịch sử thanh toán
 
-- **Giao diện danh sách khóa học yêu thích**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295431/webctt2/readme/wish-list_yllfvr.png)
+### 2. Thanh toán và ghi danh
 
-- **Giao diện đăng nhập**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295429/webctt2/readme/login_m8gru8.png)
+- Thanh toán khóa học qua **PayOS**
+- Hỗ trợ khóa học giá cố định và khóa học ở chế độ liên hệ
+- Hỗ trợ mã giảm giá
+- Có luồng success, cancel, fail và webhook xác nhận thanh toán
 
-- **Giao diện hồ sơ cá nhân**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295429/webctt2/readme/hoso_bk5i5o.png)
+### 3. Lớp học và lớp thực hành
 
-- **Giao diện xác thực OTP**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295429/webctt2/readme/otp_kwsk9z.png)
+- Xem danh sách lớp học đã tham gia
+- Xem chi tiết từng lớp, tiến độ học và điểm danh theo buổi
+- Xem danh sách lớp thực hành và theo dõi lớp
+- Đăng ký từng buổi thực hành
+- Nhận thông báo trạng thái duyệt đăng ký
+- Xem bracket thi đấu/thực hành
+- Thanh toán buổi thực hành khi cần
 
-- **Gmail xác thực**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295429/webctt2/readme/gmail_rltetu.png)
+### 4. Admin và giảng viên
 
-### Phân hệ admin, giảng viên
-- **Giao diện quản lý danh sách khóa học**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295430/webctt2/readme/qldanhsachkhoahoc_sl2waj.png)
+- Quản lý banner trang chủ
+- Quản lý danh mục, chủ đề và khóa học
+- Quản lý giảng viên, học viên và người dùng
+- Gán role, thay đổi trạng thái tài khoản, xóa tài khoản
+- Quản lý học viên theo khóa học
+- Tạo và quản lý lớp học, thêm/xóa học viên, quản lý buổi học
+- Tạo và quản lý lớp thực hành, duyệt/từ chối đăng ký, tạo bracket, điểm danh
+- Duyệt yêu cầu xác minh học viên
+- Xem và xử lý support ticket
 
-- **Giao diện quản lý danh sách học viên**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295430/webctt2/readme/qldanhsachhocvien_kxjije.png)
+### 5. Hỗ trợ hệ thống
 
-- **Giao diện quản lý danh sách category**
-    ![](https://res.cloudinary.com/teamwebctt2/image/upload/v1613295430/webctt2/readme/qldanhsachcategory_siv9dh.png)
- 
-___
-*Các em sinh viên có dùng tài liệu của anh để tham khảo thì nhớ để lại 1 sao nha :))*
+- Ghi nhận support ticket từ giao diện lỗi
+- Áp dụng rate limit cho các luồng đăng nhập/đăng ký, thanh toán và thao tác ghi dữ liệu
 
-**END**
+## Công nghệ sử dụng
+
+### Backend
+
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+
+### Giao diện và render nội dung
+
+- EJS
+- express-ejs-layouts
+- MarkdownIt
+- sanitize-html
+- Video.js
+
+### Xác thực và phiên đăng nhập
+
+- Passport
+- passport-local
+- express-session
+- connect-mongodb-session
+- bcryptjs
+
+### Dịch vụ ngoài
+
+- PayOS cho thanh toán
+- Cloudinary cho upload media
+- Nodemailer / Resend cho OTP email
+
+### Kiểm thử
+
+- Jest
+- Supertest
+- mongodb-memory-server
+
+## Cấu trúc thư mục
+
+```text
+README.md
+source/
+├─ backend/
+│  ├─ admin/        # router + view quản trị
+│  ├─ config/       # cấu hình auth, mail, cloudinary, payment...
+│  ├─ middlewares/  # session, route, error, rate limit...
+│  ├─ models/       # schema mongoose
+│  ├─ routers/      # route public, user, course, payment, classes, practice
+│  ├─ services/     # business logic như payment, class status
+│  ├─ tests/        # unit test + integration test
+│  ├─ views/        # giao diện EJS phía người dùng
+│  ├─ public/       # static assets
+│  ├─ scripts/      # script import dữ liệu
+│  ├─ app.js
+│  ├─ createApp.js
+│  └─ package.json
+└─ database/        # dữ liệu mẫu JSON
+```
+
+## Cài đặt và chạy local
+
+### 1. Chuẩn bị
+
+Bạn cần:
+
+- Node.js
+- MongoDB có thể truy cập qua `MONGO_URI`
+
+### 2. Cài dependency
+
+```bash
+cd source/backend
+npm install
+```
+
+### 3. Tạo file môi trường
+
+Tạo file `source/backend/.env` từ `source/backend/.env.example` và cấu hình tối thiểu:
+
+- `MONGO_URI`
+- `SESSION_SECRET`
+- `APP_URL` hoặc `PUBLIC_APP_URL`
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `PAYOS_CLIENT_ID`
+- `PAYOS_API_KEY`
+- `PAYOS_CHECKSUM_KEY`
+- cấu hình mail (`SMTP_USER` / `SMTP_PASS` hoặc `RESEND_API_KEY`)
+
+### 4. Import dữ liệu mẫu
+
+Repo hiện có các file dữ liệu mẫu trong `source/database`:
+
+- `admins.json`
+- `coursecategories.json`
+- `courses.json`
+- `coursetopics.json`
+- `facebookusers.json`
+- `lecturers.json`
+- `localusers.json`
+- `topweeks.json`
+
+Có thể kiểm tra trước khi import:
+
+```bash
+npm run import:database:dry
+```
+
+Import dữ liệu:
+
+```bash
+npm run import:database
+```
+
+### 5. Chạy ứng dụng
+
+```bash
+npm start
+```
+
+Mặc định app chạy tại:
+
+- `http://localhost:8000`
+
+## Scripts có sẵn
+
+| Script | Mô tả |
+| --- | --- |
+| `npm start` | Chạy ứng dụng |
+| `npm test` | Chạy toàn bộ test |
+| `npm run test:watch` | Chạy test ở chế độ watch |
+| `npm run test:coverage` | Chạy test kèm coverage |
+| `npm run import:database` | Import dữ liệu mẫu vào MongoDB |
+| `npm run import:database:dry` | Kiểm tra import mà không ghi dữ liệu |
+
+## Phạm vi test hiện có
+
+Các test trong repo hiện bao phủ những khu vực chính như:
+
+- đăng ký, OTP và đăng nhập
+- cập nhật hồ sơ người dùng
+- payment route và payment service
+- practice payment
+- support route
+- rate limit middleware
+- auth/public app URL/practice config
+- logic trạng thái lớp học
+
+## Ghi chú
+
+- Luồng thanh toán hiện tại trong route người dùng đang dùng **PayOS**.
+- Repo vẫn còn phần cấu hình **PayPal** mang tính legacy, nhưng checkout hiện tại không đi qua PayPal route riêng.
+- Các tính năng gửi mail, thanh toán và upload media cần cấu hình dịch vụ ngoài đầy đủ trước khi chạy thực tế.
+- `PUBLIC_APP_URL` hoặc `APP_URL` cần đúng để callback thanh toán hoạt động ổn định.

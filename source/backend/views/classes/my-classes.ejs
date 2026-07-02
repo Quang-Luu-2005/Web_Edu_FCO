@@ -48,9 +48,13 @@
         const doneSessions = cls.sessions.filter(s => s.status === 'done').length;
         const totalReq     = (cls.idCourse && cls.idCourse.totalSessions) || cls.sessions.length || 0;
         const progress     = totalReq > 0 ? Math.round((doneSessions / totalReq) * 100) : 0;
-        const isCompleted  = totalReq > 0 && doneSessions >= totalReq;
-        const badgeClass   = isCompleted ? 'cls-badge-completed' : 'cls-badge-ongoing';
-        const statusLabel  = isCompleted ? '✓ Hoàn thành'        : '▶ Đang theo học';
+        const statusMap = {
+          open:      { badgeClass: 'cls-badge-open',      label: '● Đang hoạt động' },
+          ongoing:   { badgeClass: 'cls-badge-ongoing',   label: '▶ Đang học' },
+          completed: { badgeClass: 'cls-badge-completed', label: '✓ Hoàn thành' },
+          cancelled: { badgeClass: 'cls-badge-cancelled', label: '✕ Đã hủy' }
+        };
+        const statusInfo = statusMap[cls.status] || statusMap.open;
       %>
       <div class="cls-card">
         <a class="cls-card-inner" href="/classes/my-classes/<%= cls._id %>">
@@ -58,7 +62,7 @@
           <div class="cls-body">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
               <div class="cls-name" style="margin:0"><%= cls.name %></div>
-              <span class="cls-badge <%= badgeClass %>"><%= statusLabel %></span>
+              <span class="cls-badge <%= statusInfo.badgeClass %>"><%= statusInfo.label %></span>
             </div>
             <div class="cls-course"><%= cls.idCourse ? cls.idCourse.name : '' %></div>
             <div class="cls-meta">

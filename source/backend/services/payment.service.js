@@ -3,7 +3,10 @@ const CourseCategory = require('../models/CourseCategory.model');
 const CourseTopic = require('../models/CourseTopic.model');
 const LocalUser = require('../models/LocalUser.model');
 const PaymentOrder = require('../models/PaymentOrder.model');
-const CourseClass = require('../models/CourseClass.model');
+const {
+  assignStudentToOpenClass,
+  getEnrollmentSlotSummary,
+} = require('./courseClassStatus.service');
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
@@ -76,27 +79,8 @@ async function canPurchaseCourse(user, course) {
     return true;
   }
 
-  const courseId = course._id.toString();
-  const purchaseCount = safeArray(user.purchasedCourses)
-    .filter((item) => item.idCourse && item.idCourse.toString() === courseId)
-    .length;
-
-  if (purchaseCount === 0) {
-    return true;
-  }
-
-  const classes = await CourseClass.find({
-    idCourse: course._id,
-    'students.idUser': user._id
-  }).select('status');
-
-  const activeClass = classes.some((cls) => !['completed', 'cancelled'].includes(cls.status));
-  if (activeClass) {
-    return false;
-  }
-
-  const completedCount = classes.filter((cls) => cls.status === 'completed').length;
-  return completedCount >= purchaseCount;
+  const summary = await getEnrollmentSlotSummary(user, course._id, { course });
+  return summary.purchaseCount === 0 || (summary.active === 0 && summary.completed >= summary.purchaseCount);
 }
 
 async function refreshLoggedInUser(req, userId) {
@@ -137,7 +121,7 @@ async function enrollCoursePurchase(order) {
 
   const didEnroll = Boolean(updateResult.modifiedCount || updateResult.nModified);
   if (!didEnroll) {
-    return course;
+    return { course, assignedClass: null, enrolled: false };
   }
 
   await Course.updateOne({ _id: course._id }, { $inc: { numberOfStudent: 1 } });
@@ -156,28 +140,38 @@ async function enrollCoursePurchase(order) {
     );
   }
 
-  return course;
+  const refreshedUser = await LocalUser.findById(order.idUser).select('_id purchasedCourses');
+  const assignedClass = refreshedUser
+    ? await assignStudentToOpenClass(refreshedUser, course)
+    : null;
+
+  return { course, assignedClass, enrolled: true };
 }
 
 async function completePaidOrder(orderCode, providerData = null) {
   const order = await PaymentOrder.findOne({ orderCode });
   if (!order) {
-    return { order: null, course: null, completed: false };
+    return { order: null, course: null, assignedClass: null, completed: false };
   }
 
   if (order.status === 'paid') {
     const course = await Course.findById(order.idCourse).populate('idCourseTopic');
-    return { order, course, completed: false };
+    return { order, course, assignedClass: null, completed: false };
   }
 
-  const course = await enrollCoursePurchase(order);
+  const enrollment = await enrollCoursePurchase(order);
 
   order.status = 'paid';
   order.paidAt = order.paidAt || new Date();
   order.rawProviderData = providerData || order.rawProviderData;
   await order.save();
 
-  return { order, course, completed: true };
+  return {
+    order,
+    course: enrollment.course,
+    assignedClass: enrollment.assignedClass || null,
+    completed: true
+  };
 }
 
 async function findLatestPendingOrder({ userId, courseId }) {

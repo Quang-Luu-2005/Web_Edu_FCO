@@ -12,6 +12,11 @@ const {
   ensureAuthenticated,
   forwardAuthenticated,
 } = require("../config/auth.config");
+const {
+  getClassProgress,
+  getEnrollmentSlotSummary,
+  syncAndSaveClassesStatus,
+} = require('../services/courseClassStatus.service');
 
 const safeArray = (value) => Array.isArray(value) ? value : [];
 
@@ -115,23 +120,23 @@ Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
   const purchasedCourses = safeArray(req.user.purchasedCourses);
   const CourseClass = require('../models/CourseClass.model');
 
-  // Lấy tất cả lớp mà user là thành viên
   const myClasses = await CourseClass.find({
     'students.idUser': req.user._id
-  }).select('idCourse name sessions status createdAt')
+  })
+    .populate('idCourse', 'name totalSessions')
     .sort({ createdAt: -1 });
+  await syncAndSaveClassesStatus(myClasses);
 
-  // Map từ courseId → class user thuộc về
   const classByCourseId = {};
-  myClasses.forEach(cls => {
+  myClasses.forEach((cls) => {
     if (!cls.idCourse) return;
-    const key = cls.idCourse.toString();
-    if (!classByCourseId[key] || classByCourseId[key].status === 'completed') {
+    const key = cls.idCourse._id ? cls.idCourse._id.toString() : cls.idCourse.toString();
+    const current = classByCourseId[key];
+    if (!current || (current.status !== 'completed' && cls.status === 'completed')) {
       classByCourseId[key] = cls;
     }
   });
 
-  // Build danh sách kèm meta
   const purchaseGroups = new Map();
   for (const pc of purchasedCourses) {
     if (!pc.idCourse) continue;
@@ -164,47 +169,26 @@ Router.get("/my-courses", ensureAuthenticated, async (req, res) => {
     if (!course) continue;
 
     const myClass = classByCourseId[course._id.toString()];
-    const userClassesForCourse = myClasses.filter(cls => cls.idCourse && cls.idCourse.toString() === course._id.toString());
-    const activeClass = userClassesForCourse.some(cls => !['completed', 'cancelled'].includes(cls.status));
-    const completedClassCount = userClassesForCourse.filter(cls => cls.status === 'completed').length;
+    const progressMeta = myClass ? getClassProgress(myClass, course) : null;
+    const summary = await getEnrollmentSlotSummary(req.user, course._id, { course, classes: myClasses });
     const canPurchaseAgain = course.courseType === 'hour'
-      || (!activeClass && completedClassCount >= (pc.purchaseCount || 1));
-
-    // Tổng buổi: ưu tiên course.totalSessions, fallback theo sessions của lớp
-    const totalSessions = course.totalSessions
-      || (myClass ? myClass.sessions.length : 0)
-      || 0;
-
-    // Số buổi đã hoàn thành (status === 'done') trong lớp của user
-    const learnedCount = myClass
-      ? myClass.sessions.filter(s => s.status === 'done').length
-      : 0;
-
-    const progress = totalSessions > 0 ? Math.round((learnedCount / totalSessions) * 100) : 0;
-    const isDone   = totalSessions > 0 && learnedCount >= totalSessions;
-
-    // Auto chuyển trạng thái lớp khi đủ số buổi
-    if (myClass) {
-      const newStatus = isDone ? 'completed' : (learnedCount > 0 ? 'ongoing' : 'open');
-      if (myClass.status !== newStatus) {
-        await CourseClass.updateOne({ _id: myClass._id }, { $set: { status: newStatus } });
-        myClass.status = newStatus;
-      }
-    }
+      || (summary.active === 0 && summary.completed >= (pc.purchaseCount || 1));
 
     items.push({
       course,
-      learnedCount,
-      totalVideos:    totalSessions,
-      progress,
-      isDone,
-      classId:        myClass ? myClass._id.toString() : null,
-      className:      myClass ? myClass.name : null,
-      enrolledAt:     pc.enrolledAt    || null,
-      lastLearnedAt:  pc.lastLearnedAt || null,
-      purchaseCount:  pc.purchaseCount || 1,
+      learnedCount: progressMeta ? progressMeta.done : 0,
+      totalVideos: progressMeta ? progressMeta.required : (course.totalSessions || 0),
+      progress: progressMeta ? progressMeta.progress : 0,
+      isDone: progressMeta ? progressMeta.isCompleted : false,
+      classId: myClass ? myClass._id.toString() : null,
+      className: myClass ? myClass.name : null,
+      classStatus: progressMeta ? progressMeta.status : null,
+      enrolledAt: pc.enrolledAt || null,
+      lastLearnedAt: pc.lastLearnedAt || null,
+      purchaseCount: pc.purchaseCount || 1,
       totalPurchasedHours: pc.totalPurchasedHours || 0,
       canPurchaseAgain,
+      pendingClassSlots: summary.pendingClassSlots,
     });
   }
 

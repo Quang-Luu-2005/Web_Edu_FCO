@@ -24,7 +24,6 @@
       <%= data.cls.idCourse ? data.cls.idCourse.name : '' %>
     </div>
   </div>
-  <!-- Đổi trạng thái nhanh -->
   <div style="display:flex;gap:8px;align-items:center">
     <% if (user.role === 'admin' && data.lecturers && data.lecturers.length > 0) { %>
     <div style="position:relative">
@@ -46,28 +45,30 @@
     </div>
     <% } %>
     <%
-      // Trạng thái lớp tự động theo số buổi đã học
-      const totalReq = (data.cls.idCourse && data.cls.idCourse.totalSessions) || data.cls.sessions.length || 0;
-      const doneCnt  = data.cls.sessions.filter(s => s.status === 'done').length;
-      const autoStatus = totalReq > 0 && doneCnt >= totalReq ? 'completed'
-                       : doneCnt > 0 ? 'ongoing'
-                       : 'open';
+      const progressMeta = data.progressMeta || { required: 0, done: 0, status: data.cls.status || 'open', progress: 0 };
       const statusMap = {
-        open:      { label: 'Đang theo học', color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
-        ongoing:   { label: 'Đang theo học', color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
-        completed: { label: 'Hoàn thành',    color: '#16a34a', bg: 'rgba(22,163,74,0.12)' }
+        open:      { label: 'Đang hoạt động', color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
+        ongoing:   { label: 'Đang học',       color: '#3b6fd4', bg: 'rgba(59,111,212,0.12)' },
+        completed: { label: 'Hoàn thành',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)' },
+        cancelled: { label: 'Đã hủy',         color: '#dc2626', bg: 'rgba(220,38,38,0.12)' }
       };
-      const st = statusMap[autoStatus];
+      const st = statusMap[progressMeta.status] || statusMap.open;
     %>
     <div style="display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;background:<%= st.bg %>;border:1px solid <%= st.color %>33;border-radius:8px;font-size:13px;font-weight:600;color:<%= st.color %>">
-      <% if (autoStatus === 'completed') { %><i class="fas fa-check-circle"></i><% } else { %><i class="fas fa-play-circle"></i><% } %>
+      <% if (progressMeta.status === 'completed') { %><i class="fas fa-check-circle"></i><% } else if (progressMeta.status === 'cancelled') { %><i class="fas fa-ban"></i><% } else { %><i class="fas fa-play-circle"></i><% } %>
       <%= st.label %>
-      <% if (totalReq > 0) { %><span style="color:#64748b;font-weight:400;margin-left:4px">(<%= doneCnt %>/<%= totalReq %>)</span><% } %>
+      <% if (progressMeta.required > 0) { %><span style="color:#64748b;font-weight:400;margin-left:4px">(<%= progressMeta.done %>/<%= progressMeta.required %>)</span><% } %>
     </div>
   </div>
 </div>
 
-<!-- Tabs -->
+<% if (progressMeta.required > 0 && progressMeta.status !== 'completed' && progressMeta.status !== 'cancelled') { %>
+<div style="margin:-6px 0 16px;padding:10px 14px;border-radius:10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.20);color:#fbbf24;font-size:12px;font-weight:600">
+  <i class="fas fa-info-circle" style="margin-right:6px"></i>
+  Cần hoàn thành đủ <%= progressMeta.required %> buổi để lớp chuyển sang trạng thái Hoàn thành.
+</div>
+<% } %>
+
 <div class="cls-tabs">
   <button class="cls-tab active" data-tab="students" onclick="switchTab('students',this)">
     <i class="fas fa-users"></i> Học viên (<%= data.cls.students.length %>/<%= data.cls.maxStudents %>)
@@ -77,7 +78,6 @@
   </button>
 </div>
 
-<!-- ── Tab: Học viên ── -->
 <div class="cls-pane active" id="tab-students">
   <div class="adm-card">
     <div class="adm-card-header">
@@ -137,7 +137,6 @@
   </div>
 </div>
 
-<!-- ── Tab: Buổi học ── -->
 <div class="cls-pane" id="tab-sessions">
   <div class="adm-card">
     <div class="adm-card-header">
@@ -196,7 +195,6 @@
   </div>
 </div>
 
-<!-- Modal thêm/sửa buổi học -->
 <div class="modal-overlay" id="session-modal">
   <div class="modal-box" style="max-width:480px">
     <button class="modal-close" onclick="closeSessionModal()">&times;</button>
@@ -248,14 +246,12 @@
 const CLASS_ID = '<%= data.cls._id %>';
 let _editSessionId = null;
 
-// ── Suggest / Autocomplete ──
 let _suggestTimer = null;
 let _lastQuery = '';
 function onSuggestInput(val) {
   clearTimeout(_suggestTimer);
   _lastQuery = val.trim();
   if (!_lastQuery) { hideSuggest(); return; }
-  // Hiển thị "đang tìm..." ngay lập tức để feedback nhanh
   showSuggestState('<div style="padding:14px 14px;color:#64748b;font-size:13px"><i class="fas fa-spinner fa-spin"></i> Đang tìm "' + escapeHtml(_lastQuery) + '"...</div>');
   _suggestTimer = setTimeout(() => fetchSuggest(_lastQuery), 220);
 }
@@ -264,7 +260,6 @@ async function fetchSuggest(q) {
     const res  = await fetch('/admin/classes/' + CLASS_ID + '/students/suggest?q=' + encodeURIComponent(q));
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const list = await res.json();
-    // Bỏ qua kết quả cũ nếu user đã gõ tiếp
     if (q !== _lastQuery) return;
     if (list && list.error) {
       showSuggestState('<div style="padding:14px;color:#f87171;font-size:13px"><i class="fas fa-exclamation-circle"></i> Lỗi: ' + escapeHtml(list.error) + '</div>');
@@ -283,7 +278,6 @@ function highlightMatch(text, query) {
   if (!text) return '';
   const safe = escapeHtml(text);
   if (!query) return safe;
-  // Highlight từng ký tự xuất hiện trong query (fuzzy match cách hiển thị)
   let out = '';
   let qi = 0;
   const lower = text.toLowerCase();
@@ -308,7 +302,6 @@ function showSuggestState(html) {
   dd.style.width = Math.max(rect.width, 320) + 'px';
   dd.innerHTML = html;
   dd.style.display = 'block';
-  // Trigger animation
   requestAnimationFrame(() => {
     dd.style.opacity   = '1';
     dd.style.transform = 'translateY(0)';
@@ -370,7 +363,6 @@ function hideSuggest() {
   setTimeout(() => { dd.style.display = 'none'; }, 150);
 }
 
-// ── Restore scroll + tab sau reload ──
 (function restoreState() {
   const saved = sessionStorage.getItem('cls_state_' + CLASS_ID);
   if (!saved) return;
@@ -391,7 +383,6 @@ function hideSuggest() {
   } catch(e) {}
 })();
 
-// ── Lưu state rồi reload ──
 function reloadWithState() {
   const activeTab = document.querySelector('.cls-tab.active')?.dataset?.tab || 'students';
   sessionStorage.setItem('cls_state_' + CLASS_ID, JSON.stringify({
@@ -401,7 +392,6 @@ function reloadWithState() {
   location.reload();
 }
 
-// ── Tabs ──
 function switchTab(name, btn) {
   document.querySelectorAll('.cls-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.cls-tab').forEach(b => b.classList.remove('active'));
@@ -409,10 +399,9 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 
-// ── Cập nhật giảng viên ──
 async function updateLecturer(idLecturer) {
   if (!idLecturer) return;
-  const res  = await fetch('/admin/classes/' + CLASS_ID + '/update', {
+  await fetch('/admin/classes/' + CLASS_ID + '/update', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ idLecturer, name: '<%= data.cls.name %>', maxStudents: '<%= data.cls.maxStudents %>', status: '<%= data.cls.status %>' })
@@ -420,7 +409,6 @@ async function updateLecturer(idLecturer) {
   admToast('✓ Đã cập nhật giảng viên', 'success');
 }
 
-// ── Thêm học viên ──
 async function addStudent() {
   const val = document.getElementById('add-student-input').value.trim();
   if (!val) return;
@@ -446,7 +434,6 @@ async function addStudent() {
   admToast('✓ Đã thêm ' + (s.name||s.username), 'success');
 }
 
-// ── Xóa học viên ──
 async function removeStudent(userId) {
   admConfirm('Xóa học viên khỏi lớp?', async () => {
     const res  = await fetch('/admin/classes/' + CLASS_ID + '/students/remove', {
@@ -461,7 +448,6 @@ async function removeStudent(userId) {
   }, '👤');
 }
 
-// ── Session modal ──
 function openAddSession() {
   _editSessionId = null;
   document.getElementById('session-modal-title').innerHTML = '<i class="fas fa-calendar-plus" style="color:#2563eb"></i> Thêm buổi học';
@@ -485,7 +471,6 @@ function openEditSession(id, title, date, meet, record, note, status) {
   document.getElementById('s-status-field').style.display = '';
   document.getElementById('session-error').textContent = '';
 
-  // Tách date thành ngày + giờ bắt đầu
   if (date) {
     const dt = new Date(date);
     const yyyy = dt.getFullYear();
@@ -497,7 +482,6 @@ function openEditSession(id, title, date, meet, record, note, status) {
     document.getElementById('s-date-day').value   = '';
     document.getElementById('s-time-start').value = '';
   }
-  // Đọc giờ kết thúc từ note nếu có (format: "[end:HH:MM]...")
   const endMatch = (note || '').match(/\[end:(\d{2}:\d{2})\]/);
   if (endMatch) {
     document.getElementById('s-time-end').value = endMatch[1];
@@ -517,7 +501,6 @@ async function saveSession() {
   const btn  = document.getElementById('session-save-btn');
   const errEl = document.getElementById('session-error');
 
-  // Ghép ngày + giờ bắt đầu thành ISO string
   const dayVal   = document.getElementById('s-date-day').value;
   const startVal = document.getElementById('s-time-start').value;
   const endVal   = document.getElementById('s-time-end').value.trim();
@@ -528,7 +511,6 @@ async function saveSession() {
     dateISO = `${dayVal}T00:00`;
   }
 
-  // Nhúng giờ kết thúc vào note nếu có
   let noteVal = document.getElementById('s-note').value.trim();
   if (endVal) noteVal = noteVal ? `${noteVal} [end:${endVal}]` : `[end:${endVal}]`;
 

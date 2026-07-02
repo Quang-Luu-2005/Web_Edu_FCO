@@ -34,6 +34,14 @@ const {
   adminWriteLimiter,
   limitMutatingMethods,
 } = require('../../middlewares/rateLimit.mdw');
+const {
+  getClassProgress,
+  getEnrollmentSlotSummary,
+  isActiveClassStatus,
+  syncAndSaveClassStatus,
+  syncAndSaveClassesStatus,
+  syncClassStatus,
+} = require('../../services/courseClassStatus.service');
 
 router.use(limitMutatingMethods(adminWriteLimiter));
 
@@ -915,33 +923,30 @@ router.get('/course/students', ensureAuthenticated, async (req, res) => {
     'purchasedCourses.idCourse': courseId
   }, 'name username email avatar purchasedCourses');
 
-  // Tìm các lớp của khóa này
+  // Tìm các lớp của khóa này và đồng bộ lại trạng thái theo số buổi đã hoàn thành
   const classes = await CourseClass.find({ idCourse: courseId })
+    .populate('idCourse', 'totalSessions')
     .populate('idLecturer', 'name avatar')
     .sort({ createdAt: -1 });
+  await syncAndSaveClassesStatus(classes, course);
 
-  // Tìm các user đã có trong lớp nào đó
-  const classStatsByUserId = {};
-  classes.forEach(cls => {
-    cls.students.forEach(s => {
-      const userId = s.idUser.toString();
-      const stats = classStatsByUserId[userId] || { completed: 0, active: 0 };
-      if (cls.status === 'completed') stats.completed += 1;
-      else if (cls.status !== 'cancelled') stats.active += 1;
-      classStatsByUserId[userId] = stats;
-    });
-  });
-
-  const students = allStudents.map(u => {
+  const students = [];
+  for (const u of allStudents) {
     const purchases = u.purchasedCourses.filter(p => p.idCourse && p.idCourse.toString() === courseId.toString());
     const latest = purchases.reduce((latestPc, pc) => {
       if (!latestPc) return pc;
       return new Date(pc.enrolledAt || 0) > new Date(latestPc.enrolledAt || 0) ? pc : latestPc;
     }, null);
-    const stats = classStatsByUserId[u._id.toString()] || { completed: 0, active: 0 };
-    const pendingClassSlots = Math.max(0, purchases.length - stats.completed - stats.active);
-    return { user: u, enrolledAt: latest ? latest.enrolledAt : null, purchaseCount: purchases.length, pendingClassSlots };
-  });
+    const summary = await getEnrollmentSlotSummary(u, courseId, { course, classes });
+    students.push({
+      user: u,
+      enrolledAt: latest ? latest.enrolledAt : null,
+      purchaseCount: purchases.length,
+      pendingClassSlots: summary.pendingClassSlots,
+      completedCount: summary.completed,
+      activeCount: summary.active,
+    });
+  }
 
   // Học viên chưa được xếp lớp
   const unassigned = students.filter(s => s.pendingClassSlots > 0);
@@ -958,14 +963,27 @@ router.post('/classes/:classId/students/add-by-id', ensureAuthenticated, express
   const { userId } = req.body;
   if (!userId) return res.json({ ok: false, msg: 'Thiếu userId' });
 
-  const cls = await CourseClass.findById(req.params.classId);
+  const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions courseType');
   if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
+
+  const classProgress = await syncAndSaveClassStatus(cls, cls.idCourse);
+  if (!isActiveClassStatus(classProgress.status)) {
+    return res.json({ ok: false, msg: 'Không thể thêm học viên vào lớp đã hoàn thành hoặc đã hủy' });
+  }
 
   const already = cls.students.some(s => s.idUser.toString() === userId);
   if (already) return res.json({ ok: false, msg: 'Học viên đã có trong lớp' });
 
   if (cls.students.length >= cls.maxStudents) {
     return res.json({ ok: false, msg: 'Lớp đã đầy' });
+  }
+
+  const user = await LocalUser.findById(userId, 'purchasedCourses');
+  if (!user) return res.json({ ok: false, msg: 'Không tìm thấy học viên' });
+
+  const summary = await getEnrollmentSlotSummary(user, cls.idCourse._id || cls.idCourse, { course: cls.idCourse });
+  if (summary.pendingClassSlots <= 0) {
+    return res.json({ ok: false, msg: 'Học viên không còn lượt xếp lớp cho khóa này' });
   }
 
   cls.students.push({ idUser: userId, enrolledAt: new Date() });
@@ -980,9 +998,10 @@ router.get('/classes', ensureAuthenticated, async (req, res) => {
   if (req.query.courseId) filter.idCourse = req.query.courseId;
 
   const classes = await CourseClass.find(filter)
-    .populate('idCourse', 'name')
+    .populate('idCourse', 'name totalSessions')
     .populate('idLecturer', 'name')
     .sort({ createdAt: -1 });
+  await syncAndSaveClassesStatus(classes);
 
   const courses = req.user.role === 'admin'
     ? await Course.find({}, 'name')
@@ -1042,6 +1061,8 @@ router.get('/classes/:classId', ensureAuthenticated, async (req, res) => {
     return res.redirect('/admin/classes');
   }
 
+  const progressMeta = await syncAndSaveClassStatus(cls, cls.idCourse);
+
   // Danh sách giảng viên để admin đổi
   const lecturers = req.user.role === 'admin'
     ? await LocalUser.find({ role: 'lecturer' }, 'name email avatar')
@@ -1050,7 +1071,7 @@ router.get('/classes/:classId', ensureAuthenticated, async (req, res) => {
   res.locals.layout = false;
   res.render('admin/classes/classDetail', {
     user: req.user,
-    data: { title: cls.name, cls, lecturers }
+    data: { title: cls.name, cls, lecturers, progressMeta }
   });
 });
 
@@ -1073,14 +1094,24 @@ router.post('/classes/:classId/students/add', ensureAuthenticated, express.json(
   });
   if (!student) return res.json({ ok: false, msg: 'Không tìm thấy người dùng' });
 
-  const cls = await CourseClass.findById(req.params.classId);
+  const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions courseType');
   if (!cls) return res.json({ ok: false, msg: 'Không tìm thấy lớp' });
+
+  const classProgress = await syncAndSaveClassStatus(cls, cls.idCourse);
+  if (!isActiveClassStatus(classProgress.status)) {
+    return res.json({ ok: false, msg: 'Không thể thêm học viên vào lớp đã hoàn thành hoặc đã hủy' });
+  }
 
   const already = cls.students.some(s => s.idUser.toString() === student._id.toString());
   if (already) return res.json({ ok: false, msg: 'Học viên đã có trong lớp' });
 
   if (cls.students.length >= cls.maxStudents) {
     return res.json({ ok: false, msg: `Lớp đã đủ ${cls.maxStudents} học viên` });
+  }
+
+  const summary = await getEnrollmentSlotSummary(student, cls.idCourse._id || cls.idCourse, { course: cls.idCourse });
+  if (summary.pendingClassSlots <= 0) {
+    return res.json({ ok: false, msg: 'Học viên không còn lượt xếp lớp cho khóa này' });
   }
 
   cls.students.push({ idUser: student._id, enrolledAt: new Date() });
@@ -1103,7 +1134,7 @@ router.post('/classes/:classId/sessions/add', ensureAuthenticated, express.json(
   const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions');
   if (!cls) return res.json({ ok: false });
   cls.sessions.push({ title, date: date ? new Date(date) : null, meetLink, note, status: 'scheduled' });
-  autoUpdateClassStatus(cls);
+  syncClassStatus(cls, cls.idCourse);
   await cls.save();
   const s = cls.sessions[cls.sessions.length - 1];
   return res.json({ ok: true, session: s });
@@ -1122,25 +1153,17 @@ router.post('/classes/:classId/sessions/:sessionId/update', ensureAuthenticated,
   if (recordLink !== undefined) s.recordLink = recordLink;
   if (note       !== undefined) s.note       = note;
   if (status     !== undefined) s.status     = status;
-  autoUpdateClassStatus(cls);
+  syncClassStatus(cls, cls.idCourse);
   await cls.save();
   return res.json({ ok: true, session: s });
 });
 
-// Helper: tự động cập nhật trạng thái lớp dựa vào số buổi đã hoàn thành
-function autoUpdateClassStatus(cls) {
-  const totalReq = (cls.idCourse && cls.idCourse.totalSessions) || cls.sessions.length || 0;
-  const doneCnt  = cls.sessions.filter(s => s.status === 'done').length;
-  if (totalReq > 0 && doneCnt >= totalReq) cls.status = 'completed';
-  else if (doneCnt > 0)                    cls.status = 'ongoing';
-  else                                     cls.status = 'open';
-}
-
 // Xóa buổi học
 router.post('/classes/:classId/sessions/:sessionId/delete', ensureAuthenticated, async (req, res) => {
-  const cls = await CourseClass.findById(req.params.classId);
+  const cls = await CourseClass.findById(req.params.classId).populate('idCourse', 'totalSessions');
   if (!cls) return res.json({ ok: false });
   cls.sessions.pull({ _id: req.params.sessionId });
+  syncClassStatus(cls, cls.idCourse);
   await cls.save();
   return res.json({ ok: true });
 });

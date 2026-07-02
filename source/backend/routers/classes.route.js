@@ -4,6 +4,11 @@ const CourseClass = require('../models/CourseClass.model');
 const Course     = require('../models/Course.model');
 const LocalUser  = require('../models/LocalUser.model');
 const { ensureAuthenticated } = require('../config/auth.config');
+const {
+  getClassProgress,
+  syncAndSaveClassStatus,
+  syncAndSaveClassesStatus,
+} = require('../services/courseClassStatus.service');
 
 // ── Học viên: xem lớp của mình ──
 Router.get('/my-classes', ensureAuthenticated, async (req, res) => {
@@ -14,6 +19,7 @@ Router.get('/my-classes', ensureAuthenticated, async (req, res) => {
     .populate('idCourse', 'name poster totalSessions')
     .populate('idLecturer', 'name avatar')
     .sort({ createdAt: -1 });
+  await syncAndSaveClassesStatus(classes);
 
   return res.render('./classes/my-classes', {
     isAuthenticated: req.isAuthenticated(),
@@ -30,7 +36,7 @@ Router.get('/my-classes/:classId', ensureAuthenticated, async (req, res) => {
   }
 
   const cls = await CourseClass.findById(req.params.classId)
-    .populate('idCourse', 'name poster')
+    .populate('idCourse', 'name poster totalSessions')
     .populate('idLecturer', 'name avatar email')
     .populate('students.idUser', 'name avatar username email');
 
@@ -52,6 +58,8 @@ Router.get('/my-classes/:classId', ensureAuthenticated, async (req, res) => {
     });
   }
 
+  const progressMeta = await syncAndSaveClassStatus(cls, cls.idCourse);
+
   // Tìm attendance của user hiện tại
   const myRecord = cls.students.find(s =>
     s.idUser && s.idUser._id.toString() === req.user._id.toString()
@@ -61,6 +69,7 @@ Router.get('/my-classes/:classId', ensureAuthenticated, async (req, res) => {
     isAuthenticated: req.isAuthenticated(),
     user: req.user,
     cls,
+    progressMeta,
     isMember,
     isLecturer,
     isAdmin,

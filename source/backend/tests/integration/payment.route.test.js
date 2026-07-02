@@ -20,6 +20,7 @@ const request = require('supertest');
 const LocalUser = require('../../models/LocalUser.model');
 const Course = require('../../models/Course.model');
 const PaymentOrder = require('../../models/PaymentOrder.model');
+const CourseClass = require('../../models/CourseClass.model');
 const paymentRouter = require('../../routers/payment.route');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
 const { createRouterApp, resetAllRateLimits } = require('../helpers/routerApp');
@@ -121,6 +122,80 @@ describe('payment.route', () => {
     expect(response.status).toBe(302);
     expect(response.headers.location).toBe('https://payos.test/existing');
     expect(await PaymentOrder.countDocuments({ courseName: course.name })).toBe(1);
+  });
+
+  test('POST /payment/:nameCourse/checkout blocks repurchase while class is active', async () => {
+    const course = await Course.create({
+      name: 'Active Class Course',
+      tuition: 0,
+      courseType: 'session',
+      totalSessions: 3,
+      discountCodes: [{
+        code: 'FREE100',
+        percent: 100,
+        maxUses: 0,
+        usedCount: 0,
+        active: true,
+      }],
+    });
+    await LocalUser.findByIdAndUpdate(currentUserId, {
+      $push: { purchasedCourses: { idCourse: course._id, courseType: 'session', enrolledAt: new Date() } },
+      $addToSet: { idCourses: course._id },
+    });
+    await CourseClass.create({
+      idCourse: course._id,
+      idLecturer: currentUserId,
+      name: 'Active Class',
+      status: 'ongoing',
+      students: [{ idUser: currentUserId }],
+      sessions: [{ status: 'done' }, { status: 'scheduled' }, { status: 'scheduled' }],
+    });
+
+    const response = await request(app)
+      .post(`/payment/${encodeURIComponent(course.name)}/checkout`)
+      .send({ discountCode: 'FREE100' });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('/my-courses');
+    expect(await PaymentOrder.countDocuments({ courseName: course.name })).toBe(0);
+  });
+
+  test('POST /payment/:nameCourse/checkout allows repurchase after completed class', async () => {
+    const course = await Course.create({
+      name: 'Completed Repurchase Course',
+      tuition: 0,
+      courseType: 'session',
+      totalSessions: 3,
+      discountCodes: [{
+        code: 'FREE100',
+        percent: 100,
+        maxUses: 0,
+        usedCount: 0,
+        active: true,
+      }],
+    });
+    await LocalUser.findByIdAndUpdate(currentUserId, {
+      $push: { purchasedCourses: { idCourse: course._id, courseType: 'session', enrolledAt: new Date() } },
+      $addToSet: { idCourses: course._id },
+    });
+    await CourseClass.create({
+      idCourse: course._id,
+      idLecturer: currentUserId,
+      name: 'Completed Class',
+      status: 'open',
+      students: [{ idUser: currentUserId }],
+      sessions: [{ status: 'done' }, { status: 'done' }, { status: 'done' }],
+    });
+
+    const response = await request(app)
+      .post(`/payment/${encodeURIComponent(course.name)}/checkout`)
+      .send({ discountCode: 'FREE100' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.view).toBe('./payment/success');
+
+    const user = await LocalUser.findById(currentUserId).lean();
+    expect(user.purchasedCourses).toHaveLength(2);
   });
 
   test('POST /payment/:nameCourse/checkout cancels stale pending order without checkout URL before creating new one', async () => {

@@ -52,7 +52,7 @@
             <td><%= cls.sessions.length %> buổi</td>
             <td>
               <%
-                const statusMap = { open:'Mở đăng ký', ongoing:'Đang học', completed:'Hoàn thành', cancelled:'Đã hủy' };
+                const statusMap = { open:'Đang hoạt động', ongoing:'Đang học', completed:'Hoàn thành', cancelled:'Đã hủy' };
                 const statusColor = { open:'adm-badge-blue', ongoing:'adm-badge-green', completed:'adm-badge-yellow', cancelled:'adm-badge-red' };
               %>
               <span class="adm-badge <%= statusColor[cls.status] || 'adm-badge-blue' %>">

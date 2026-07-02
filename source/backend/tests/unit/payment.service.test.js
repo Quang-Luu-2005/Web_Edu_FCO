@@ -15,6 +15,7 @@ const {
   markOrderCancelled,
   normalizeOrderCode,
 } = require('../../services/payment.service');
+const { getEnrollmentSlotSummary } = require('../../services/courseClassStatus.service');
 const { connectTestDb, clearTestDb, disconnectTestDb } = require('../setup/testDb');
 
 describe('payment.service', () => {
@@ -81,7 +82,7 @@ describe('payment.service', () => {
       _id: userId,
       purchasedCourses: [],
     };
-    const course = { _id: courseId, courseType: 'session' };
+    const course = { _id: courseId, courseType: 'session', totalSessions: 3 };
 
     expect(await canPurchaseCourse(user, course)).toBe(true);
 
@@ -92,7 +93,7 @@ describe('payment.service', () => {
       name: 'Class A',
       status: 'ongoing',
       students: [{ idUser: userId, attendance: [] }],
-      sessions: [],
+      sessions: [{ status: 'done' }, { status: 'scheduled' }, { status: 'scheduled' }],
     });
 
     expect(await canPurchaseCourse(user, course)).toBe(false);
@@ -102,13 +103,105 @@ describe('payment.service', () => {
       idCourse: courseId,
       idLecturer: lecturerId,
       name: 'Class B',
-      status: 'completed',
+      status: 'open',
       students: [{ idUser: userId, attendance: [] }],
-      sessions: [],
+      sessions: [{ status: 'done' }, { status: 'done' }, { status: 'done' }],
     });
 
     expect(await canPurchaseCourse(user, course)).toBe(true);
+    const summary = await getEnrollmentSlotSummary(user, courseId, { course });
+    expect(summary.completed).toBe(1);
+    expect(summary.active).toBe(0);
     expect(await canPurchaseCourse(user, { _id: courseId, courseType: 'hour' })).toBe(true);
+  });
+
+  test('completePaidOrder auto-assigns session purchase to an open class when available', async () => {
+    const lecturerId = new mongoose.Types.ObjectId();
+    const user = await LocalUser.create({
+      username: 'student-session',
+      email: 'student-session@example.com',
+      password: 'hashed',
+      name: 'Student Session',
+      isAuth: true,
+    });
+    const course = await Course.create({
+      name: 'Session Course Payment Test',
+      tuition: 0,
+      courseType: 'session',
+      totalSessions: 3,
+    });
+    const openClass = await CourseClass.create({
+      idCourse: course._id,
+      idLecturer: lecturerId,
+      name: 'Open Session Class',
+      status: 'open',
+      maxStudents: 10,
+      sessions: [{ status: 'scheduled' }, { status: 'scheduled' }, { status: 'scheduled' }],
+      students: [],
+    });
+    await PaymentOrder.create({
+      orderCode: 456789,
+      provider: 'free',
+      idUser: user._id,
+      idCourse: course._id,
+      courseName: course.name,
+      courseType: 'session',
+      originalAmount: 0,
+      amount: 0,
+    });
+
+    const result = await completePaidOrder(456789, { source: 'test' });
+
+    expect(result.completed).toBe(true);
+    expect(result.assignedClass._id.toString()).toBe(openClass._id.toString());
+
+    const assignedClass = await CourseClass.findById(openClass._id).lean();
+    expect(assignedClass.students).toHaveLength(1);
+    expect(assignedClass.students[0].idUser.toString()).toBe(user._id.toString());
+  });
+
+  test('completePaidOrder leaves session purchase unassigned when no open class is available', async () => {
+    const lecturerId = new mongoose.Types.ObjectId();
+    const user = await LocalUser.create({
+      username: 'student-waiting',
+      email: 'student-waiting@example.com',
+      password: 'hashed',
+      name: 'Student Waiting',
+      isAuth: true,
+    });
+    const course = await Course.create({
+      name: 'Waiting Session Course',
+      tuition: 0,
+      courseType: 'session',
+      totalSessions: 3,
+    });
+    await CourseClass.create({
+      idCourse: course._id,
+      idLecturer: lecturerId,
+      name: 'Completed Session Class',
+      status: 'completed',
+      maxStudents: 10,
+      sessions: [{ status: 'done' }, { status: 'done' }, { status: 'done' }],
+      students: [],
+    });
+    await PaymentOrder.create({
+      orderCode: 456790,
+      provider: 'free',
+      idUser: user._id,
+      idCourse: course._id,
+      courseName: course.name,
+      courseType: 'session',
+      originalAmount: 0,
+      amount: 0,
+    });
+
+    const result = await completePaidOrder(456790, { source: 'test' });
+
+    expect(result.completed).toBe(true);
+    expect(result.assignedClass).toBeNull();
+
+    const assignedCount = await CourseClass.countDocuments({ 'students.idUser': user._id });
+    expect(assignedCount).toBe(0);
   });
 
   test('completePaidOrder enrolls user, updates counters and stays idempotent', async () => {

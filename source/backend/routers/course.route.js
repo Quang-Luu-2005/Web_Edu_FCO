@@ -9,7 +9,7 @@ const CourseCategory = require('../models/CourseCategory.model');
 const CourseTopic = require('../models/CourseTopic.model');
 
 const LocalUser = require('../models/LocalUser.model');
-const CourseClass = require('../models/CourseClass.model');
+const { canPurchaseCourse } = require('../services/payment.service');
 
 const { renderCourseDescription } = require('../utils/courseDescriptionRenderer');
 
@@ -139,38 +139,6 @@ const getReactionByUser = (reactions, userId) => {
 const isPaidCourse = (course, user) => {
     const purchasedCourses = safeArray(user && user.purchasedCourses);
     return purchasedCourses.some((item) => item.idCourse && item.idCourse.toString() === course._id.toString());
-};
-
-const canPurchaseCourse = async (course, user) => {
-    if (!user || !course) {
-        return false;
-    }
-
-    if (course.courseType === 'hour') {
-        return true;
-    }
-
-    const courseId = course._id.toString();
-    const purchaseCount = safeArray(user.purchasedCourses)
-        .filter((item) => item.idCourse && item.idCourse.toString() === courseId)
-        .length;
-
-    if (purchaseCount === 0) {
-        return true;
-    }
-
-    const classes = await CourseClass.find({
-        idCourse: course._id,
-        'students.idUser': user._id
-    }).select('status');
-
-    const activeClass = classes.some((cls) => !['completed', 'cancelled'].includes(cls.status));
-    if (activeClass) {
-        return false;
-    }
-
-    const completedCount = classes.filter((cls) => cls.status === 'completed').length;
-    return completedCount >= purchaseCount;
 };
 
 const ensureCourseAccess = (req, course) => {
@@ -324,7 +292,7 @@ Router.get('/:nameCourse', async (req, res) => {
         return item.idCourse && item.idCourse.toString() === course._id.toString();
     });
     const isPaid = Boolean(purchasedCourse);
-    const canPurchaseAgain = req.user ? await canPurchaseCourse(course, req.user) : false;
+    const canPurchaseAgain = req.user ? await canPurchaseCourse(req.user, course) : false;
     const isAdmin = Boolean(req.user && req.user.role === 'admin');
 
     const wishList = safeArray(req.user && req.user.idWishList);

@@ -41,21 +41,47 @@
       </div>
     </div>
 
+    <% const progress = progressMeta || { required: 0, done: 0, progress: 0, status: cls.status || 'open' }; %>
+    <% const statusMap = {
+      open: 'Đang hoạt động',
+      ongoing: 'Đang học',
+      completed: 'Hoàn thành',
+      cancelled: 'Đã hủy'
+    }; %>
+
     <!-- Thống kê nhanh -->
     <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
       <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
-        <strong style="font-size:18px;color:#1a1f2e;display:block"><%= cls.sessions.length %></strong> Tổng buổi học
+        <strong style="font-size:18px;color:#1a1f2e;display:block"><%= progress.required || cls.sessions.length %></strong> Tổng buổi yêu cầu
       </div>
       <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
-        <strong style="font-size:18px;color:#15803d;display:block"><%= cls.sessions.filter(s=>s.status==='done').length %></strong> Đã học xong
+        <strong style="font-size:18px;color:#15803d;display:block"><%= progress.done %></strong> Đã học xong
       </div>
       <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
-        <strong style="font-size:18px;color:#3b6fd4;display:block"><%= cls.sessions.filter(s=>s.status==='scheduled').length %></strong> Sắp diễn ra
+        <strong style="font-size:18px;color:#3b6fd4;display:block"><%= progress.progress %>%</strong> Tiến độ lớp học
+      </div>
+      <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
+        <strong style="font-size:18px;color:#1a1f2e;display:block"><%= statusMap[progress.status] || cls.status %></strong> Trạng thái lớp
       </div>
       <div style="background:#fff;border:1px solid #e8e8e4;border-radius:10px;padding:12px 18px;font-size:13px;color:#4a5568">
         <strong style="font-size:18px;color:#1a1f2e;display:block"><%= cls.students.length %></strong> Học viên
       </div>
     </div>
+
+    <% if (progress.required > 0) { %>
+    <div style="background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:16px 18px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+        <strong style="font-size:14px;color:#1a1f2e">Tiến độ hoàn thành lớp</strong>
+        <span style="font-size:12px;color:#718096;font-weight:600"><%= progress.done %>/<%= progress.required %> buổi</span>
+      </div>
+      <div style="height:8px;background:#e8e8e4;border-radius:999px;overflow:hidden">
+        <div style="height:100%;width:<%= progress.progress %>%;background:linear-gradient(90deg,#3b6fd4,#16a34a);border-radius:999px"></div>
+      </div>
+      <% if (progress.status === 'completed') { %>
+      <div style="margin-top:8px;font-size:12px;color:#15803d;font-weight:700"><i class="fas fa-check-circle"></i> Lớp đã hoàn thành</div>
+      <% } %>
+    </div>
+    <% } %>
 
     <!-- Danh sách buổi học -->
     <h2 style="font-size:18px;font-weight:700;color:#1a1f2e;margin-bottom:16px">Lịch buổi học</h2>
